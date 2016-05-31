@@ -102,6 +102,7 @@ if __name__ == "__main__":
           print "Wrong parameters file"
      if len(sys.argv)>4:
         try:
+            print sys.argv[4]
             model=cobra.io.read_sbml_model((sys.argv[4]))     
         except:
             print "Wrong model file"
