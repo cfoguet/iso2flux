@@ -95,17 +95,20 @@ if __name__ == "__main__":
      print iso_model_file
      if len(sys.argv)>3:
         print sys.argv[3]
-        try:
+        p_dict.update(read_isotoflux_settings(sys.argv[3]))
+        """try:
           p_dict.update(read_isotoflux_settings(sys.argv[3]))
           
         except: 
-          print "Wrong parameters file"
+          print "Wrong parameters file"""
      if len(sys.argv)>4:
-        try:
+        print sys.argv[4]
+        model=cobra.io.read_sbml_model((sys.argv[4]))     
+        """try:
             print sys.argv[4]
             model=cobra.io.read_sbml_model((sys.argv[4]))     
         except:
-            print "Wrong model file"
+            print "Wrong model file"""
      if len(sys.argv)>5: 
         try:
           model,ratio_dict=read_flux_constraints(model,ratio_dict={},file_name=sys.argv[5])
