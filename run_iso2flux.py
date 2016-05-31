@@ -124,7 +124,7 @@ if __name__ == "__main__":
      
      #model,ratio_dict=read_flux_constraints(model,file_name="normoxia_constraints.xlsx")
      fva=flux_variability_analysis(model,fraction_of_optimum=1)
-     write_fva(model,fn="unconstrained_fluxes"+mid_data_name,fraction=p_dict["fraction_of_optimum"],remove0=False,change_threshold=0.001,mode="full",lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"])
+     write_fva(model,fn="unconstrained_fluxes.csv",fraction=p_dict["fraction_of_optimum"],remove0=False,change_threshold=0.001,mode="full",lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"])
      #Remember which reactions can be negative to add them as turnover later as negative lower bound may be removed when minimizing flux
      reactions_with_forced_turnover=p_dict["reactions_with_forced_turnover"]
      """for reaction in model.reactions:
@@ -165,7 +165,7 @@ if __name__ == "__main__":
      for paramater in parameters:
          if "turnover" not in paramater:
              parameters_to_evaluate.append(paramater)
-     export_label_results(label_model,fn=("bestlabel_"+mid_data_name),show_chi=True)
-     write_fva(label_model.constrained_model,fn="best_fluxes"+mid_data_name,fraction=1,remove0=False,change_threshold=0.001,mode="full",lp_tolerance_feasibility=1e-6)
-     parameter_confidence_interval_dict,flux_confidence_interval_dict,chi_parameters_sets_dict=estimate_confidence_intervals(label_model,significance=p_dict["confidence_significance"],perturbation=p_dict["confidence_perturbation"],min_absolute_perturbation=p_dict["confidence_min_absolute_perturbation"],max_absolute_perturbation=p_dict["confidence_max_absolute_perturbation"],parameter_precision=label_model.parameter_precision,best_parameter_dict=best_parameters,parameter_list=parameters_to_evaluate,fraction_of_optimum=fraction_of_optimum,relative_max_random_sample=relative_max_sample, relative_min_random_sample= relative_min_sample,annealing_n=p_dict["annealing_n"],annealing_m=p_dict["annealing_m"],annealing_p0=p_dict["annealing_p0"],annealing_pf=p_dict["annealing_pf"],output=True,annealing_n_processes=p_dict["annealing_n_processes"],annealing_cycle_time_limit=p_dict["annealing_cycle_time_limit"], annealing_cycle_max_attempts=5,annealing_iterations=p_dict["annealing_iterations"],fname="confidence"+mid_data_name)
+     export_label_results(label_model,fn=("bestlabel.csv"),show_chi=True)
+     write_fva(label_model.constrained_model,fn="best_fluxes.csv",fraction=1,remove0=False,change_threshold=0.001,mode="full",lp_tolerance_feasibility=1e-6)
+     parameter_confidence_interval_dict,flux_confidence_interval_dict,chi_parameters_sets_dict=estimate_confidence_intervals(label_model,significance=p_dict["confidence_significance"],perturbation=p_dict["confidence_perturbation"],min_absolute_perturbation=p_dict["confidence_min_absolute_perturbation"],max_absolute_perturbation=p_dict["confidence_max_absolute_perturbation"],parameter_precision=label_model.parameter_precision,best_parameter_dict=best_parameters,parameter_list=parameters_to_evaluate,fraction_of_optimum=fraction_of_optimum,relative_max_random_sample=relative_max_sample, relative_min_random_sample= relative_min_sample,annealing_n=p_dict["annealing_n"],annealing_m=p_dict["annealing_m"],annealing_p0=p_dict["annealing_p0"],annealing_pf=p_dict["annealing_pf"],output=True,annealing_n_processes=p_dict["annealing_n_processes"],annealing_cycle_time_limit=p_dict["annealing_cycle_time_limit"], annealing_cycle_max_attempts=5,annealing_iterations=p_dict["annealing_iterations"],fname="confidence.csv")
      
