@@ -9,5 +9,7 @@ setup(name='iso2flux',
       author='Carles Foguet',
       author_email='cfoguet@outlook.com',
       url='',
+      scripts=["run_iso2flux.py"],
+      install_requires=["cython","python-libsbml","openpyxl","numpy","scipy","matplotlib","pandas","nose","lxml","cobra"],
       packages=find_packages(),
      )

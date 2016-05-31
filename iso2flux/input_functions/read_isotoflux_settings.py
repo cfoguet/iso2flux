@@ -14,7 +14,7 @@ def read_isotoflux_settings(fn):
                    value=False
                 elif "," in value.lower() or ("[" in value.lower() or "]" in value.lower()):
                    value=value.replace("]","").replace("[","").split(",")
-                   if len(value)=[""]:
+                   if value==[""]:
                       value=[]
                    
                 elif "." in value:
