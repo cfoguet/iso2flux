@@ -28,6 +28,7 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
        for n,header in enumerate(rows[0]):
            if header!=None:
               col_n_dict[header.lower()]=n #Remove caps
+       print col_n_dict
        #Update this if the headers are changed
        labelled_substrate_emuid_isotopologue_replicate_injection_dict={}
        n_condition=col_n_dict["conditions"]
@@ -60,9 +61,9 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
            if  any(x==None or x=="" for x in [abundance,pattern,substrate,metabolite_name,unrpocessed_carbon_range,str_isotopologue,replicate,injection,isotopologue_abundance_str]):
                continue
            time=float(row[n_time])
-           print [condition,time]
-           if condition!=selected_condition or time!=selected_time:
-              continue 
+           print [[condition,selected_condition],[time,float(selected_time)]]
+           if condition!=selected_condition or time!=float(selected_time):
+              continue
            if row[n_lab_sub_abundance_units]=="%":
               abundance/=100
            labelled_substrate=str(substrate)+"$/$"+str(pattern)+"$/$"+str(abundance)
@@ -83,6 +84,7 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
            else:
                   print (metabolite_id+" not defined as isotopomer")
            emuid="emu_"+iso_object.id+"_"
+           print emuid
            local_emu0_dict["done"]=False
            local_emu0_dict["size"]=len(carbons)
            local_emu0_dict["met_id"]=iso_object.id
