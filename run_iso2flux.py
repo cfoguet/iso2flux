@@ -97,7 +97,7 @@ if __name__ == "__main__":
       argv=sys.argv[1:]
       #argv=("-e output_Midcor_input_iso2flux-2.csv -l simple_label_model.xlsx -p parameters.csv -s simple_model.sbml -t 18 -f Ctr -o example_").split()
       
-      opts, args = getopt.getopt(argv,"e:l:s:p:c:o:t:f:q",["experimental_data_file=","label_model_files=","sbml_model=","parameters_file=","constraints_file=","output_prefix=","factor=","quick_analysis"])
+      opts, args = getopt.getopt(argv,"e:l:s:p:c:o:t:f:q",["experimental_data_file=","label_model_files=","sbml_model=","parameters_file=","constraints_file=","output_prefix=","time=","factor=","quick_analysis"])
       #opts, args = getopt.getopt(sys.argv[1:],"hi:o:",["ifile=","ofile="])
      except getopt.GetoptError as err:
         # print help information and exit:
@@ -193,7 +193,6 @@ if __name__ == "__main__":
      
      a,b=solver(label_model,mode="fsolve")
      get_objective_function(label_model,output=True)
-     
      def test1(): solver(label_model,mode="fsolve")
      
      timeit(test1,number=1)

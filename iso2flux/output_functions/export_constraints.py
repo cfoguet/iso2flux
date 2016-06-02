@@ -14,7 +14,7 @@ def export_constraints(model,fn=None,ratio_dict={}):
        tk.destroy()
      except:
        fn="constraints.xlsx"
-  sheet_row_data_dict={"constraints":[["Constraints","Reaction id","Lower bound","Upper bound","Objective coefficient","Reaction name"]]}
+  sheet_row_data_dict={"constraints":[["Reaction id","Lower bound","Upper bound","Objective coefficient","Reaction name"]]}
   
   
   sorted_reaction_id=sorted([x.id for x in model.reactions],key=lambda v: v.upper())
