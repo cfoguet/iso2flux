@@ -86,7 +86,7 @@ if __name__ == "__main__":
      """mid_data_name="CA_34_label_reduit.xlsx" 
      iso_model_file="isotopomer_model_reduit2.xlsx"""
      #model=cobra.io.read_sbml_model("simple_model.sbml")
-     p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 1, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 0, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 20, 'annealing_relative_max_sample': 0.4, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.005, 'parameter_precision': 0.0001, 'fraction_of_optimum': 1, 'lp_tolerance_feasibility': 1e-06, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.25, 'annealing_iterations': 2}
+     p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 1, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 10, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 20, 'annealing_relative_max_sample': 0.4, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.005, 'parameter_precision': 0.0001, 'fraction_of_optimum': 1, 'lp_tolerance_feasibility': 1e-06, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.25, 'annealing_iterations': 2}
      model=None
      constraints_file=None
      mid_data_name=None
@@ -95,7 +95,7 @@ if __name__ == "__main__":
      quick_analysis=False
      try:
       argv=sys.argv[1:]
-      #argv=("-e output_Midcor_input_iso2flux-2.csv -l simple_label_model.xlsx -p parameters.csv -s simple_model.sbml -t 18 -f Ctr -o example_").split()
+      #argv=("-e output_Midcor_input_iso2flux-2.csv -l isotopomer_model_reduit2.xlsx -p parameters.csv -s simple_model.sbml -t 18 -f Ctr -o example_").split()
       
       opts, args = getopt.getopt(argv,"e:l:s:p:c:o:t:f:w:q",["experimental_data_file=","label_model_files=","sbml_model=","parameters_file=","constraints_file=","output_prefix=","time=","factor=","working_directory=","quick_analysis"])
       #opts, args = getopt.getopt(sys.argv[1:],"hi:o:",["ifile=","ofile="])
@@ -128,6 +128,7 @@ if __name__ == "__main__":
               quick_analysis=True
          elif opt in ("--working_directory","-w"):
               os.chdir(arg)
+              
      if mid_data_name==None:
         raise Exception ("'--experimental_data_file' required") 
         #sys.exit(2)
@@ -162,7 +163,7 @@ if __name__ == "__main__":
         except: 
           print "Wrong constraints file" 
      """
-
+     
      
      fraction_of_optimum=p_dict["fraction_of_optimum"]
      
@@ -182,9 +183,20 @@ if __name__ == "__main__":
      find_missing_reactions(label_model)
      
      #emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,mid_data_name,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
-     emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=factor,selected_time=time,minimum_sd=p_dict["minimum_sd"],rsm=True)
+     emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=factor,selected_time=time,minimum_sd=p_dict["minimum_sd"],rsm=False)
      print emu_dict0
-     label_model.build(emu_dict0,force_balance=True,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=False,turnover_exclude_EX=p_dict["turnover_exclude_EX"])
+     label_model.build(emu_dict0,force_balance=True,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=False,turnover_exclude_EX=p_dict['turnover_exclude_EX'])
+     """label_model.turnover_flux_dict["glc6p_pdif"]={"ub":1000,"lb":0,"v":500}
+     label_model.turnover_flux_dict["pyr_pdif"]={"ub":1000,"lb":0,"v":500}
+     label_model.turnover_flux_dict["gludxm"]={"ub":1000,"lb":0,"v":500}"""
+     check_steady_state(label_model,only_initial_m0=True,threshold=1e-9)#Check initial dy for steady state deviations
+     check_simulated_fractions(label_model)
+     find_missing_reactions(label_model)
+     
+     #emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,mid_data_name,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
+     emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=factor,selected_time=time,minimum_sd=p_dict["minimum_sd"],rsm=False)
+     print emu_dict0
+     label_model.build(emu_dict0,force_balance=True,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=False,turnover_exclude_EX=p_dict['turnover_exclude_EX'])
      """label_model.turnover_flux_dict["glc6p_pdif"]={"ub":1000,"lb":0,"v":500}
      label_model.turnover_flux_dict["pyr_pdif"]={"ub":1000,"lb":0,"v":500}
      label_model.turnover_flux_dict["gludxm"]={"ub":1000,"lb":0,"v":500}"""
@@ -199,15 +211,25 @@ if __name__ == "__main__":
      
      timeit(test1,number=1)
      #model=label_model.constrained_model=copy.deepcopy(label_model.metabolic_model)
-     best_parameters=parameters=identify_free_parameters(label_model,parameter_dict={},fraction_of_optimum=fraction_of_optimum,change_threshold=p_dict["identify_free_parameters_change_threshold"],add_turnover=p_dict["identify_free_parameters_add_turnover"],parameter_precision=label_model.parameter_precision,n_samples=p_dict["identify_free_parameters_n_samples"])
+     #best_parameters=parameters=identify_free_parameters(label_model,parameter_dict={},fraction_of_optimum=fraction_of_optimum,change_threshold=p_dict["identify_free_parameters_change_threshold"],add_turnover=p_dict["identify_free_parameters_add_turnover"],parameter_precision=label_model.parameter_precision,n_samples=p_dict["identify_free_parameters_n_samples"])
      relative_max_sample=p_dict["annealing_relative_max_sample"]
      relative_min_sample=p_dict["annealing_relative_min_sample"]
      print p_dict
-     max_random_sample=int(relative_max_sample*len(best_parameters))
-     min_random_sample=int(relative_min_sample*len(best_parameters))
+     best_parameters={}
+     f_best=99999999
      for x in range(0,p_dict["annealing_iterations"]):
-         best_parameters,best_flux_dict,f_best=annealing(label_model,max_random_sample=max_random_sample,min_random_sample=min_random_sample,n=p_dict["annealing_n"],m=p_dict["annealing_m"],p0=p_dict["annealing_p0"],pf=p_dict["annealing_pf"],parameter_precision=label_model.parameter_precision,max_perturbation=p_dict["annealing_max_perturbation"],      fraction_of_optimum=fraction_of_optimum,parameter_dict=best_parameters,n_processes=p_dict["annealing_n_processes"],output=False)
+         parameters=parameters=identify_free_parameters(label_model,parameter_dict={},fraction_of_optimum=fraction_of_optimum,change_threshold=p_dict["identify_free_parameters_change_threshold"],add_turnover=p_dict["identify_free_parameters_add_turnover"],parameter_precision=label_model.parameter_precision,n_samples=p_dict["identify_free_parameters_n_samples"]) 
+         print parameters
+         max_random_sample=int(relative_max_sample*len(parameters))
+         min_random_sample=int(relative_min_sample*len(parameters))
+         parameters,best_flux_dict,f=annealing(label_model,max_random_sample=max_random_sample,min_random_sample=min_random_sample,n=p_dict["annealing_n"],m=p_dict["annealing_m"],p0=p_dict["annealing_p0"],pf=p_dict["annealing_pf"],parameter_precision=label_model.parameter_precision,max_perturbation=p_dict["annealing_max_perturbation"],      fraction_of_optimum=fraction_of_optimum,parameter_dict=parameters,n_processes=p_dict["annealing_n_processes"],output=False)
+         if f<f_best:
+            f_best=f
+            best_parameters=copy.deepcopy(parameters)
+         clear_parameters(label_model,parameter_dict=None,parameter_list=[], clear_ratios=True,clear_turnover=True,clear_fluxes=True,restore_objectives=True) #Clear previous parameters
+         label_model.parameter_dict={} #Clear previous parameters
      parameters_to_evaluate=[]
+     apply_parameters(label_model,best_parameters)
      for paramater in parameters:
          if "turnover" not in paramater:
              parameters_to_evaluate.append(paramater)

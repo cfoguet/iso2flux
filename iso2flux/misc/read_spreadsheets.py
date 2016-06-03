@@ -21,7 +21,8 @@ def read_spreadsheets(file_names=None,csv_delimiter=',',more_than_1=True,tkinter
        file_names=[file_names]
     condition_rows_dict={}
     for file_name in file_names:
-        if "xlsx" in file_name:
+        file_type=file_name[-6:] #Take some extra caracters just in case
+        if file_type in (".xlsx","xlsm","xltx","xltm"):
            wb = load_workbook(file_name, read_only=True)
            for ws in wb.worksheets:
                   condition=ws.title

@@ -60,10 +60,11 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
            isotopologue_abundance_str=row[n_isotopologue_abundance]
            if  any(x==None or x=="" for x in [abundance,pattern,substrate,metabolite_name,unrpocessed_carbon_range,str_isotopologue,replicate,injection,isotopologue_abundance_str]):
                continue
+           print "bbbbbbbb"
            time=float(row[n_time])
            print [[condition,selected_condition],[time,float(selected_time)]]
            if condition!=selected_condition or time!=float(selected_time):
-              continue
+              continue 
            if row[n_lab_sub_abundance_units]=="%":
               abundance/=100
            labelled_substrate=str(substrate)+"$/$"+str(pattern)+"$/$"+str(abundance)

@@ -212,9 +212,8 @@ class Label_model:
                if reaction+"_reverse" in self.reaction_emu_dict:#self.simplified_metabolic_model.reactions :
                   if reaction in self.merged_reactions_reactions_dict:
                      reaction=self.merged_reactions_reactions_dict[reaction][0]
-                  if "EX_" in reaction and turnover_exclude_EX and reaction not in self.reactions_with_forced_turnover:
+                  if ("EX_" in reaction and turnover_exclude_EX) and (reaction not in self.reactions_with_forced_turnover):
                       self.turnover_flux_dict[reaction]={"v":0,"lb":0,"ub":0}
-                      continue
                   else:
                       self.turnover_flux_dict[reaction]={"v":turnover_upper_bound/2.0,"lb":0,"ub":turnover_upper_bound}
                       #Add turnover for inputs and outputs
