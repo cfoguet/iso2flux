@@ -97,7 +97,7 @@ if __name__ == "__main__":
       argv=sys.argv[1:]
       #argv=("-e output_Midcor_input_iso2flux-2.csv -l simple_label_model.xlsx -p parameters.csv -s simple_model.sbml -t 18 -f Ctr -o example_").split()
       
-      opts, args = getopt.getopt(argv,"e:l:s:p:c:o:t:f:q",["experimental_data_file=","label_model_files=","sbml_model=","parameters_file=","constraints_file=","output_prefix=","time=","factor=","quick_analysis"])
+      opts, args = getopt.getopt(argv,"e:l:s:p:c:o:t:f:w:q",["experimental_data_file=","label_model_files=","sbml_model=","parameters_file=","constraints_file=","output_prefix=","time=","factor=","working_directory=","quick_analysis"])
       #opts, args = getopt.getopt(sys.argv[1:],"hi:o:",["ifile=","ofile="])
      except getopt.GetoptError as err:
         # print help information and exit:
@@ -126,6 +126,8 @@ if __name__ == "__main__":
               time=arg
          elif opt in ("--quick_analysis","-q"):
               quick_analysis=True
+         elif opt in ("--working_directory","-w"):
+              os.chdir(arg)
      if mid_data_name==None:
         raise Exception ("'--experimental_data_file' required") 
         #sys.exit(2)
