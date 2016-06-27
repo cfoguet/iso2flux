@@ -34,8 +34,9 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
        n_condition=col_n_dict["conditions"]
        n_substrate=col_n_dict["labelled substrate"]
        n_lab_pattern_substrate=col_n_dict["label pattern"]  
-       n_lab_sub_abundance=col_n_dict["abundance [value]"]
-       n_lab_sub_abundance_units=col_n_dict["abundance [units]"]
+       #n_lab_sub_abundance=col_n_dict["abundance [value]"]
+       n_lab_sub_abundance=col_n_dict["abundance"]
+       #n_lab_sub_abundance_units=col_n_dict["abundance [units]"]
        n_time=col_n_dict["incubation time [value]"]
        n_replicate=col_n_dict["replicate"]
        n_injection=col_n_dict["injection"]
@@ -43,6 +44,7 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
        n_carbon_range=col_n_dict["atomic positions to the parent molecule/metabolite name"]
        n_isotopologue=col_n_dict["isotopologue"]
        n_isotopologue_abundance=col_n_dict["isotopologue [value]"]
+       #n_isotopologue_units=col_n_dict["isotopologue [units]"]
        n_isotopologue_units=col_n_dict["isotopologue [units]"]
        for n,row in enumerate(rows):
            if n==0:
@@ -60,13 +62,16 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
            isotopologue_abundance_str=row[n_isotopologue_abundance]
            if  any(x==None or x=="" for x in [abundance,pattern,substrate,metabolite_name,unrpocessed_carbon_range,str_isotopologue,replicate,injection,isotopologue_abundance_str]):
                continue
+               print "aaaaaaaaaaAAaa"
            print "bbbbbbbb"
            time=float(row[n_time])
            print [[condition,selected_condition],[time,float(selected_time)]]
            if condition!=selected_condition or time!=float(selected_time):
+              print "ccccccccccccccccccccc"
               continue 
-           if row[n_lab_sub_abundance_units]=="%":
-              abundance/=100
+           print "ddddddddddddddddd"
+           """if row[n_lab_sub_abundance_units]=="%":
+              abundance/=100"""
            labelled_substrate=str(substrate)+"$/$"+str(pattern)+"$/$"+str(abundance)
            isotopologue=str(row[n_isotopologue].lower().replace("m","")) 
            isotopologue_abundance=float(row[n_isotopologue_abundance])
