@@ -193,15 +193,7 @@ if __name__ == "__main__":
      check_simulated_fractions(label_model)
      find_missing_reactions(label_model)
      
-     #emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,mid_data_name,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
-     emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=factor,selected_time=time,minimum_sd=p_dict["minimum_sd"],rsm=False)
-     print emu_dict0
-     label_model.build(emu_dict0,force_balance=True,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=False,turnover_exclude_EX=p_dict['turnover_exclude_EX'])
-     """label_model.turnover_flux_dict["glc6p_pdif"]={"ub":1000,"lb":0,"v":500}
-     label_model.turnover_flux_dict["pyr_pdif"]={"ub":1000,"lb":0,"v":500}
-     label_model.turnover_flux_dict["gludxm"]={"ub":1000,"lb":0,"v":500}"""
-     check_steady_state(label_model,only_initial_m0=True,threshold=1e-9)#Check initial dy for steady state deviations
-     check_simulated_fractions(label_model) #Checks that the simulation can be succesfully run and that there are not negative or larger than 1 fractions
+     
      
      #launch_gui(label_model)
      
