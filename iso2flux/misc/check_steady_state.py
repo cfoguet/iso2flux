@@ -1,7 +1,10 @@
 from ..flux_functions.get_fluxes import get_fluxes
 from ..emus_functions.set_equations_variables import set_equations_variables
-def check_steady_state(label_model,only_initial_m0=True,threshold=1e-6):
+def check_steady_state(label_model,only_initial_m0=True,threshold=1e-6,fn=None,fn_mode="a"):
     passed_flg=True
+    if fn!=None:
+       output_file=open(fn,fn_mode)
+       output_file.write("Steady state test:\n")
     label_model.constrained_model.optimize()
     get_fluxes(label_model)
     if only_initial_m0:
@@ -16,9 +19,18 @@ def check_steady_state(label_model,only_initial_m0=True,threshold=1e-6):
                 if abs(x)>threshold:
                    passed_flg=False  
                    print(str(n)+" "+label_model.size_inverse_variable_dict[size][n]+" "+str(x))
+                   if fn!=None:
+                       output_file.write(str(n)+" "+label_model.size_inverse_variable_dict[size][n]+" "+str(x)+"\n")
     if only_initial_m0:
        set_equations_variables(label_model,force_balance=label_model.force_balance,set_initial_label=True)
        if  passed_flg==False:
+           if fn!=None:
+              output_file.write("failed\n\n")
+              output_file.close() 
            print "test failed"
        else:
            print "test passed"
+           if fn!=None:
+              output_file.write("passed\n\n")
+              output_file.close()  
+    return passed_flg

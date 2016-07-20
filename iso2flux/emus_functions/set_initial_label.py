@@ -1,5 +1,19 @@
 import numpy as np
-def set_initial_label(metabolite_id,label_model,label_patterns=[[[1,1,0,0,0,0],0.5]],condition="condition",total_concentration=1):
+def set_initial_label(metabolite_id,label_model,label_patterns=[[[1,1,0,0,0,0],0.5]],condition="condition",total_concentration=1.0):
+    """
+    Sets the initial value of the variables according to the labelled substrates defined in the exoerimental data file(s)
+    metabolite_id: string
+    
+    label_model: label_model object
+    metabolite_id: str 
+	ID of the metabolite that has been labelled
+    label_pattern: list 
+	 Label pattern of the substrates
+    condition: str, optional
+         Name of the condition. Several labelled substrates can be assigned to the same condition by using the same condition name
+    total_concentration: float, optional
+        currently unnused
+    """
     isotopomer_object=label_model.met_id_isotopomer_dict[metabolite_id]
     isotopomer_object.input=True
     isotopomer_id=label_model.met_id_isotopomer_dict[metabolite_id].id

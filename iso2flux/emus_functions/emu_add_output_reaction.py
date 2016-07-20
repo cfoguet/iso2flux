@@ -1,6 +1,7 @@
 from cobra import Model, Reaction, Metabolite
 
 def emu_add_output_reaction(label_model,reaction,isotopomer_object_id,coef):
+    #Currently unnused
     if coef>0:
        print("Error: emu_add_output_reaction: positive coefficient for output reaction")
     new_reaction=Reaction(reaction.id+"_"+isotopomer_object_id+"_output")

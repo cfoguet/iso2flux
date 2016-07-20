@@ -3,6 +3,10 @@ import copy
 import re
 from ..flux_functions.define_reaction_group import define_reaction_group
 def find_label_propagating_fluxes(label_model):
+  """
+  Automatically groups reactions of the metabolic models and defines the "reactions_propagating_label" variable. It requires that remove_identical_reactions has been prior to being executed or it will fail to group reactions
+  label_model: label_model object 
+  """
   reverse_re=re.compile("(.+)_reverse$")
   group_emu_dict={}
   emu_group_dict={}
@@ -41,7 +45,6 @@ def find_label_propagating_fluxes(label_model):
              if reverse_re.match(reaction)==None:
                 if reaction in label_model.reactions_propagating_label:
                    continue 
-                   print "A"
                 else:
                    reaction_id+=reaction+"_"
                    local_label_reactions_dict[reaction]=1
@@ -49,7 +52,6 @@ def find_label_propagating_fluxes(label_model):
                 forward_reaction=reverse_re.match(reaction).group(1)
                 if forward_reaction in label_model.reactions_propagating_label:
                    continue
-                   print "B"
                 else:
                    reaction_id+=forward_reaction+"_"
                    local_label_reactions_dict[forward_reaction]=-1

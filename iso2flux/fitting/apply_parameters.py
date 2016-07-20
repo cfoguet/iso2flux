@@ -2,11 +2,23 @@ import copy
 import math
 from ..misc.round_functions import round_up,round_down
 
-def apply_parameters(label_model,parameter_dict=None,apply_flux_values=True,clear_ratio_dict=False,parameter_precision=None,parameter_list=[],model=None):
+def apply_parameters(label_model,parameter_dict=None,apply_flux_values=True,parameter_precision=None,parameter_list=[],model=None):
+    """
+    Applies the parameters to the COBRA model and the flux turnover dict
+    label_model: label_model object
+    parameter_dict: dict, optional
+	Dict of parameters that should be applied. If none the parameters in the label_model.parameter dict will be taken
+    apply_flux_values: bool, optional
+        If false the parameters relating flux values wont be applied
+    parameter_precision: float, optional
+        Precision which will be used to set flux bounds for flux values. If none the default precision defined in the label model object will be used
+    parameter_list: list, optional
+	List of parameters in the parameter dict that should be applied. If empty all parameters of the dict will be applied
+    model: COBRApy model object, optional
+        Model where the parameters will be applied. If none is provided it will use the constrained_model in the label_model object
+    """
     if parameter_dict=={}:
        return
-    if clear_ratio_dict==True:
-       label_model.ratio_dict={}
     if parameter_precision==None:
        parameter_precision=label_model.parameter_precision
     precision=int(-1*(math.log10(parameter_precision)))

@@ -1,6 +1,17 @@
 import os
 
 def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state=True):
+    """
+    Writes the emu balances into files .pyx that so that they can be compiled using cython.
+    label_model: label_model object
+    c_code: bool, deprectaed:
+        Currently not used
+    force_balance: bool,optional
+	If True it will force the isotologues of a given emu to add up to 1 resulting on increased performance
+    steady_state: bool, deprecated 
+        Currently not used
+         
+    """
     external_metabolites_list=[]
     eq_dir="equations"
     if not os.path.exists(eq_dir):
@@ -12,6 +23,8 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
     f.close()
     function_str="" 
     for size in sorted(label_model.size_expanded_model_dict.keys()):
+        #function_str+="import emu_equations_size%s\ntry:\n  emu_equations_size%s=reload(emu_equations_size%s)\nexcept:\n  pass\n"%(size,size,size)
+        #function_str+="def f%s(yy,t=0,label_model=None):\n  condition=label_model.active_condition\n  dy=emu_equations_size%s.emu_equations_size%s(yy,"%(size,size,size)
         function_str+="from emu_equations_size%s import emu_equations_size%s\n"%(size,size)
         function_str+="def f%s(yy,t=0,label_model=None):\n  condition=label_model.active_condition\n  dy=emu_equations_size%s(yy,"%(size,size)  
         string="import cython\nfrom libc.stdlib cimport malloc, free\nimport numpy as np\ncimport numpy as np\n" 

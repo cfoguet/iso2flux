@@ -27,6 +27,8 @@ def add_label_reactions(label_model,reaction_id,label_propagation={},substrates_
                   return
       else: #If a list of reactions is added the reactions will be merged
           reference_reaction=process_reaction_list(label_model,reaction_id)
+          if reference_reaction==None:
+             return
           
           
           
@@ -193,7 +195,7 @@ def process_reaction_list(label_model,reaction_list):
               else:
                  reversible_merged_reaction_list.append(reaction)
               if reaction.lower_bound==0.0 and reaction.upper_bound==0.0:  #If one of the reactions merged is inactive do not add it
-                 return 
+                 return None
             if reversible_flag==True:
              #reflection=Reaction(merged_reaction_id+"_reverse")
              reference_reaction.notes[reflection]=merged_reaction_id+"_reverse"

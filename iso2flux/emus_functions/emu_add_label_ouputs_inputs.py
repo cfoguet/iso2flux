@@ -3,6 +3,12 @@ from cobra import Model, Reaction, Metabolite
 #from emu_add_output_reaction import emu_add_output_reaction
 
 def emu_add_label_ouputs_inputs(label_model,excluded_reactions_id=[]):
+   """
+   Automatically adds input and output reactions to the emu models based on the stochiometry of the metabolic model.
+   label_model: label_model object
+   excluded_reactions_id: list of strings,optional
+   		IDs of the reactions that should not be added as inputs or ouputs 
+   """
    simp_model=label_model.simplified_metabolic_model
    size_model_dict=label_model.size_model_dict 
    #Add outputs that are reactions for different size models

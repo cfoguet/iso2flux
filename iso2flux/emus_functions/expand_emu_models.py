@@ -2,6 +2,10 @@ from cobra import Model, Reaction, Metabolite
 import copy
 from set_reflections import set_reflections
 def expand_emu_models(label_model):
+   """
+   expands each emu to the different isotoplogues it can include
+   label_model: label_model object
+   """
    for model_size in label_model.size_model_dict:
       expanded_emu_model=model = Model('expanded_emu_model (size'+str(model_size)+")")
       mid_emu_dict={}

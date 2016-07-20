@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import random
 import math
 import copy
@@ -406,9 +406,11 @@ def annealing(label_model,parameter_dict=None,parameter_to_be_fitted=[],paramete
     f_best=cycle_arg_dict["f_best"]
     fc=cycle_arg_dict["fc"]
     best_flux_dict=cycle_arg_dict["best_flux_dict"]"""
+    na=best_result["na"]
     best_parameters=best_result["best_parameters"]
     current_parameters=best_result["current_parameters"]
-    fc=f_best=best_result["f_best"]
+    f_best=best_result["f_best"]
+    fc=best_result["fc"]
     #fc=best_result["fc"]
     best_flux_dict=best_result["best_flux_dict"]
     DeltaE_avg=best_result["DeltaE_avg"]
@@ -447,11 +449,11 @@ def annealing(label_model,parameter_dict=None,parameter_to_be_fitted=[],paramete
        parameter_list.append(current_parameters)"""
     t = frac * t
     #cycle_arg_dict["t"]=t
-  if output:
+  """if output:
      plt.plot(fs,'r.-')
      plt.savefig('annealing.png')
      parameter_dict=best_parameters
-     plt.clf() #Clears buffer
+     plt.clf() #Clears buffer"""
   if n_processes>1:
      pool.close()
   best_parameters=best_result["best_parameters"]
@@ -530,7 +532,7 @@ def cycle(cycle_arg_dict):
     #na=local_cycle_arg_dict["na"]
     #min_random_sample=local_cycle_arg_dict["min_random_sample"]
     #max_random_sample=local_cycle_arg_dict["max_random_sample"]
-    
+    na=local_cycle_arg_dict["na"]
     original_f_best=local_cycle_arg_dict["f_best"]
     model=local_cycle_arg_dict["label_model"].constrained_model
     precision=int(-1*(math.log10(local_cycle_arg_dict["parameter_precision"])))
@@ -702,6 +704,7 @@ def cycle(cycle_arg_dict):
            fi=99999999
            #print "Code 1" 
         DeltaE = abs(fi-local_cycle_arg_dict["fc"])
+        #print [fi-local_cycle_arg_dict["fc"],local_cycle_arg_dict["DeltaE_avg"],local_cycle_arg_dict["t"],fi,local_cycle_arg_dict["fc"],local_cycle_arg_dict["f_best"]] #remove me
         #print fi-local_cycle_arg_dict["fc"]
         if (fi>local_cycle_arg_dict["fc"]):
             # Initialize DeltaE_avg if a worse solution was found
@@ -736,6 +739,7 @@ def cycle(cycle_arg_dict):
             #check if it is the new best result
             
         if (accept==True):
+            print "accept "+str(DeltaE)+" "+str(fi)  #remove me
             local_cycle_arg_dict["current_parameters"]=copy.deepcopy(working_parameters)
             ###error_dump(local_cycle_arg_dict["label_model"],"not optimal 1","accept_no_apply") 
             ###apply_parameters(local_cycle_arg_dict["label_model"], local_cycle_arg_dict["current_parameters"],apply_flux_values=True,parameter_precision=local_cycle_arg_dict["parameter_precision"])
@@ -792,7 +796,7 @@ def cycle(cycle_arg_dict):
             na=local_cycle_arg_dict["na"]
             #print na
             # update DeltaE_avg
-            local_cycle_arg_dict["DeltaE_avg"] = (local_cycle_arg_dict["DeltaE_avg"] * (na-1.0) +  DeltaE) / na
+            local_cycle_arg_dict["DeltaE_avg"] = (local_cycle_arg_dict["DeltaE_avg"] * (na-1.0) +  DeltaE) / na 
             #print [na,i,=local_cycle_arg_dict["t"],DeltaE,DeltaE_avg]
         else:
             if debug:
@@ -821,14 +825,16 @@ def cycle(cycle_arg_dict):
        local_cycle_arg_dict["best_parameters"]=copy.deepcopy(parameter_dict1)
        local_cycle_arg_dict["best_flux_dict"]=copy.deepcopy(best_flux_dict1)
        local_cycle_arg_dict["current_parameters"]=copy.deepcopy(parameter_dict1)
+       local_cycle_arg_dict["DeltaE_avg"] = (local_cycle_arg_dict["DeltaE_avg"] * (na-1.0) +  abs(f_best1-original_f_best)) / na
     elif f_best2<f_best1 and f_best2<original_f_best:
        print ["coordinated2"]
+       local_cycle_arg_dict["DeltaE_avg"] = (local_cycle_arg_dict["DeltaE_avg"] * (na-1.0) +  abs(f_best2-local_cycle_arg_dict["fc"])) / na
        local_cycle_arg_dict["f_best"]=f_best2
        local_cycle_arg_dict["fc"]=f_best2
        local_cycle_arg_dict["best_parameters"]=copy.deepcopy(parameter_dict2)
        local_cycle_arg_dict["best_flux_dict"]=copy.deepcopy(best_flux_dict2)
        local_cycle_arg_dict["current_parameters"]=copy.deepcopy(parameter_dict2)
-       
+          
     """print ["current_f_best",local_cycle_arg_dict["f_best"]]
     if original_f_best!=local_cycle_arg_dict["f_best"]:
        f_best1, parameter_dict1,best_flux_dict1=coordinate_descent(local_cycle_arg_dict["label_model"],parameter_dict=local_cycle_arg_dict["best_parameters"],parameter_to_be_fitted=local_cycle_arg_dict["parameter_to_be_fitted"],parameter_precision=local_cycle_arg_dict["parameter_precision"],perturbation=0.01,max_perturbation=local_cycle_arg_dict["max_perturbation"],force_flux_value_bounds=False,mode="fsolve",fba_mode="fba",debug=False,is_subprocess=True)

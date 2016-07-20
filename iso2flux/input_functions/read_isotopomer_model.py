@@ -22,13 +22,17 @@ def read_isotopomer_model(label_model,file_name,header=True):
 
 
     """
-    sheet_rows_dict=read_spreadsheets(file_names=file_name,csv_delimiter=',',more_than_1=True,tkinter_title="Choose a Label Metabolites/Label propagation file(s)") 
+    sheet_rows_dict=read_spreadsheets(file_names=file_name,csv_delimiter=',',more_than_1=False,tkinter_title="Choose a Label Metabolites/Label propagation file(s)") 
     #wb = load_workbook(file_name, read_only=True)
+    metabolites_rows=[]
+    reactions_rows=[]
     for data in sheet_rows_dict:
-        if sheet_rows_dict[data][1][0].split(",")[0] in label_model.metabolic_model.metabolites: #Check if you are looking at the list of metabolites
-           for n,row in enumerate(sheet_rows_dict[data]):
-               if n==0 and header:
-                  continue
+        for row in sheet_rows_dict[data]:
+            if row[0].split(",")[0] in label_model.metabolic_model.metabolites: #Check if you are looking at the list of metabolites
+               metabolites_rows.append(row)
+            elif row[0].split(",")[0] in label_model.metabolic_model.reactions:
+               reactions_rows.append(row)
+    for n,row in enumerate(metabolites_rows):
                if row[0]==None:
                   continue
                reference_metabolites=str(row[0].replace(" ","")).split(",")
@@ -96,14 +100,10 @@ def read_isotopomer_model(label_model,file_name,header=True):
                #print[references_metabolites,ncarbons,symmetric]
                iso=isotopomer(reference_metabolite_id=reference_metabolites,label_model=label_model,ncarbons=ncarbons,symmetric=symmetric,label_input=label_input,iso_id=None)
                print iso.id
-        elif sheet_rows_dict[data][1][0].split(",")[0] in label_model.metabolic_model.reactions:
-           label_propagation_ws=sheet_rows_dict[data]
     cobra.manipulation.convert_to_irreversible(label_model.irreversible_metabolic_model)#Convert any Exchange we migh have added to irreversible
     remove_produced_inputs(label_model) #Remove inputs that are products of irreversible reactions
     label_re=re.compile("(.+)[(](.+)[)]")
-    for n_row,row in enumerate(label_propagation_ws):
-               if n_row==0 and header:
-                  continue
+    for n_row,row in enumerate(reactions_rows):
                if row[0]==None:
                   continue
                reaction_id=str(row[0].replace(" ",""))

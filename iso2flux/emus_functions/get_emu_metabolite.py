@@ -1,6 +1,12 @@
 from cobra import  Metabolite
 
 def get_emu_metabolite(emu_dict,label_model):
+    """
+    Creates a cobra metabolite object for the new emu. Additionally it will add additional information if the emu is symmetryc
+    label_model: label_model object
+    emu_dict: dict
+        dict that contains the ID of the metabolite (or group of metabolites) and the carbon range
+    """
     #print emu_dict
     met_id=emu_dict["met_id"]
     carbons=emu_dict["carbons"]
