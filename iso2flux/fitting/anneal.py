@@ -626,6 +626,11 @@ def cycle(cycle_arg_dict):
                   #original_ub_list=[]
                   
                   for reaction in local_cycle_arg_dict["current_parameters"][parameter]["reactions"]:
+                      """####################3REMOVE ME
+                      fva=flux_variability_analysis(model,reaction_list=[reaction], fraction_of_optimum=0,tolerance_feasibility=local_cycle_arg_dict["label_model"].lp_tolerance_feasibility)
+                      lb_list.append(fva[reaction]["minimum"])
+                      ub_list.append(fva[reaction]["maximum"])
+                      ####################Remove ME"""
                       try:
                          fva=flux_variability_analysis(model,reaction_list=[reaction], fraction_of_optimum=0,tolerance_feasibility=local_cycle_arg_dict["label_model"].lp_tolerance_feasibility)
                          lb_list.append(fva[reaction]["minimum"])
@@ -635,6 +640,7 @@ def cycle(cycle_arg_dict):
                          #print [model.optimize(),parameter,fva]
                       except:
                         print "errror 1"
+                        
                         error_dump(local_cycle_arg_dict["label_model"],"error1")
                         failure_flag=True
                         #return 

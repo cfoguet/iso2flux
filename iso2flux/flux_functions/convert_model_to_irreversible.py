@@ -53,13 +53,16 @@ def convert_to_irreversible_with_indicators(cobra_model,reaction_id_list,metabol
        measured_metabolite_dict={}
        
        for emu in emus:
-           iso_id=label_model.emu_dict[emu]["met_id"]
-           isotopomer_object=label_model.id_isotopomer_object_dict[iso_id]
-           if isinstance(isotopomer_object.ref_met,list):
-              for metabolite in isotopomer_object.ref_met:
-                  full_metabolite_list.append(metabolite.id)
+           iso_id=str(label_model.emu_dict[emu]["met_id"])
+           #print label_model.id_isotopomer_object_dict
+           #isotopomer_object=label_model.id_isotopomer_object_dict[iso_id]
+           metabolites=label_model.isotopomer_id_metabolite_id_dict[iso_id]
+           print [iso_id,label_model.isotopomer_id_metabolite_id_dict[iso_id]]
+           if isinstance(metabolites,list):
+              for metabolite in metabolites:
+                  full_metabolite_list.append(metabolite)
            else:
-              full_metabolite_list.append(isotopomer_object.ref_met.id)
+              full_metabolite_list.append(metabolites)
     
     for metabolites in full_metabolite_list:
        print metabolites

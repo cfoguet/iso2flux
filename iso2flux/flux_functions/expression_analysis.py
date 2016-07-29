@@ -121,12 +121,17 @@ def cplex_create_imat_problem(cobra_model,hex_reactions=[],lex_reactions=[],epsi
      #constraint_limits.append(float(cobra_model.reactions.get_by_id(x).lower_bound)))
       constraint_limits.append(0))
      for x in hex_reactions]
-#CFC added V + xL*Vmax<Vmax
-    [(constraint_sense.append("L"),
-      constraint_names.append(x+"_lexs"),
-      constraint_limits.append(float(cobra_model.reactions.get_by_id(x).upper_bound)))
-     for x in lex_reactions]
-     
+    #CFC added V + xL*Vmax<Vmax
+    for x in lex_reactions:
+         constraint_sense.append("L")
+         constraint_names.append(x+"_lexs")
+         reaction=cobra_model.reactions.get_by_id(x) 
+         if  "reflection" in reaction.notes:
+             reflection=cobra_model.reactions.get_by_id(reaction.notes["reflection"]) 
+             constraint_limits.append(float(max(reaction.upper_bound,reflection.upper_bound)))
+         else:
+             constraint_limits.append(float(reaction.upper_bound))
+      
     constraint_sense.append("E")
     constraint_names.append("imat_objective_cons")
     constraint_limits.append(0)
@@ -156,8 +161,9 @@ def cplex_create_imat_problem(cobra_model,hex_reactions=[],lex_reactions=[],epsi
     for x in lex_reactions:
          imat_variables_list.append(x+"_lexs_var")
          if "reflection" in cobra_model.reactions.get_by_id(x).notes:
+            reflection_id=cobra_model.reactions.get_by_id(x).notes["reflection"]
             variable_list = [x,cobra_model.reactions.get_by_id(x).notes["reflection"],x+"_lexs_var"]
-            coefficient_list = [1,1,(cobra_model.reactions.get_by_id(x).upper_bound-lex_epsilon)]
+            coefficient_list = [1,1,(max(cobra_model.reactions.get_by_id(x).upper_bound,cobra_model.reactions.get_by_id(reflection_id).upper_bound)-lex_epsilon)]
          else: 
             variable_list = [x,x+"_lexs_var"]
             coefficient_list = [1,(cobra_model.reactions.get_by_id(x).upper_bound-lex_epsilon)]
@@ -378,9 +384,9 @@ def guorbi_create_problem_imat(cobra_model,hexs=[],lexs=[],epsilon=1,lex_epsilon
         else:
            the_reverse_reaction=cobra_model.reactions.get_by_id(the_reaction.notes["reflection"])
            #constraint_coefficients = [1,1,(the_reaction.upper_bound)]
-           constraint_coefficients = [1,1,(the_reaction.upper_bound-(lex_epsilon))]
+           constraint_coefficients = [1,1,(max(the_reaction.upper_bound,the_reverse_reaction.upper_bound)-(lex_epsilon))]
            constraint_variables = [reaction_to_variable[the_reaction],reaction_to_variable[the_reverse_reaction],reaction_to_variable[varname]]
-           lp.addConstr(LinExpr(constraint_coefficients, constraint_variables), sense_dict["L"],the_reaction.upper_bound, str(nconstr))   
+           lp.addConstr(LinExpr(constraint_coefficients, constraint_variables), sense_dict["L"],max(the_reaction.upper_bound,the_reverse_reaction.upper_bound), str(nconstr))   
         nconstr=nconstr+1
         imat_objective_constraint_coefficients.append(-1)
         imat_objective_constraint_variables.append(reaction_to_variable[varname])
@@ -549,6 +555,12 @@ def imat_variability(model,hexs,lexs,epsilon,lex_epsilon,fraction_of_optimum=1.0
     if all_reactions:
        fva_list=[]
        for x in model.reactions:
+           if "_reverse" in x.id:
+              continue
+           if "TMS_" in x.id:
+              continue
+           if  "RGROUP_" in x.id:
+              continue
            fva_list.append(x.id) 
     else:
        if check_hex:
@@ -674,11 +686,15 @@ def get_expression(model,file_name="gene_expression_data.xlsx",gene_method="aver
         regular_expression=""
         if gene_prefix=="":
            regular_expression+="^"
+        else:
+           regular_expression+=gene_prefix 
         regular_expression+=geneid
         if gene_sufix=="":
            regular_expression+="$"
-        if gene_sufix==".":
+        elif gene_sufix==".":
            regular_expression+="\." 
+        else:
+           regular_expression+=gene_sufix  
         print regular_expression
         for gene in gene_matches:
             if re.search(regular_expression,gene.id)!=None: 
@@ -873,9 +889,9 @@ def integrate_omics_imat(metabolic_model,gene_expression_file,fraction_of_optimu
    convert_to_irreversible_with_indicators( gene_expression_model,hexs+lexs,metabolite_list=metabolite_list, mutually_exclusive_directionality_constraint = True,label_model=label_model)
    add_turnover_metabolites(gene_expression_model, metabolite_id_list=metabolite_list, epsilon=epsilon,label_model=label_model)
    print gene_expression_model.optimize(solver=solver)
-   objective,status=imat( gene_expression_model,hex_reactions=hexs,lex_reactions=lexs,epsilon=0.1,lex_epsilon=lex_epsilon,objective="imat",imat_lower_bound=0.0,sense="maximize",output=True,solver=solver)
+   objective,status=imat( gene_expression_model,hex_reactions=hexs,lex_reactions=lexs,epsilon=epsilon,lex_epsilon=lex_epsilon,objective="imat",imat_lower_bound=0.0,sense="maximize",output=True,solver=solver)
    print objective,status
-   fva=imat_variability(gene_expression_model,hexs,lexs,epsilon=epsilon,lex_epsilon=lex_epsilon,fraction_of_optimum=imat_fraction_optimum,check_hex=True,all_reactions=False,solver=solver)
+   fva=imat_variability(gene_expression_model,hexs,lexs,epsilon=epsilon,lex_epsilon=lex_epsilon,fraction_of_optimum=imat_fraction_optimum,check_hex=True,all_reactions=True,solver=solver)
    print fva
    if add_as_constraints==True:
      for reaction_id in fva: 
@@ -884,8 +900,19 @@ def integrate_omics_imat(metabolic_model,gene_expression_file,fraction_of_optimu
        upper_bound=fva[reaction_id]["maximum"]
        #reaction.lower_bound=max(round_down(fva[reaction_id]["minimum"],precision),reaction.lower_bound)
        #reaction.upper_bound=min(round_up(fva[reaction_id]["maximum"],precision),reaction.upper_bound)
-       
-       if abs(lower_bound)<=lex_epsilon:
+       reaction.upper_bound=min(round_up(upper_bound,precision),reaction.upper_bound)  
+       reaction.lower_bound=max(round_down(fva[reaction_id]["minimum"],precision),reaction.lower_bound)
+     """if label_model!=None:
+        for group_reaction_id in label_groups_reactions_dict:
+            group_reaction=metabolic_model.reactions.get_by_id(group_reaction_id)
+            lower_bound=0
+            upper_bound=0
+            for group_memeber_id in label_groups_reactions_dict["group_reaction_id"]:
+                group_member_reaction=metabolic_model.reactions.get_by_id(group_memeber_id)
+                coef=label_groups_reactions_dict["group_reaction_id"]["group_memeber_id"]
+                lower_bound+=coef*group_member_reaction.lower_bound
+                upper_bound+=coef*group_member_reaction.lower_bound"""
+     """if abs(lower_bound)<=lex_epsilon:
           reaction.lower_bound=max(0,reaction.lower_bound)
        else:
           reaction.lower_bound=max(round_down(fva[reaction_id]["minimum"],precision),reaction.lower_bound)
@@ -893,8 +920,8 @@ def integrate_omics_imat(metabolic_model,gene_expression_file,fraction_of_optimu
           reaction.upper_bound=min(0,reaction.upper_bound)
        else:
           reaction.upper_bound=min(round_up(upper_bound,precision),reaction.upper_bound)  
-       reaction.objective_coefficient=0.0
-   return hexs,lexs,objective,status, fva
+       reaction.objective_coefficient=0.0"""
+   return hexs,lexs,[objective,int(objective*imat_fraction_optimum)],status, fva
 
 
 def integrate_omics_gim3e(metabolic_model,gene_expression_file,fraction_of_optimum=1,low_expression_threshold=25,absent_gene_expression=50,percentile=True,gene_method="average",gene_prefix="",gene_sufix="",metabolite_list_fname=None,label_model=None,epsilon=0.0001,gim3e_fraction_optimum=0.75,add_as_constraints=True,boundaries_precision=0.001):
@@ -953,6 +980,8 @@ def integrate_omics_gim3e(metabolic_model,gene_expression_file,fraction_of_optim
    if add_as_constraints==True:
      for reaction_id in fva: 
        if reaction_id in metabolic_model.reactions:
+          if "RGROUP_" in reaction_id:
+              continue
           reaction=metabolic_model.reactions.get_by_id(reaction_id)
           lower_bound=fva[reaction_id]["minimum"]#round_down(fva[reaction_id]["minimum"],precision)  
           upper_bound=fva[reaction_id]["maximum"]#round_up(fva[reaction_id]["maximum"],precision)  

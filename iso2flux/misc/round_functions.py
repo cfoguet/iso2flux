@@ -9,6 +9,8 @@ def round_up(number,positions):
 
 
 def round_down(number,positions):
+    if number==0.0:
+       return 0
     exponent=pow(10,positions)
     return math.floor(number*exponent-0.0001)/exponent
     """if new_number==number:

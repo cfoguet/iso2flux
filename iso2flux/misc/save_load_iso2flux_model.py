@@ -9,6 +9,7 @@ import os
 import cobra
 
 def save_iso2flux_model(label_model,name="project",write_sbml=True,ask_sbml_name=False,gui=False):
+   project_name=name
    if gui:
       tk=Tkinter.Tk()
       tk.withdraw()
@@ -20,8 +21,6 @@ def save_iso2flux_model(label_model,name="project",write_sbml=True,ask_sbml_name
          if ".sbml" not in sbml_name:
            sbml_name+=".sbml"
       tk.destroy()
-   else:
-      project_name=name+".iso2flux"
    project_dict={}
    #project_dict["condition_size_yy_dict"]=label_model.condition_size_yy_dict
    #project_dict["condition_size_yy0_dict"]=label_model.condition_size_yy0_dict
@@ -47,11 +46,11 @@ def save_iso2flux_model(label_model,name="project",write_sbml=True,ask_sbml_name
    project_dict["isotopomer_id_metabolite_id_dict"]=label_model.isotopomer_id_metabolite_id_dict
    project_dict["reactions_propagating_label"]=label_model.reactions_propagating_label
    project_dict["label_groups_reactions_dict"]=label_model.label_groups_reactions_dict
-   project_dict["label_groups_reactions_dict"]=label_model.label_groups_reactions_dict
+   #project_dict["label_groups_reactions_dict"]=label_model.label_groups_reactions_dict
    project_dict["p_dict"]=label_model.p_dict
    if write_sbml:
       if ask_sbml_name==False or gui==False:
-         sbml_name=project_name[:-9]+".sbml"
+         sbml_name=project_name[:-9]+"_iso2flux.sbml"
       cobra.io.write_sbml_model(label_model.metabolic_model, sbml_name)
    with open(project_name, 'w') as fp:
          json.dump(project_dict, fp)
@@ -70,13 +69,13 @@ def load_iso2flux_model(project_file="project.iso2flux",sbml_name="project_metab
          sbml_name=loaded_file.name
       tk.destroy()
    if ask_sbml_name==False:
-      sbml_name=project_file[:-9]+".sbml"    
+      sbml_name=project_file[:-9]+"_iso2flux.sbml"   
    metabolic_model=cobra.io.read_sbml_model(sbml_name)
    with open(project_file, 'r') as fp:
          project_dict=json.load(fp)
    loaded_label_model=Label_model(metabolic_model) 
    loaded_label_model.constrained_model=copy.deepcopy(metabolic_model)
-   loaded_label_model.eqn_dir=os.getcwd()+"/equations"#project_dict["eqn_dir"]
+   loaded_label_model.eqn_dir=project_dict["eqn_dir"]#project_dict["eqn_dir"]
    loaded_label_model.reaction_n_dict=project_dict["reaction_n_dict"]
    loaded_label_model.merged_reactions_reactions_dict=project_dict["merged_reactions_reactions_dict"]
    loaded_label_model.force_balance=project_dict["force_balance"]

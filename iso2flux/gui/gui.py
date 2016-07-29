@@ -283,8 +283,8 @@ class GUI:
            else:
               sufix=""
            """
-           prefix=self.label_model.p_dict["gene_prefix"]
-           sufix=self.label_model.p_dict["gene_sufix"]   
+           prefix=self.label_model.p_dict["gene_expression_gene_prefix"]
+           sufix=self.label_model.p_dict["gene_expression_gene_sufix"]   
            hexs,lexs,objective,status, genefva= integrate_omics_imat(self.label_model.constrained_model,excel_name,fraction_of_optimum=self.fraction_of_optimum,low_expression_threshold=low_expression_threshold, high_expression_threshold=high_expression_threshold,percentile=True,gene_method="average",metabolite_list_fname=metabolite_list_fname, epsilon=hex_epsilon,lex_epsilon=lex_epsilon,imat_fraction_optimum=imat_fraction_optimum,label_model=self.label_model,add_as_constraints=True,solver=None,gene_prefix=prefix,gene_sufix=sufix)
            print hexs
            print lexs 
@@ -362,7 +362,7 @@ class GUI:
            """
            prefix=self.label_model.p_dict["gene_expression_gene_prefix"]
            sufix=self.label_model.p_dict["gene_expression_gene_sufix"]  
-           penalty_dict,objective,fva=integrate_omics_gim3e(self.label_model.constrained_model,excel_name,fraction_of_optimum=self.fraction_of_optimum,low_expression_threshold=low_expression_threshold,absent_gene_expression=50,percentile=True,gene_method="average",metabolite_list_fname=metabolite_list_fname,label_model=self.label_model,epsilon=0.0001,gim3e_fraction_optimum=gim3e_fraction_optimum,add_as_constraints=True,boundaries_precision=self.parameter_precision,gene_prefix=prefix,gene_sufix=sufix)
+           penalty_dict,objective,fva=integrate_omics_gim3e(self.label_model.constrained_model,excel_name,fraction_of_optimum=self.fraction_of_optimum,low_expression_threshold=low_expression_threshold,absent_gene_expression=50,percentile=True,gene_method="average",metabolite_list_fname=metabolite_list_fname,label_model=self.label_model,epsilon=0.0001,gim3e_fraction_optimum=gim3e_fraction_optimum,add_as_constraints=True,boundaries_precision=0.01,gene_prefix=prefix,gene_sufix=sufix)
            print penalty_dict
            print objective
            print fva
@@ -860,7 +860,7 @@ class GUI:
           self.root.after_cancel(self.get_ratio_selection_after)
           self.root.after_cancel(self.get_bounds_objective_after)
           self.root.after_cancel(self.update_search_after)
-          self.root.after_cancel(self.get_selected_turnover_after)
+          #self.root.after_cancel(self.get_selected_turnover_after)
           self.root.after_cancel(self.get_selected_reaction_name_after)
           self.root.destroy()
           launch_gui(new_label_model)
@@ -1031,7 +1031,8 @@ class GUI:
           
           
       def reset_all_bounds(self):
-          for reaction_id in self.modified_reactions:
+          self.label_model.constrained_model=copy.deepcopy(self.backup_constrained_model)
+          """for reaction_id in self.modified_reactions:
               #self.boundaries_reaction_selector_listbox.itemconfig(self.inverse_llistafluxos_dict[reaction_id], {'fg': 'black'}) 
               reaction=self.backup_constrained_model.reactions.get_by_id(reaction_id)
               lb=reaction.lower_bound
@@ -1046,7 +1047,7 @@ class GUI:
                  self.boundaries_lb_spinbox.insert(INSERT,str(lb))
                  self.boundaries_ub_spinbox.delete(0,"end")
                  self.boundaries_ub_spinbox.insert(INSERT,str(ub))
-                 self.varoptimizacion.set(int(obj))
+                 self.varoptimizacion.set(int(obj))"""
           self.run_fva()
           self.modified_reactions=[]
           self.label_model.parameter_dict={}
@@ -2256,8 +2257,8 @@ class build_model_gui:
         if ""==self.sbml_entry.get() or ""==self.e_data_entry.get or ""==self.label_rules_entry.get():
              print "Mandatory Input missing"
              return
-        p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 3, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 10, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 20, 'annealing_relative_max_sample': 0.4, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.005, 'parameter_precision': 0.0001, 'fraction_of_optimum': 1, 'lp_tolerance_feasibility': 1e-06, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.25, 'annealing_iterations': 2,"gene_expression_mode":"imat", "gene_expression_low_expression_threshold":25,"gene_expression_high_expression_threshold":75,"gene_expression_percentile":True,"gene_expression_gene_method":"avearge", "gene_expression_gene_sufix":"_AT","gene_expression_gene_prefix":"","gene_expression_epsilon":1, "gene_expression_lex_epsilon":1e-6,"gene_expression_fraction_optimum":1, "gene_expression_absent_gene_expression_value":50}
-        p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 4, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 100, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 10, 'annealing_relative_max_sample': 0.35, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.005, 'parameter_precision': 0.0001, 'fraction_of_optimum': 0, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.2, 'annealing_iterations': 2,"gene_prefix":"gene","gene_sufix":"_AT"}
+        p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 3, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 10, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 20, 'annealing_relative_max_sample': 0.4, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.001, 'parameter_precision': 0.0001, 'fraction_of_optimum': 1, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.25, 'annealing_iterations': 2,"gene_expression_mode":"imat", "gene_expression_low_expression_threshold":25,"gene_expression_high_expression_threshold":75,"gene_expression_percentile":True,"gene_expression_gene_method":"avearge", "gene_expression_gene_sufix":"_AT","gene_expression_gene_prefix":"","gene_expression_epsilon":1, "gene_expression_lex_epsilon":1e-6,"gene_expression_fraction_optimum":1, "gene_expression_absent_gene_expression_value":50}
+        #p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 4, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 100, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 10, 'annealing_relative_max_sample': 0.35, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.005, 'parameter_precision': 0.0001, 'fraction_of_optimum': 0, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.2, 'annealing_iterations': 2,"gene_prefix":"gene","gene_sufix":"_AT"}
         model_file=self.sbml_entry.get()
         if ".sbml" in model_file.lower() or ".xml" in model_file.lower():
             model=cobra.io.read_sbml_model(self.sbml_entry.get())
@@ -2273,7 +2274,12 @@ class build_model_gui:
           print "Settings loaded"
         except:
           pass 
+        project_name = tkFileDialog.asksaveasfilename(title="Save project as...",filetypes=[("iso2flux",".iso2flux")])
+        if ".iso2flux" not in project_name:
+            project_name+=".iso2flux"
         self.label_model=label_model=Label_model(model,lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"],parameter_precision=p_dict["parameter_precision"],reactions_with_forced_turnover=p_dict["reactions_with_forced_turnover"])
+        self.label_model.p_dict=p_dict
+        self.label_model.eqn_dir=project_name[:-9]+"_equations"
         read_isotopomer_model(label_model,self.label_rules_entry.get())
         find_missing_reactions(label_model)
         #loaded_file = tkFileDialog.askopenfile(title='Choose experimental measuments file',filetypes=[("xlsx",".xlsx")]) 
@@ -2281,8 +2287,8 @@ class build_model_gui:
         e_data_names=self.e_data_entry.get().replace("[","").replace("]","").split(",")
         emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,e_data_names,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
         label_model.build(emu_dict0,force_balance=True,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=False,turnover_exclude_EX=p_dict['turnover_exclude_EX'])
-        self.label_model.p_dict=p_dict
-        save_iso2flux_model(label_model,name="project",write_sbml=True,gui=True)
+        
+        save_iso2flux_model(label_model,name=project_name,write_sbml=True,gui=False)
         self.root.destroy()
     
     

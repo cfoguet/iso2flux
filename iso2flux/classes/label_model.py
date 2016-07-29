@@ -85,7 +85,7 @@ class Label_model:
           self.split_reactions_dict={} #unused but keept for compatibility
           self.parameter_dict={}
           self.metabolic_model=model
-          
+          self.eqn_dir="equations"
           self.label_groups_reactions_dict={} #Add to save/load function
           self.reactions_propagating_label=[] #Add to save/load function
           self.p_dict={}

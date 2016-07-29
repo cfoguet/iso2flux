@@ -76,6 +76,9 @@ class build_model_gui:
           print "Settings loaded"
         except:
           pass 
+        project_name = tkFileDialog.asksaveasfilename(title="Save project as...",filetypes=[("iso2flux",".iso2flux")])
+        if ".iso2flux" not in project_name:
+            project_name+=".iso2flux"
         self.label_model=label_model=Label_model(model,lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"],parameter_precision=p_dict["parameter_precision"],reactions_with_forced_turnover=p_dict["reactions_with_forced_turnover"])
         read_isotopomer_model(label_model,self.label_rules_entry.get())
         find_missing_reactions(label_model)
@@ -84,8 +87,8 @@ class build_model_gui:
         e_data_names=self.e_data_entry.get().replace("[","").replace("]","").split(",")
         emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,e_data_names,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
         label_model.build(emu_dict0,force_balance=True,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=False,turnover_exclude_EX=p_dict['turnover_exclude_EX'])
-        
-        save_iso2flux_model(label_model,name="project",write_sbml=True,gui=True)
+        label_model.eqn_dir=project_name[:-9]+"_equations"
+        save_iso2flux_model(label_model,name="project",write_sbml=True,gui=False)
         self.root.destroy()
         
     def __init__(self,root):

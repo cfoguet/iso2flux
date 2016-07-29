@@ -13,11 +13,11 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
          
     """
     external_metabolites_list=[]
-    eq_dir="equations"
-    if not os.path.exists(eq_dir):
-       os.makedirs(eq_dir)
-    os.chdir( eq_dir )
-    label_model.eqn_dir= os.getcwd() 
+    eqn_dir=label_model.eqn_dir
+    if not os.path.exists(eqn_dir):
+       os.makedirs(eqn_dir)
+    os.chdir( eqn_dir )
+    #label_model.eqn_dir= os.getcwd() 
     f=open("__init__.py","w")
     f.write("from . import *")
     f.close()

@@ -35,11 +35,11 @@ def define_reaction_group(model,reaction_dict,group_reaction_id=None,lower_bound
         theoretical_upper_bound+=reaction.upper_bound
         theoretical_lower_bound+=reaction.lower_bound
     if lower_bound==None:
-        group_reaction.lower_bound=round_down(theoretical_lower_bound,2)
+        group_reaction.lower_bound=min(round_down(theoretical_lower_bound,2),-1000)
     else:
         group_reaction.lower_bound=lower_bound
     if upper_bound==None:
-        group_reaction.upper_bound=round_up(theoretical_upper_bound,2)
+        group_reaction.upper_bound=max(round_up(theoretical_upper_bound,2),1000)
     else:
         group_reaction.upper_bound=upper_bound
 

@@ -292,7 +292,7 @@ def estimate_confidence_intervals(label_model,significance=0.95,perturbation=0.1
         save_flux_confidence_interval(label_model,flux_confidence_interval_dict,significance=significance,fn=fname,omit_turnovers=not evaluate_turnovers,parameter_list=None)   
    elif "json" in  fname:
       save_confidence_interval_json(flux_confidence_interval_dict,parameter_confidence_interval_dict,fn=fname)
-   constrained_model=save_sbml_with_confidence_results(label_model,flux_confidence_interval_dict,fname=sbml_name,parameter_dict=best_parameter_dict,full_mode=full_mode,parameter_list=parameter_list)     
+   constrained_model=save_sbml_with_confidence_results(label_model,flux_confidence_interval_dict,fname=sbml_name,parameter_dict=best_parameter_dict,full_mode=full_mode,parameter_list=parameter_list,precision=precision)     
    apply_parameters(label_model,best_parameter_dict,parameter_precision=parameter_precision)
    return parameter_confidence_interval_dict,flux_confidence_interval_dict,parameter_value_parameters_sets_dict,constrained_model
 
@@ -469,7 +469,7 @@ def save_flux_confidence_interval(label_model,flux_confidence_interval_dict={},s
             reaction=label_model.constrained_model.reactions.get_by_id(reaction_id)
             row.append(reaction.name)
             row.append(reaction.reaction)
-      sheet_row_data_dict["confidence"].append(row)      
+         sheet_row_data_dict["confidence"].append(row)      
     write_spreadsheet(file_name=fn,sheet_row_data_dict=sheet_row_data_dict)
 
 
@@ -589,7 +589,7 @@ def get_ratios_bounds(label_model,ratio,perturbation,lp_tolerance_feasibility=1e
     return original_v,lb,ub
 
 
-def save_sbml_with_confidence_results(label_model,flux_confidence_interval_dict,fname=None,parameter_dict={},full_mode=True,parameter_list=[]):
+def save_sbml_with_confidence_results(label_model,flux_confidence_interval_dict,fname=None,parameter_dict={},full_mode=True,parameter_list=[],precision=4):
       print ["sbml",fname]
       clear_parameters(label_model,parameter_dict=parameter_dict,parameter_list=[], clear_ratios=True,clear_turnover=True,clear_fluxes=True,restore_objectives=True)
       model_to_save=copy.deepcopy(label_model.constrained_model)
@@ -597,8 +597,8 @@ def save_sbml_with_confidence_results(label_model,flux_confidence_interval_dict,
         if not full_mode and reaction.id not in parameter_list:
            continue
         if reaction.id in flux_confidence_interval_dict:
-           reaction.lower_bound=flux_confidence_interval_dict[reaction.id]["lb"]
-           reaction.upper_bound=flux_confidence_interval_dict[reaction.id]["ub"]
+           reaction.lower_bound=round_down(flux_confidence_interval_dict[reaction.id]["lb"],precision)
+           reaction.upper_bound=round_up(flux_confidence_interval_dict[reaction.id]["ub"],precision)
       try:
         if fname!=None or fname!="":
            cobra.io.write_sbml_model(model_to_save, fname)

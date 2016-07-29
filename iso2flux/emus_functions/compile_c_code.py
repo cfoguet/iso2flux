@@ -17,7 +17,7 @@ def compile_c_code(label_model,recompile=True,steady_state=True):
     """
     if recompile==False:
        return
-    os.chdir("equations")
+    os.chdir(label_model.eqn_dir)
     for size in label_model.emu_size_dict:
       if steady_state==True:
            theproc = subprocess.Popen([sys.executable, 'emu_equations_size%s_setup.py'%(size), 'build_ext','--inplace'])
