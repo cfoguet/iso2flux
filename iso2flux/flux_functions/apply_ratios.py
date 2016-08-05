@@ -6,10 +6,13 @@ def apply_ratios(constrained_model,ratio_dict):
             ratio_reaction=constrained_model.reactions.get_by_id("RATIO_"+ratio)
             for flux in ratio_dict[ratio]:
                 flux_metabolite=constrained_model.metabolites.get_by_id(ratio+"_"+flux)
-                coef=ratio_reaction.metabolites[flux_metabolite]
-                if coef!=-ratio_dict[ratio][flux]:
-                   deltacoef=-ratio_dict[ratio][flux]-coef
-                   ratio_reaction.add_metabolites({flux_metabolite:deltacoef}) 
+                if flux_metabolite not in ratio_reaction.metabolites:
+                   ratio_reaction.add_metabolites({flux_metabolite:-ratio_dict[ratio][flux]}) 
+                else:
+                   coef=ratio_reaction.metabolites[flux_metabolite]
+                   if coef!=-ratio_dict[ratio][flux]:
+                      deltacoef=-ratio_dict[ratio][flux]-coef
+                      ratio_reaction.add_metabolites({flux_metabolite:deltacoef}) 
          else:
             metabolite_dict={}
             for flux in ratio_dict[ratio]:

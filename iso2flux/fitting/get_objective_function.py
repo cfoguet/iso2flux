@@ -1,7 +1,15 @@
-def get_objective_function(label_model,force_balance=True,output=False,condition_size_yy_dict=None,rsm="dynamic"):
+def get_objective_function(label_model,output=False,condition_size_yy_dict=None,rsm="dynamic",force_balance=True):
     """
-    rsm, dynamic, always or never
+    Computes computes square deviation normalized by standard deviation between the experimentally determined and simulated isotoplogues fractions
+    label_model: label_model object
+    output:boolean, optional
+		If true it will print in the terminal the square deviation associated to each measurment 
+    condition_size_yy_dict: dict,optional
+		Provides the simulated isotopologue distributions. If it is None it will take the distribution stored in the label_model object
+    rsm: string,optional:
+         Indicates how the fucntion should deal with experimental measurments that have the m/Sm flag. It can either be "dynamic" (only compute m/Sm when experimental m0>simulated m0), always (always compute m/Sm) or never (never compute m/Sm). Default is dynamic	  
     """
+    force_balance=label_model.force_balance
     if condition_size_yy_dict==None:
        condition_size_yy_dict=label_model.condition_size_yy_dict
     label_model.objective_function_dict={}
@@ -29,6 +37,10 @@ def get_objective_function(label_model,force_balance=True,output=False,condition
                    label_model.condition_simulation_results_dict[condition][emu][n]=sim
                    if n!=0:
                       total_label+=sim
+                else:
+                   if emu not in label_model.condition_simulation_results_dict[condition]:
+                      label_model.condition_simulation_results_dict[condition][emu]={}
+                   label_model.condition_simulation_results_dict[condition][emu][n]=0.0 
             if force_balance==True:
                label_model.condition_simulation_results_dict[condition][emu][0]=1-total_label
             if emu in label_model.rsm_list and rsm!="never": #TODO change it to be a property of experimental data dict

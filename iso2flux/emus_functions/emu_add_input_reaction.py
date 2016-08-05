@@ -1,5 +1,8 @@
 from cobra import Model, Reaction, Metabolite
 def emu_add_input_reaction(label_model,reaction):
+    """
+    currenntly unnused
+    """
     product_coef_dict={}
     for metabolite in reaction.metabolites:
         same_pool=False

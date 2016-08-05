@@ -5,7 +5,8 @@ import json
 import tkFileDialog
 import math
 import numpy
-
+import os
+import sys
 #Ilabel imports
 import cobra
 from cobra.flux_analysis.variability import flux_variability_analysis
@@ -19,6 +20,7 @@ from ..output_functions.model_to_excel import model_to_excel
 from ..output_functions.showr import showr
 from ..output_functions.write_fva import write_fva
 from ..output_functions.print_emu_results import  print_emu_results
+from ..output_functions.convert_model_to_spreadsheet import  convert_model_to_spreadsheet
 from ..output_functions.export_constraints import export_constraints
 from ..output_functions.export_label_results import export_label_results
 from ..input_functions.read_constraints import read_flux_constraints 
@@ -40,8 +42,20 @@ from ..fitting.confidence_intervals import estimate_confidence_intervals
 from ..flux_functions.minimal_flux import add_flux_limit_constraints
 
 from ..doc.open_manual import open_manual
+from ..classes.label_model import Label_model #Import the label_model class
 
 from cobra.flux_analysis.parsimonious import optimize_minimal_flux
+
+from ..label_propagation_functions.find_missing_reactions import find_missing_reactions
+from ..input_functions.read_experimental_mid import read_experimental_mid
+from ..input_functions.read_isotopomer_model import read_isotopomer_model
+from ..input_functions.read_constraints import read_flux_constraints 
+from ..input_functions.read_isotoflux_settings import read_isotoflux_settings
+from ..input_functions.create_cobra_model_from_file import create_cobra_model_from_file
+from ..misc.write_spreadsheet import write_spreadsheet
+from ..misc.read_spreadsheets import read_spreadsheets
+from ..misc.check_steady_state import check_steady_state
+from ..misc.check_simulated_fractions import check_simulated_fractions
 
 if __name__=="__main__":
    #from ilabel.fitting.anneal import annealing
@@ -68,9 +82,9 @@ class GUI:
       def add_menubar(self):
           menubar = Menu(self.root)
           filemenu = Menu(menubar, tearoff=0)
-          filemenu.add_command(label="Reset model", command=self.reset_model)
-          filemenu.add_command(label="Load Model", command=self.load_model) #TODO Swicth to load model
-          filemenu.add_command(label="Save Model", command=self.save_model) #TODO Swicth to save model
+          filemenu.add_command(label="Reset", command=self.reset_model)
+          filemenu.add_command(label="Load", command=self.load_model) #TODO Swicth to load model
+          filemenu.add_command(label="Save", command=self.save_model) #TODO Swicth to save model
           #TODO Save constraints/Load constraints
           menubar.add_cascade(label="File", menu=filemenu)
           fittingmenu = Menu(menubar, tearoff=0)
@@ -91,13 +105,13 @@ class GUI:
           gene_expression_menu = Menu(menubar, tearoff=0)
           if "cplex" in solver_dict or "gurobi" in solver_dict: #Only add the optin if there are the righ solvers to run the program
               gene_expression_menu.add_command(label="iMAT", command=self.create_imat_window)
-          gene_expression_menu.add_command(label="gim3e", command=self.create_gim3e_window)
+          gene_expression_menu.add_command(label="GIM3E", command=self.create_gim3e_window)
           add_constrain_menu.add_cascade(label="Integrate gene expression",menu=gene_expression_menu)
           
           export_menu = Menu(menubar, tearoff=0)           
           export_menu.add_command(label="Export Fluxes", command=self.export_fluxes)
           export_menu.add_command(label="Export Constraints", command=self.export_constraints)
-          export_menu.add_command(label="Export SBML model", command=self.export_sbml) #TODO ADD EXPORT IMPORT CONTRAINTS
+          export_menu.add_command(label="Export model", command=self.export_model) 
           export_menu.add_command(label="Export label simulation results", command=self.export_label)
           menubar.add_cascade(label="Export", menu=export_menu)
           
@@ -172,7 +186,7 @@ class GUI:
           
           
       def get_gene_expression_file(self):
-          loaded_file = tkFileDialog.askopenfile(title='Choose a file',filetypes=[("xlsx",".xlsx")]) 
+          loaded_file = tkFileDialog.askopenfile(title='Choose a file',filetypes=[("xlsx","*.xlsx"),("csv","*.csv"),('All files','*.*')]) 
           file_name=loaded_file.name    
           self.gene_expression_file_entry.delete(0, END)
           self.gene_expression_file_entry.insert(0, file_name)
@@ -190,7 +204,7 @@ class GUI:
           top.title="iMAT"
           low_expression_threshold_frame=Frame(top)
           low_expression_threshold_frame.pack(side=TOP)
-          Label(low_expression_threshold_frame,text="low expression percentile").pack(side=LEFT)
+          Label(low_expression_threshold_frame,text="Low expression percentile").pack(side=LEFT)
           self.low_expression_threshold_entry=Entry(low_expression_threshold_frame)
           self.low_expression_threshold_entry.delete(0, END)
           self.low_expression_threshold_entry.insert(0, 25) 
@@ -198,7 +212,7 @@ class GUI:
           
           high_expression_threshold_frame=Frame(top)
           high_expression_threshold_frame.pack(side=TOP)
-          Label(high_expression_threshold_frame,text="high expression percentile").pack(side=LEFT)
+          Label(high_expression_threshold_frame,text="High expression percentile").pack(side=LEFT)
           self.high_expression_threshold_entry=Entry(high_expression_threshold_frame)
           self.high_expression_threshold_entry.delete(0, END)
           self.high_expression_threshold_entry.insert(0, 75) 
@@ -206,7 +220,7 @@ class GUI:
           
           hex_epsilon_frame=Frame(top)
           hex_epsilon_frame.pack(side=TOP)
-          Label(hex_epsilon_frame,text="hex epsilon").pack(side=LEFT)
+          Label(hex_epsilon_frame,text="Epsilon").pack(side=LEFT)
           self.hex_epsilon_entry=Entry(hex_epsilon_frame)
           self.hex_epsilon_entry.delete(0, END)
           self.hex_epsilon_entry.insert(0, 1) 
@@ -229,7 +243,7 @@ class GUI:
                     
           gene_expression_file_frame=Frame(top)
           gene_expression_file_frame.pack(side=TOP)
-          Label(gene_expression_file_frame,text="gene_expression file").pack(side=LEFT)
+          Label(gene_expression_file_frame,text="Gene expression file").pack(side=LEFT)
           self.gene_expression_file_entry=Entry(gene_expression_file_frame)
           self.gene_expression_file_entry.delete(0, END)
           self.gene_expression_file_entry.insert(0, "") 
@@ -239,7 +253,7 @@ class GUI:
           
           metabolomics_file_frame=Frame(top)
           metabolomics_file_frame.pack(side=TOP)
-          Label(metabolomics_file_frame,text="metabolomics file").pack(side=LEFT)
+          Label(metabolomics_file_frame,text="Metabolomics file").pack(side=LEFT)
           self.metabolomics_file_entry=Entry(metabolomics_file_frame)
           self.metabolomics_file_entry.delete(0, END)
           self.metabolomics_file_entry.insert(0, "") 
@@ -258,7 +272,7 @@ class GUI:
            imat_fraction_optimum=float(self.imat_fraction_optimum_entry.get())
            excel_name=self.gene_expression_file_entry.get()
            metabolite_list_fname=self.metabolomics_file_entry.get()
-           if metabolite_list_fname=="":
+           """if metabolite_list_fname=="":
               metabolite_list_fname=None
            if "G_" in self.label_model.metabolic_model.genes[0].id:
               prefix="G_"
@@ -267,10 +281,14 @@ class GUI:
            if "_AT" in self.label_model.metabolic_model.genes[0].id:
               sufix="_AT"
            else:
-              sufix=""   
-           integrate_omics_imat(self.label_model.constrained_model,excel_name,fraction_of_optimum=self.fraction_of_optimum,low_expression_threshold=low_expression_threshold, high_expression_threshold=high_expression_threshold,percentile=True,gene_method="average",metabolite_list_fname=metabolite_list_fname, epsilon=hex_epsilon,lex_epsilon=lex_epsilon,imat_fraction_optimum=imat_fraction_optimum,label_model=self.label_model,add_as_constraints=True,solver=None,gene_prefix=prefix,gene_sufix=sufix)
-           
-           
+              sufix=""
+           """
+           prefix=self.label_model.p_dict["gene_expression_gene_prefix"]
+           sufix=self.label_model.p_dict["gene_expression_gene_sufix"]   
+           hexs,lexs,objective,status, genefva= integrate_omics_imat(self.label_model.constrained_model,excel_name,fraction_of_optimum=self.fraction_of_optimum,low_expression_threshold=low_expression_threshold, high_expression_threshold=high_expression_threshold,percentile=True,gene_method="average",metabolite_list_fname=metabolite_list_fname, epsilon=hex_epsilon,lex_epsilon=lex_epsilon,imat_fraction_optimum=imat_fraction_optimum,label_model=self.label_model,add_as_constraints=True,solver=None,gene_prefix=prefix,gene_sufix=sufix)
+           print hexs
+           print lexs 
+           print objective
            reaction_id=self.active_reaction_get_bounds
            reaction=self.label_model.constrained_model.reactions.get_by_id(reaction_id)
            self.boundaries_lb_spinbox.delete(0,"end")
@@ -287,7 +305,7 @@ class GUI:
           top.title="gim3e"
           low_expression_threshold_frame=Frame(top)
           low_expression_threshold_frame.pack(side=TOP)
-          Label(low_expression_threshold_frame,text="low expression percentile").pack(side=LEFT)
+          Label(low_expression_threshold_frame,text="Low expression percentile").pack(side=LEFT)
           self.low_expression_threshold_entry=Entry(low_expression_threshold_frame)
           self.low_expression_threshold_entry.delete(0, END)
           self.low_expression_threshold_entry.insert(0, 25) 
@@ -304,7 +322,7 @@ class GUI:
           
           gene_expression_file_frame=Frame(top)
           gene_expression_file_frame.pack(side=TOP)
-          Label(gene_expression_file_frame,text="gene_expression file").pack(side=LEFT)
+          Label(gene_expression_file_frame,text="Gene expression file").pack(side=LEFT)
           self.gene_expression_file_entry=Entry(gene_expression_file_frame)
           self.gene_expression_file_entry.delete(0, END)
           self.gene_expression_file_entry.insert(0, "") 
@@ -314,7 +332,7 @@ class GUI:
           
           metabolomics_file_frame=Frame(top)
           metabolomics_file_frame.pack(side=TOP)
-          Label(metabolomics_file_frame,text="metabolomics file").pack(side=LEFT)
+          Label(metabolomics_file_frame,text="Metabolomics file").pack(side=LEFT)
           self.metabolomics_file_entry=Entry(metabolomics_file_frame)
           self.metabolomics_file_entry.delete(0, END)
           self.metabolomics_file_entry.insert(0, "") 
@@ -331,7 +349,7 @@ class GUI:
            gim3e_fraction_optimum=float(self.gim3e_fraction_optimum_entry.get())
            excel_name=self.gene_expression_file_entry.get()
            metabolite_list_fname=self.metabolomics_file_entry.get()
-           if metabolite_list_fname=="":
+           """if metabolite_list_fname=="":
               metabolite_list_fname=None
            if "G_" in self.label_model.metabolic_model.genes[0].id:
               prefix="G_"
@@ -341,7 +359,10 @@ class GUI:
               sufix="_AT"
            else:
               sufix=""  
-           penalty_dict,objective,fva=integrate_omics_gim3e(self.label_model.constrained_model,excel_name,fraction_of_optimum=self.fraction_of_optimum,low_expression_threshold=low_expression_threshold,absent_gene_expression=50,percentile=True,gene_method="average",metabolite_list_fname=metabolite_list_fname,label_model=self.label_model,epsilon=0.0001,gim3e_fraction_optimum=gim3e_fraction_optimum,add_as_constraints=True,boundaries_precision=self.parameter_precision,gene_prefix=prefix,gene_sufix=sufix)
+           """
+           prefix=self.label_model.p_dict["gene_expression_gene_prefix"]
+           sufix=self.label_model.p_dict["gene_expression_gene_sufix"]  
+           penalty_dict,objective,fva=integrate_omics_gim3e(self.label_model.constrained_model,excel_name,fraction_of_optimum=self.fraction_of_optimum,low_expression_threshold=low_expression_threshold,absent_gene_expression=50,percentile=True,gene_method="average",metabolite_list_fname=metabolite_list_fname,label_model=self.label_model,epsilon=0.0001,gim3e_fraction_optimum=gim3e_fraction_optimum,add_as_constraints=True,boundaries_precision=0.01,gene_prefix=prefix,gene_sufix=sufix)
            print penalty_dict
            print objective
            print fva
@@ -439,8 +460,8 @@ class GUI:
           self.add_turnover_flag.set(1)
           text=Label(top,text="Automatically add:")
           text.pack(side = TOP)
-          C1 = Checkbutton(top, text = "free fluxes as parameters", variable = self.add_fluxes_flag,onvalue = 1, offvalue = 0)
-          C2 = Checkbutton(top, text = "turnover fluxes as parameters", variable = self.add_turnover_flag,onvalue = 1, offvalue = 0)
+          C1 = Checkbutton(top, text = "Free fluxes as parameters", variable = self.add_fluxes_flag,onvalue = 1, offvalue = 0)
+          C2 = Checkbutton(top, text = "Reversible turnover fluxes as parameters", variable = self.add_turnover_flag,onvalue = 1, offvalue = 0)
           C1.pack()
           C2.pack()
           abutton=Button(top, text="Accept",command=self.add_parameters)
@@ -550,10 +571,10 @@ class GUI:
           
           signficance_level_frame=Frame(confidence_parameters_frame)
           signficance_level_frame.pack(side=TOP)
-          Label(signficance_level_frame,text="significance level").pack(side=LEFT)
+          Label(signficance_level_frame,text="Significance Level").pack(side=LEFT)
           self.signficance_level_frame_entry=Entry(signficance_level_frame)
           self.signficance_level_frame_entry.delete(0, END)
-          self.signficance_level_frame_entry.insert(0, 0.95) 
+          self.signficance_level_frame_entry.insert(0, self.label_model.p_dict['confidence_significance']*100) 
           self.signficance_level_frame_entry.pack(side=LEFT)
           
           setp_size_frame=Frame(confidence_parameters_frame)
@@ -638,7 +659,17 @@ class GUI:
           self.min_sampleframe_confidence_entry.insert(0, int(len(self.label_model.parameter_dict)*self.relative_min_random_sample)) 
           self.min_sampleframe_confidence_entry.pack(side=LEFT)
           
-          select_parameters_frame=LabelFrame(top,text="Select Parameters")    
+          self.confidence_sbml = IntVar()
+          self.confidence_constraint = IntVar()
+          check_confidence_sbml=Checkbutton(top, text = "Save SBML", variable = self.confidence_sbml,onvalue = 1, offvalue = 0)
+          check_confidence_constraint=Checkbutton(top, text = "Add results as constraints", variable = self.confidence_constraint,onvalue = 1, offvalue = 0)
+          evaluate_all_button = Button(top, text="Evaluate all fluxes",command=self.confidence_start_warning)
+          evaluate_specific_button = Button(top, text="Evaluate specific fluxes & ratios",command=self.confidence_select_fluxes)
+          check_confidence_sbml.pack(side=TOP)
+          check_confidence_constraint.pack(side=TOP)
+          evaluate_all_button.pack(side=TOP)
+          evaluate_specific_button.pack(side=TOP) 
+          """select_parameters_frame=LabelFrame(top,text="Select Parameters")    
           select_parameters_frame.pack(side=TOP)
           
           all_parameter_frame=LabelFrame(select_parameters_frame,text="Parameters")   
@@ -675,14 +706,14 @@ class GUI:
           confidence_added_parameter_selector_listbox.pack( side = RIGHT, fill = BOTH ,expand="yes")
           added_parameter_selector_scrollbar.config( command = confidence_added_parameter_selector_listbox.yview )
           remove_parameter_button = Button(added_parameter_frame, text="Remove selected",command=self.confidence_remove_selected)
-          remove_parameter_button.pack( side = TOP)
+          remove_parameter_button.pack( side = TOP)"""
           
           self.confidence_selected_parameters=[]
           
-          button01 = Button(top, text="Start",command=self.confidence_start_warning)
-          button01.pack( side = TOP)
+          #button01 = Button(top, text="Start",command=self.confidence_start_warning)
+          #button01.pack( side = TOP)
           
-      def confidence_add_parameter(self):
+      """def confidence_add_parameter(self):
           selection=self.confidence_parameter_selector_listbox.curselection()
           if selection!=():
              parameter=self.confidence_parameter_selector_listbox.get(selection[0])
@@ -701,8 +732,24 @@ class GUI:
           if selection!=():
              parameter=self.confidence_added_parameter_selector_listbox.get(selection[0])
              self.confidence_selected_parameters.remove(parameter)
-             self.confidence_added_parameter_selector_listbox.delete(selection)
+             self.confidence_added_parameter_selector_listbox.delete(selection)"""
       
+      def confidence_select_fluxes(self):
+          data_rows_dict=read_spreadsheets(file_names=None,csv_delimiter=',',more_than_1=True,tkinter_title="Chose the file with reaction ID or ratios that should be evaluated")
+          for data in data_rows_dict:
+              for row in data_rows_dict[data]:
+                  for element in row:
+                      if element in self.confidence_selected_parameters:
+                         continue 
+                      if element in self.label_model.constrained_model.reactions:
+                         self.confidence_selected_parameters.append(element)
+                      elif "/" in element:
+                          element_list=element.split("/")
+                          if element_list[0] in self.label_model.constrained_model.reactions and element_list[1] in self.label_model.constrained_model.reactions:
+                             self.confidence_selected_parameters.append(element)
+          self.confidence_start_warning()  
+      
+          
       def confidence_start_warning(self):
           self.confidence_warning_window=top=Toplevel()      
           self.confidence_warning_window.title("Warning")
@@ -717,7 +764,7 @@ class GUI:
       
       def calculate_confidence_intervals(self):
           parameter_list=self.confidence_selected_parameters
-          signficance=float(self.signficance_level_frame_entry.get())
+          signficance=float(self.signficance_level_frame_entry.get())/100.0
           n_perturbations=200
           setp_size=float(self.setp_size_entry.get())/100.0
           minimum_perturbation=self.change_threshold
@@ -730,14 +777,19 @@ class GUI:
           self.annealing_pf=annealing_pf=float(self.pfframe_confidence_entry.get())
           output=True
           self.annealing_n_processes=annealing_n_processes=int(self.n_process_confidence_entry.get())
-          annealing_cycle_time_limit=(annealing_m*50)
+          annealing_cycle_time_limit=self.label_model.p_dict['annealing_cycle_time_limit']#(annealing_m*50)
           annealing_cycle_max_attempts=5
           self.create_waiting_window() 
           self.confidence_warning_window.destroy()
           self.root.update_idletasks()
-          if len(parameter_list)>0:
-             fname = tkFileDialog.asksaveasfilename(parent=self.root,title="Save results as...",filetypes=[("xlsx","*.xlsx"),("csv","*.csv")],defaultextension=".csv")
-             parameter_confidence_interval_dict , flux_confidence_interval_dict, chi_parameters_sets_dict =estimate_confidence_intervals(self.label_model,significance=signficance,perturbation=setp_size,min_absolute_perturbation=0.01,max_absolute_perturbation=25,parameter_precision=self.parameter_precision,best_parameter_dict=self.label_model.parameter_dict,parameter_list=parameter_list,fraction_of_optimum=self.fraction_of_optimum,relative_max_random_sample=relative_max_random_sample, relative_min_random_sample= relative_min_random_sample,annealing_n=annealing_n,annealing_m=annealing_m,annealing_p0=annealing_p0,annealing_pf=annealing_pf,output=output,annealing_n_processes=annealing_n_processes,annealing_cycle_time_limit=annealing_cycle_time_limit, annealing_cycle_max_attempts=annealing_cycle_max_attempts,fname=fname)
+          fname = tkFileDialog.asksaveasfilename(parent=self.root,title="Save results as...",filetypes=[("xlsx","*.xlsx"),("csv","*.csv")],defaultextension=".csv")
+          if self.confidence_sbml.get()==1:
+                sbml_name = tkFileDialog.asksaveasfilename(parent=self.root,title="Save SBML as...",filetypes=[("SBML","*.sbml"),("XML","*.xml")])
+          else:
+                sbml_name=None 
+          parameter_confidence_interval_dict , flux_confidence_interval_dict, chi_parameters_sets_dict,constrained_model =estimate_confidence_intervals(self.label_model,significance=signficance,perturbation=setp_size,min_absolute_perturbation=0.01,max_absolute_perturbation=self.label_model.p_dict["confidence_max_absolute_perturbation"],parameter_precision=self.parameter_precision,best_parameter_dict=self.label_model.parameter_dict,parameter_list=parameter_list,fraction_of_optimum=self.fraction_of_optimum,relative_max_random_sample=relative_max_random_sample, relative_min_random_sample= relative_min_random_sample,annealing_n=annealing_n,annealing_m=annealing_m,annealing_p0=annealing_p0,annealing_pf=annealing_pf,output=output,annealing_n_processes=annealing_n_processes,annealing_cycle_time_limit=annealing_cycle_time_limit, annealing_cycle_max_attempts=annealing_cycle_max_attempts,fname=fname,sbml_name=sbml_name,annealing_iterations=self.label_model.p_dict["annealing_iterations"])
+          if self.confidence_constraint.get()==1:
+             self.label_model.constrained_model=constrained_model
           self.waiting.destroy()
           self.confidence_window.destroy()
               
@@ -770,7 +822,7 @@ class GUI:
           self.annealing_n=n=int(self.nframeentry.get())
           self.annealing_m=m=int(self.mframeentry.get())
           fraction_of_optimum=float(self.fraction_of_optimum)
-          max_perturbation=2#float(self.max_perturbationframeentry.get())
+          max_perturbation=self.label_model.p_dict['annealing_max_perturbation']#2#float(self.max_perturbationframeentry.get())
           max_sample=min(int(self.max_sampleframeentry.get()),len(self.label_model.parameter_dict))
           min_sample=min(int(self.min_sampleframeentry.get()),len(self.label_model.parameter_dict))
           self.relative_max_random_sample=float(max_sample)/len(self.label_model.parameter_dict)
@@ -808,7 +860,7 @@ class GUI:
           self.root.after_cancel(self.get_ratio_selection_after)
           self.root.after_cancel(self.get_bounds_objective_after)
           self.root.after_cancel(self.update_search_after)
-          self.root.after_cancel(self.get_selected_turnover_after)
+          #self.root.after_cancel(self.get_selected_turnover_after)
           self.root.after_cancel(self.get_selected_reaction_name_after)
           self.root.destroy()
           launch_gui(new_label_model)
@@ -979,7 +1031,8 @@ class GUI:
           
           
       def reset_all_bounds(self):
-          for reaction_id in self.modified_reactions:
+          self.label_model.constrained_model=copy.deepcopy(self.backup_constrained_model)
+          """for reaction_id in self.modified_reactions:
               #self.boundaries_reaction_selector_listbox.itemconfig(self.inverse_llistafluxos_dict[reaction_id], {'fg': 'black'}) 
               reaction=self.backup_constrained_model.reactions.get_by_id(reaction_id)
               lb=reaction.lower_bound
@@ -994,7 +1047,7 @@ class GUI:
                  self.boundaries_lb_spinbox.insert(INSERT,str(lb))
                  self.boundaries_ub_spinbox.delete(0,"end")
                  self.boundaries_ub_spinbox.insert(INSERT,str(ub))
-                 self.varoptimizacion.set(int(obj))
+                 self.varoptimizacion.set(int(obj))"""
           self.run_fva()
           self.modified_reactions=[]
           self.label_model.parameter_dict={}
@@ -1322,8 +1375,8 @@ class GUI:
          self.boundaries_lb_turnover_spinbox = Spinbox(sublabelframe_turnover_boundaries_lb, from_=0, to=99999, increment = 0.01, format="%.2f", width = 7)
          self.boundaries_lb_turnover_spinbox.pack( side = LEFT)
          
-         self.sublabelframe_turnover_rid = Label(frame_turnover_boundaries,width=2*(self.average_width+1))
-         self.sublabelframe_turnover_rid.config(text ="turnover")
+         self.sublabelframe_turnover_rid = Label(frame_turnover_boundaries)
+         self.sublabelframe_turnover_rid.config(text ="Reversible turnover")
          
          sublabelframe_turnover_ub = Frame( frame_turnover_boundaries)
          self.boundaries_ub_turnover_spinbox = Spinbox(sublabelframe_turnover_ub, from_=-99999, to=99999, increment = 0.01, format="%.2f", width = 7)
@@ -1500,8 +1553,8 @@ class GUI:
          scrollbar614.pack( side = TOP, fill=X,expand=False) 
          scrollbar611.config( command = self.fva_listbox.yview ) 
          scrollbar614.config( command = self.fva_listbox.xview ) 
-         add_parameter_button = Button(label_frame_fva, text="Add selected flux as parameter",command=self.add_parameter)
-         add_parameter_button.pack( side = TOP)
+         #add_parameter_button = Button(label_frame_fva, text="Add selected flux as parameter",command=self.add_parameter)
+         #add_parameter_button.pack( side = TOP)
          #add_parameter_button = Button(label_frame_fva, text="automatically\nadd parameters",command=self.add_all_parameters)
          #add_parameter_button.pack( side = TOP)
          
@@ -1518,10 +1571,11 @@ class GUI:
              reaction_id=self.active_reaction_get_bounds
              reaction=self.label_model.constrained_model.reactions.get_by_id(reaction_id)
              if reaction_id not in self.label_model.parameter_dict:
-                fva=flux_variability_analysis(self.label_model.constrained_model,fraction_of_optimum=self.fraction_of_optimum,reaction_list=[reaction_id],tolerance_feasibility=label_model.lp_tolerance_feasibility)
+                fva=flux_variability_analysis(self.label_model.constrained_model,fraction_of_optimum=self.fraction_of_optimum,reaction_list=[reaction_id],tolerance_feasibility=self.label_model.lp_tolerance_feasibility)
                 minimum=fva[reaction_id]["minimum"] 
                 maximum=fva[reaction_id]["maximum"]
                 value=round((19*minimum+1*maximum)/20,5) #Weighted average
+                model=self.label_model.constrained_model
                 self.label_model.parameter_dict[reaction_id]={"v":value,"lb":model.reactions.get_by_id(reaction_id).lower_bound,"ub":model.reactions.get_by_id(reaction_id).upper_bound, "type":"flux value","reactions":[reaction_id] ,"max_d":0.1,"original_lb":model.reactions.get_by_id(reaction_id).lower_bound,"original_ub":model.reactions.get_by_id(reaction_id).upper_bound,"original_objective_coefficient":model.reactions.get_by_id(reaction_id).objective_coefficient}
                 apply_parameters(self.label_model,parameter_precision=self.parameter_precision,parameter_list=[reaction_id])
                 self.parameter_button.config(text="Remove from parameters")
@@ -1556,7 +1610,7 @@ class GUI:
       
       def add_all_parameters(self):
           #self.change_threshold=max(float( self.threshold_change_entry.get()),self.parameter_precision)
-          parameters=identify_free_parameters(self.label_model,parameter_dict={},n_samples=200,add_to_model=True,parameter_precision=self.parameter_precision,change_threshold=self.change_threshold,fraction_of_optimum=self.fraction_of_optimum,max_d=0.1,key_reactions=[],add_turnover=False,excluded_turnovers=[],turnover_upper_bound=1000,debug=True)
+          parameters=identify_free_parameters(self.label_model,parameter_dict={},n_samples=self.label_model.p_dict["identify_free_parameters_n_samples"],add_to_model=True,parameter_precision=self.parameter_precision,change_threshold=self.change_threshold,fraction_of_optimum=self.fraction_of_optimum,max_d=0.1,key_reactions=[],add_turnover=False,excluded_turnovers=[],turnover_upper_bound=1000,debug=True)
           reaction=self.label_model.constrained_model.reactions.get_by_id(self.active_reaction_get_bounds)
           self.boundaries_lb_spinbox.delete(0,"end")
           self.boundaries_lb_spinbox.insert(INSERT,str(reaction.lower_bound))
@@ -1577,10 +1631,12 @@ class GUI:
                 write_fva(self.label_model.constrained_model, fn=fileName,fraction=self.fraction_of_optimum,remove0=False,change_threshold=10*self.parameter_precision, mode="reduced", lp_tolerance_feasibility=self.label_model.lp_tolerance_feasibility)
       
           
-      def export_sbml(self):
-           fileName = tkFileDialog.asksaveasfilename(parent=self.root,title="Save model with constrains as...",filetypes=[("sbml",".sbml"),("xml",".xml")],defaultextension=".sbml")
-           if len(fileName)>0:
-              cobra.io.write_sbml_model(self.label_model.constrained_model, fileName) 
+      def export_model(self):
+           fileName = tkFileDialog.asksaveasfilename(parent=self.root,title="Save model with constrains as...",filetypes=[("sbml","*.sbml"),("xml","*.xml"),("xlsx","*.xlsx"),("csv","*.csv")])
+           if ".sbml" in fileName or ".xml" in fileName:
+              cobra.io.write_sbml_model(self.label_model.constrained_model, fileName)
+           else:
+              convert_model_to_spreadsheet(self.label_model.constrained_model,fileName) 
       
       def export_label(self):
            fileName = tkFileDialog.asksaveasfilename(parent=self.root,title="Save label simulation results as...",filetypes=[("xlsx",".xlsx"),("csv",".csv")],defaultextension=".csv")
@@ -1955,7 +2011,7 @@ class GUI:
           self.label_model.parameter_dict={}
           self.run_fva() 
           self.view_parameters_window.destroy()  
-          self.highlight_modified(self.turnover_selector_listbox,self.modified_turnovers)  
+          #self.highlight_modified(self.turnover_selector_listbox,self.modified_turnovers)  
           self.highlight_modified(self.boundaries_reaction_selector_listbox,self.modified_reactions)
           self.update_fva_listbox()
       
@@ -2060,8 +2116,9 @@ class GUI:
           self.root.protocol("WM_DELETE_WINDOW",self.restore_original_parameters)
           self.label_model=label_model
           self.parameter_precision=label_model.parameter_precision
-          self.change_threshold=label_model.parameter_precision*10
-          root.title("iso2flux GUI")
+          print self.label_model.p_dict
+          self.change_threshold=self.label_model.p_dict["identify_free_parameters_change_threshold"]
+          root.title(self.label_model.project_name)
           self.label_model.constrained_model=label_model.constrained_model
           self.backup_constrained_model=copy.deepcopy(label_model.constrained_model) #Used to restore bounds and objectives
           self.backup_turnover_flux_dict=copy.deepcopy(label_model.turnover_flux_dict) #Used to restore bounds and objectives
@@ -2083,19 +2140,19 @@ class GUI:
           self.waiting_for_fva=False
           self.waiting_for_label_simulation=True
           self.reseting_bounds=False
-          self.fraction_of_optimum=1
+          self.fraction_of_optimum=self.label_model.p_dict["fraction_of_optimum"]
           self.force_bounds_update=False 
           self.waiting_for_parameters=False
           self.fitted_parameters=True
           self.llistafluxos=[]
           #Default annealing parameters
-          self.annealing_n=10
-          self.annealing_m=500
-          self.annealing_p0=0.4
-          self.annealing_pf=0.01
-          self.annealing_n_processes=1
-          self.relative_max_random_sample=0.5
-          self.relative_min_random_sample=0.5
+          self.annealing_n=self.label_model.p_dict["annealing_n"]
+          self.annealing_m=self.label_model.p_dict["annealing_m"]
+          self.annealing_p0=self.label_model.p_dict["annealing_p0"]
+          self.annealing_pf=self.label_model.p_dict["annealing_pf"]
+          self.annealing_n_processes=self.label_model.p_dict["annealing_n_processes"]
+          self.relative_max_random_sample=self.label_model.p_dict["annealing_relative_max_sample"]
+          self.relative_min_random_sample=self.label_model.p_dict["annealing_relative_min_sample"]
           #Build reaction name_dict:
           self.id_name_dict={}
           for reaction in self.label_model.metabolic_model.reactions:
@@ -2148,5 +2205,187 @@ def launch_gui(label_model):
     root = Tk()
     gui = GUI(root,label_model)
     root.mainloop()
+
+class build_model_gui:
+    def get_file(self,root,text="",default_file=None,open_file_widget=None,row=0):
+        file_frame=root  
+        #file_frame.grid(side=TOP)
+        Label(file_frame,text=text).grid(row=row,column=0)
+        file_entry=Entry(file_frame,width=60)
+        file_entry.grid(row=row,column=1) 
+        if default_file!=None:
+           file_entry.insert(0,default_file)     
+        button = Button(file_frame,text="Browse",command=open_file_widget)
+        button.grid(row=row,column=2)
+        return file_entry
+    
+    def get_working_directory(self):
+        wd=tkFileDialog.askdirectory(title="Select working directory:",parent=self.root)  
+        os.chdir(wd)
+        self.wd_entry.delete(0, END)
+        self.wd_entry.insert(0,wd) 
+       
+    def get_sbml_model(self):
+        loaded_file = tkFileDialog.askopenfile(title='Choose a Constraint based model',filetypes=[("sbml","*.sbml"),("xml","*.xml"),("xlsx","*.xlsx"),("CSV","*.csv"),("all files","*")],parent=self.root)
+        self.sbml_entry.delete(0, END) 
+        self.sbml_entry.insert(0,str(loaded_file.name)) 
+    
+    def get_label_propagation_rules(self):
+        loaded_file = tkFileDialog.askopenfile(title='Choose a set of label propagation rules',filetypes=[("xlsx","*.xlsx"),("CSV","*.csv")],parent=self.root)
+        self.label_rules_entry.delete(0, END) 
+        self.label_rules_entry.insert(0,str(loaded_file.name))
+        
+    def get_exp_data(self):
+        loaded_files = tkFileDialog.askopenfiles(title='Choose epxerimental isotopologues data',filetypes=[("xlsx","*.xlsx"),("CSV","*.csv")],parent=self.root)
+        file_names=[x.name for x in loaded_files]
+        self.e_data_entry.delete(0, END) 
+        for file_name in file_names:
+           self.e_data_entry.insert(0,file_name+",")
+        self.e_data_entry.delete(len(self.e_data_entry.get())-1) #delete last coma
+        
+    def get_flux_constraints(self):
+        loaded_file = tkFileDialog.askopenfile(title='Chose constraints file',filetypes=[("xlsx","*.xlsx"),("CSV","*.csv")],parent=self.root)
+        self.constraints_entry.delete(0, END) 
+        self.constraints_entry.insert(0,str(loaded_file.name))
+        
+    def get_settings(self):
+        loaded_file = tkFileDialog.askopenfile(title='Chose Settings file',filetypes=[("xlsx","*.xlsx"),("CSV","*.csv")],parent=self.root)
+        self.settings_entry.delete(0, END) 
+        self.settings_entry.insert(0,str(loaded_file.name))
+    def new_model(self):
+        self.store_inputs()
+        if ""==self.sbml_entry.get() or ""==self.e_data_entry.get or ""==self.label_rules_entry.get():
+             print "Mandatory Input missing"
+             return
+        p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 3, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 10, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 20, 'annealing_relative_max_sample': 0.4, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.001, 'parameter_precision': 0.0001, 'fraction_of_optimum': 1, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.25, 'annealing_iterations': 2,"gene_expression_mode":"imat", "gene_expression_low_expression_threshold":25,"gene_expression_high_expression_threshold":75,"gene_expression_percentile":True,"gene_expression_gene_method":"avearge", "gene_expression_gene_sufix":"_AT","gene_expression_gene_prefix":"","gene_expression_epsilon":1, "gene_expression_lex_epsilon":1e-6,"gene_expression_fraction_optimum":1, "gene_expression_absent_gene_expression_value":50}
+        #p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 4, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 100, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 10, 'annealing_relative_max_sample': 0.35, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.005, 'parameter_precision': 0.0001, 'fraction_of_optimum': 0, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.2, 'annealing_iterations': 2,"gene_prefix":"gene","gene_sufix":"_AT"}
+        model_file=self.sbml_entry.get()
+        if ".sbml" in model_file.lower() or ".xml" in model_file.lower():
+            model=cobra.io.read_sbml_model(self.sbml_entry.get())
+        else:
+            model=create_cobra_model_from_file(model_file) 
+        try:
+          read_flux_constraints(model,ratio_dict={},file_name=self.constraints_entry.get(),create_copies=False)
+        except:
+          print "Constraints loaded"
+          pass
+        try: 
+          p_dict.update(read_isotoflux_settings(settings_entry.get()))
+          print "Settings loaded"
+        except:
+          pass 
+        project_name = tkFileDialog.asksaveasfilename(title="Save project as...",filetypes=[("iso2flux",".iso2flux")])
+        if ".iso2flux" not in project_name:
+            project_name+=".iso2flux"
+        self.label_model=label_model=Label_model(model,lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"],parameter_precision=p_dict["parameter_precision"],reactions_with_forced_turnover=p_dict["reactions_with_forced_turnover"])
+        self.label_model.p_dict=p_dict
+        self.label_model.eqn_dir=project_name[:-9]+"_equations"
+        read_isotopomer_model(label_model,self.label_rules_entry.get())
+        find_missing_reactions(label_model)
+        #loaded_file = tkFileDialog.askopenfile(title='Choose experimental measuments file',filetypes=[("xlsx",".xlsx")]) 
+        #fileName=loaded_file.name
+        e_data_names=self.e_data_entry.get().replace("[","").replace("]","").split(",")
+        emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,e_data_names,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
+        label_model.build(emu_dict0,force_balance=True,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=False,turnover_exclude_EX=p_dict['turnover_exclude_EX'])
+        
+        save_iso2flux_model(label_model,name=project_name,write_sbml=True,gui=False)
+        self.root.destroy()
+    
+    
+    def validate_model(self):
+        self.root.withdraw() 
+        self.store_inputs()
+        if ""==self.sbml_entry.get() or ""==self.e_data_entry.get or ""==self.label_rules_entry.get():
+             print "Mandatory Input missing"
+             return
+        p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 4, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 100, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 10, 'annealing_relative_max_sample': 0.35, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.005, 'parameter_precision': 0.0001, 'fraction_of_optimum': 1.0, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.2, 'annealing_iterations': 2}
+        model_file=self.sbml_entry.get()
+        if ".sbml" in model_file.lower() or ".xml" in model_file.lower():
+            model=cobra.io.read_sbml_model(self.sbml_entry.get())
+        else:
+            model=create_cobra_model_from_file(model_file) 
+        try:
+          read_flux_constraints(model,ratio_dict={},file_name=self.constraints_entry.get(),create_copies=False)
+        except:
+          print "Constraints loaded"
+          pass
+        try: 
+          p_dict.update(read_isotoflux_settings(settings_entry.get()))
+          print "Settings loaded"
+        except:
+          pass 
+        self.label_model=label_model=Label_model(model,lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"],parameter_precision=p_dict["parameter_precision"],reactions_with_forced_turnover=p_dict["reactions_with_forced_turnover"])
+        read_isotopomer_model(label_model,self.label_rules_entry.get())
+        missing_dict=find_missing_reactions(label_model,fn="validation_results.txt",fn_mode="w")
+        #loaded_file = tkFileDialog.askopenfile(title='Choose experimental measuments file',filetypes=[("xlsx",".xlsx")]) 
+        #fileName=loaded_file.name
+        e_data_names=self.e_data_entry.get().replace("[","").replace("]","").split(",")
+        emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,e_data_names,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
+        label_model.build(emu_dict0,force_balance=False,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=False,turnover_exclude_EX=p_dict['turnover_exclude_EX'])
+        steady_state_flag=check_steady_state(label_model,only_initial_m0=True,threshold=1e-9,fn="validation_results.txt",fn_mode="a")#Check initial dy for steady state deviations
+        #check_simulated_fractions(label_model)
+        #self.label_model.p_dict=p_dict
+        #save_iso2flux_model(label_model,name="project",write_sbml=True,gui=True)
+        #self.root.destroy()
+        top=Toplevel(self.root)
+        top.protocol("WM_DELETE_WINDOW",self.restart_script)
+        if steady_state_flag and len(missing_dict)==0:
+           validation_summary=Label(top,text="Succesfully validated\n")
+        else:  
+           validation_summary=Label(top,text="Validation failed,\nsee validation_results.txt for details\n")
+        validation_summary.pack(side=TOP)
+        ok_button=Button(top,text="Ok",command=self.restart_script) 
+        ok_button.pack(side=TOP)
+        
+    def restart_script(self):
+       os.execv(sys.executable, ['python'] + sys.argv)    
+    def store_inputs(self):
+        with open("inputs.temp", 'w') as fp:
+             json.dump({"sbml":self.sbml_entry.get(),"label_rules":self.label_rules_entry.get(),"e_data":self.e_data_entry.get(),"constraints":self.constraints_entry.get(),"settings":self.settings_entry.get()}, fp)
+    def load_inputs(self):
+        with open("inputs.temp", 'r') as fp:
+                  loaded_inputs=json.load(fp)
+        self.sbml_entry.delete(0, END) 
+        self.sbml_entry.insert(0,str(loaded_inputs["sbml"]))
+        self.label_rules_entry.delete(0, END) 
+        self.label_rules_entry.insert(0,str(loaded_inputs["label_rules"]))
+        self.e_data_entry.delete(0, END) 
+        self.e_data_entry.insert(0,str(loaded_inputs["e_data"]))
+        self.constraints_entry.delete(0, END) 
+        self.constraints_entry.insert(0,str(loaded_inputs["constraints"]))
+        self.settings_entry.delete(0, END) 
+        self.settings_entry.insert(0,str(loaded_inputs["settings"]))
+        
+    def __init__(self,root):
+        self.root=root
+        root.title("Iso2Flux")
+        main_frame=Frame(root)
+        #self.wd_entry=self.get_file(root,text="Working directory",default_file=os.getcwd(),open_file_widget=self.get_working_directory,row=)
+        self.sbml_entry=self.get_file(root,text="Constraint based model",default_file=None,open_file_widget=self.get_sbml_model,row=0)
+        self.label_rules_entry=self.get_file(root,text="Label propagation rules",default_file=None,open_file_widget=self.get_label_propagation_rules,row=1)
+        self.e_data_entry=self.get_file(root,text="13C Patterns",default_file=None,open_file_widget=self.get_exp_data,row=2)
+        self.constraints_entry=self.get_file(root,text="Flux constraints (Optional)",default_file=None,open_file_widget=self.get_flux_constraints,row=3)
+        self.settings_entry=self.get_file(root,text="Advanced settings(Optional)",default_file=None,open_file_widget=self.get_settings,row=4)
+        button1=Button(root,text="Create Iso2flux Instance",command=self.new_model)
+        button2=Button(root,text="Validate Inputs",command=self.validate_model)
+        button1.grid(row=6,column=1)
+        button2.grid(row=7,column=1)
+        self.load_inputs()
+
+
+"""def launch_build_model_gui():
+    tk.destroy()
+    global label_model
+    root = Tk()
+    gui = build_model_gui(root)
+    root.mainloop()
+    label_model=gui.label_model
+
+
+def load_model():
+    tk.withdraw()
+    global label_model
+    label_model=load_iso2flux_model(gui=True)
+    tk.destroy()"""
 
 

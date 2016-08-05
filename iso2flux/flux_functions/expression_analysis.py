@@ -33,7 +33,10 @@ import math
 
 
 def cplex_create_imat_problem(cobra_model,hex_reactions=[],lex_reactions=[],epsilon=1,lex_epsilon=0.0001,imat_lower_bound=0.0,imat_upper_bound=2000.0,objective="imat",**kwargs):
-    
+    """
+    Formulates and imat problem for the cplex solver
+    imat_upper_bound is deprectaed
+    """
     #print("creating problem")
     # Process parameter defaults
     from cplex import Cplex, SparsePair
@@ -93,7 +96,7 @@ def cplex_create_imat_problem(cobra_model,hex_reactions=[],lex_reactions=[],epsi
        goal_coef=1.0
     objective_coefficients.append(goal_coef)
     lower_bounds.append(int(imat_lower_bound))
-    upper_bounds.append(int(imat_upper_bound))
+    upper_bounds.append(len(cobra_model.reactions))
     variable_names.append("imat_objective")
     variable_kinds.append(Cplex.variables.type.integer) 
     
@@ -118,12 +121,17 @@ def cplex_create_imat_problem(cobra_model,hex_reactions=[],lex_reactions=[],epsi
      #constraint_limits.append(float(cobra_model.reactions.get_by_id(x).lower_bound)))
       constraint_limits.append(0))
      for x in hex_reactions]
-#CFC added V + xL*Vmax<Vmax
-    [(constraint_sense.append("L"),
-      constraint_names.append(x+"_lexs"),
-      constraint_limits.append(float(cobra_model.reactions.get_by_id(x).upper_bound)))
-     for x in lex_reactions]
-     
+    #CFC added V + xL*Vmax<Vmax
+    for x in lex_reactions:
+         constraint_sense.append("L")
+         constraint_names.append(x+"_lexs")
+         reaction=cobra_model.reactions.get_by_id(x) 
+         if  "reflection" in reaction.notes:
+             reflection=cobra_model.reactions.get_by_id(reaction.notes["reflection"]) 
+             constraint_limits.append(float(max(reaction.upper_bound,reflection.upper_bound)))
+         else:
+             constraint_limits.append(float(reaction.upper_bound))
+      
     constraint_sense.append("E")
     constraint_names.append("imat_objective_cons")
     constraint_limits.append(0)
@@ -153,8 +161,9 @@ def cplex_create_imat_problem(cobra_model,hex_reactions=[],lex_reactions=[],epsi
     for x in lex_reactions:
          imat_variables_list.append(x+"_lexs_var")
          if "reflection" in cobra_model.reactions.get_by_id(x).notes:
+            reflection_id=cobra_model.reactions.get_by_id(x).notes["reflection"]
             variable_list = [x,cobra_model.reactions.get_by_id(x).notes["reflection"],x+"_lexs_var"]
-            coefficient_list = [1,1,(cobra_model.reactions.get_by_id(x).upper_bound-lex_epsilon)]
+            coefficient_list = [1,1,(max(cobra_model.reactions.get_by_id(x).upper_bound,cobra_model.reactions.get_by_id(reflection_id).upper_bound)-lex_epsilon)]
          else: 
             variable_list = [x,x+"_lexs_var"]
             coefficient_list = [1,(cobra_model.reactions.get_by_id(x).upper_bound-lex_epsilon)]
@@ -180,10 +189,35 @@ def cplex_create_imat_problem(cobra_model,hex_reactions=[],lex_reactions=[],epsi
 
 
 def cplex_solve_imat(model,hex_reactions=[],lex_reactions=[],epsilon=1,lex_epsilon=0.001,imat_lower_bound=0.0,imat_upper_bound=2000.0,objective="imat",sense="maximize",lp_output=False,problem=None): 
+   """
+   Solves an imat problem using CPLEX
+   model: model object
+   hex_reactions: list of reaction IDs
+          List of highly expressed reactions
+   lex_reactions: list of reactions IDs
+          List of lowly expressed reactions
+   epsilon: float
+            Minimum flux to consider a reaction active
+   lex_espilon: float
+            Maximum flux to consider a reaction inactive
+   imal_lower_bound: int
+          Minimal value of the iMAT objective function
+   imat_upper_bound=int
+          Deprecated
+   objective: str
+          Objective to be maximized or minimized. It can be either iMAT (default) to optimize the iMat objective function or a reaction ID
+   sense: str
+          Either "maximize" or "minimize" depending on wether the objective should be maximize or minimized
+   lp_output: bool
+          Used for debugging
+   problem: cplex problem object
+          Used for debugging
+   
+   """
    from cobra.solvers.cplex_solver import format_solution, solve_problem, get_status
    name="problem_"+objective+"_"+sense+".lp"
    if problem==None:
-             problem=cplex_create_imat_problem(model, hex_reactions ,lex_reactions, epsilon,lex_epsilon,imat_lower_bound,imat_upper_bound=imat_upper_bound,objective=objective)
+             problem=cplex_create_imat_problem(model, hex_reactions ,lex_reactions, epsilon,lex_epsilon,imat_lower_bound,objective=objective)
    #problem.write(name)
    #problem.read(name) canviat,mira si dona fallo
    problem.set_log_stream(None)
@@ -234,8 +268,9 @@ def cplex_solve_imat(model,hex_reactions=[],lex_reactions=[],epsilon=1,lex_epsil
       return (problem.solution.get_objective_value(), status)
 
 def guorbi_create_problem_imat(cobra_model,hexs=[],lexs=[],epsilon=1,lex_epsilon=0.0001,objective="imat",quadratic_component=None,imat_lower_bound=0, **kwargs):
-    """Solver-specific method for constructing a solver problem from
-    a cobra.Model.  This can be tuned for performance using kwargs      
+    print "gurobi"
+    """
+    Creates an IMAT problem for the sofware GUROBI      
     """
     from cobra.solvers.gurobi_solver import parameter_defaults, set_parameter, solve_problem, variable_kind_dict, sense_dict
     from gurobipy import Model, LinExpr, GRB, QuadExpr
@@ -349,9 +384,9 @@ def guorbi_create_problem_imat(cobra_model,hexs=[],lexs=[],epsilon=1,lex_epsilon
         else:
            the_reverse_reaction=cobra_model.reactions.get_by_id(the_reaction.notes["reflection"])
            #constraint_coefficients = [1,1,(the_reaction.upper_bound)]
-           constraint_coefficients = [1,1,(the_reaction.upper_bound-(lex_epsilon))]
+           constraint_coefficients = [1,1,(max(the_reaction.upper_bound,the_reverse_reaction.upper_bound)-(lex_epsilon))]
            constraint_variables = [reaction_to_variable[the_reaction],reaction_to_variable[the_reverse_reaction],reaction_to_variable[varname]]
-           lp.addConstr(LinExpr(constraint_coefficients, constraint_variables), sense_dict["L"],the_reaction.upper_bound, str(nconstr))   
+           lp.addConstr(LinExpr(constraint_coefficients, constraint_variables), sense_dict["L"],max(the_reaction.upper_bound,the_reverse_reaction.upper_bound), str(nconstr))   
         nconstr=nconstr+1
         imat_objective_constraint_coefficients.append(-1)
         imat_objective_constraint_variables.append(reaction_to_variable[varname])
@@ -367,6 +402,7 @@ def guorbi_create_problem_imat(cobra_model,hexs=[],lexs=[],epsilon=1,lex_epsilon
 
 
 def gurobi_format_solution_imat(lp, cobra_model, **kwargs):
+    """Formats the solution of the Gurobi IMAT problem"""
     from cobra.solvers.gurobi_solver import get_status
     from cobra.core.Solution import Solution
     status = get_status(lp)
@@ -385,9 +421,25 @@ def gurobi_format_solution_imat(lp, cobra_model, **kwargs):
                                 y_dict={}, status=status)
     return(the_solution)
 
-def gurobi_solve_imat(cobra_model,hexs=[],lexs=[],epsilon=1,lex_epsilon=0.0001,objective="imat",sense="maximize", **kwargs):
+def gurobi_solve_imat(cobra_model,hexs=[],lexs=[],epsilon=1,lex_epsilon=0.0001,imat_lower_bound=0,objective="imat",sense="maximize", **kwargs):
     """
-    """
+   Solves an imat problem using CPLEX
+   model: model object
+   hex_reactions: list of reaction IDs
+          List of highly expressed reactions
+   lex_reactions: list of reactions IDs
+          List of lowly expressed reactions
+   epsilon: float
+            Minimum flux to consider a reaction active
+   lex_espilon: float
+            Maximum flux to consider a reaction inactive
+   imal_lower_bound: int
+          Minimal value of the iMAT objective function
+   objective: str
+          Objective to be maximized or minimized. It can be either iMAT (default) to optimize the iMat objective function or a reaction ID
+   sense: str
+          Either "maximize" or "minimize" depending on wether the objective should be maximize or minimized
+   """
     from gurobipy import Model, LinExpr, GRB, QuadExpr
     from cobra.solvers.gurobi_solver import solve_problem
     for i in ["new_objective", "update_problem", "the_problem"]:
@@ -397,7 +449,7 @@ def gurobi_solve_imat(cobra_model,hexs=[],lexs=[],epsilon=1,lex_epsilon=0.0001,o
         warn("error_reporting deprecated")
         kwargs.pop('error_reporting')  
     #Create a new problem
-    lp= guorbi_create_problem_imat(cobra_model,hexs,lexs,epsilon,lex_epsilon,objective="imat",sense="maximize", **kwargs)
+    lp= guorbi_create_problem_imat(cobra_model,hexs,lexs,epsilon,lex_epsilon,objective=objective,sense=sense,imat_lower_bound=imat_lower_bound, **kwargs)
     #Define objective sense
     if sense=="minimize":
        objective_sense=GRB.MINIMIZE
@@ -422,13 +474,35 @@ def gurobi_solve_imat(cobra_model,hexs=[],lexs=[],epsilon=1,lex_epsilon=0.0001,o
         if status == 'optimal':
             break
     cobra_model.solution=gurobi_format_solution_imat(lp, cobra_model) 
-    
+    print cobra_model.solution.f, status
     return (cobra_model.solution.f, status) 
 
 
 def imat(cobra_model,hex_reactions=[],lex_reactions=[],epsilon=1,lex_epsilon=0.001,objective="imat",imat_lower_bound=0.0,sense="maximize",output=False,solver="cplex"):
+    """
+    Solves an imat problem
+    cobra_model: model object
+    hex_reactions: list of reaction IDs
+          List of highly expressed reactions
+    lex_reactions: list of reactions IDs
+          List of lowly expressed reactions
+    epsilon: float
+            Minimum flux to consider a reaction active
+    lex_espilon: float
+            Maximum flux to consider a reaction inactive
+    imal_lower_bound: int
+          Minimal value of the iMAT objective function
+    objective: str
+          Objective to be maximized or minimized. It can be either iMAT (default) to optimize the iMat objective function or a reaction ID
+    sense: str
+          Either "maximize" or "minimize" depending on wether the objective should be maximize or minimized
+    output: bool
+          If True it will print an overvier of the result
+    solver: string
+          Either "cplex" or "gurobi"
+    """
     if solver=="gurobi":
-       objective, status=gurobi_solve_imat(cobra_model,hex_reactions,lex_reactions,epsilon,lex_epsilon) #TODO complete parameters
+       objective, status=gurobi_solve_imat(cobra_model,hex_reactions,lex_reactions,epsilon,lex_epsilon,imat_lower_bound=imat_lower_bound,objective=objective,sense=sense) #TODO complete parameters
     elif solver=="cplex":
        objective, status=cplex_solve_imat(cobra_model,hex_reactions,lex_reactions,epsilon,lex_epsilon,imat_lower_bound,imat_upper_bound=2000.0,objective=objective,sense=sense)
     
@@ -452,6 +526,26 @@ def imat(cobra_model,hex_reactions=[],lex_reactions=[],epsilon=1,lex_epsilon=0.0
 
 
 def imat_variability(model,hexs,lexs,epsilon,lex_epsilon,fraction_of_optimum=1.0,check_hex=True,all_reactions=False,solver="cplex"):
+    """
+    Performs a flux variabilaity analysis using iMAT
+    model: model object
+    hex_reactions: list of reaction IDs
+          List of highly expressed reactions
+    lex_reactions: list of reactions IDs
+          List of lowly expressed reactions
+    epsilon: float
+            Minimum flux to consider a reaction active
+    lex_espilon: float
+            Maximum flux to consider a reaction inactive
+    fraction of optimum: float
+          Minimal fraction of the iMAT objective that must be achieved
+    check_hex: bool
+          If false only the variability of lowly expressed reactions will be evaluated. This can be used when the goal using iMAT is to remove lowly expressed reactions
+    all_reactions: bool
+          If False the only the variability of highly expressed and lowly expressed reactions will be evaluated. If True all reactions will be evluated
+    solver: string
+          Either "cplex" or "gurobi"
+    """
     optimal, status=imat(model,hexs,lexs,epsilon,lex_epsilon,solver=solver)
     #print [optimal,fraction_of_optimum]
     fraction_optimal=int(optimal*fraction_of_optimum)
@@ -461,6 +555,12 @@ def imat_variability(model,hexs,lexs,epsilon,lex_epsilon,fraction_of_optimum=1.0
     if all_reactions:
        fva_list=[]
        for x in model.reactions:
+           if "_reverse" in x.id:
+              continue
+           if "TMS_" in x.id:
+              continue
+           if  "RGROUP_" in x.id:
+              continue
            fva_list.append(x.id) 
     else:
        if check_hex:
@@ -511,8 +611,11 @@ def imat_variability(model,hexs,lexs,epsilon,lex_epsilon,fraction_of_optimum=1.0
     return fva
 
 
-def create_gim3e_model(cobra_model,excel_name="gene_expression_data.xlsx",metabolite_list=[],label_model=None,epsilon=0.0001,gene_method="average",gene_prefix="",gene_sufix="",low_expression_threshold=25,absent_gene_expression=100,percentile=True):
-    reaction_expression_dict,genexpraw_dict,expression_dict=get_gene_exp(cobra_model,absent_gene_expression=absent_gene_expression,percentile=percentile,excel_name=excel_name,gene_method=gene_method,gene_prefix=gene_prefix,gene_sufix=gene_sufix)
+def create_gim3e_model(cobra_model,file_name="gene_expression_data.xlsx",metabolite_list=[],label_model=None,epsilon=0.0001,gene_method="average",gene_prefix="",gene_sufix="",low_expression_threshold=25,absent_gene_expression=100,percentile=True):
+    """
+    Creates a Gim3e model
+    """
+    reaction_expression_dict,genexpraw_dict,expression_dict=get_gene_exp(cobra_model,absent_gene_expression=absent_gene_expression,percentile=percentile,file_name=file_name,gene_method=gene_method,gene_prefix=gene_prefix,gene_sufix=gene_sufix)
     print reaction_expression_dict
     if percentile==True: #If percentile is set to True, low_expression_threshold is assumed to be a percintile
        value_list=[] 
@@ -553,14 +656,28 @@ def create_gim3e_model(cobra_model,excel_name="gene_expression_data.xlsx",metabo
     return penalty_dict
 
 
-def get_expression(model,excel_name="gene_expression_data.xlsx",gene_method="average",gene_prefix="",gene_sufix=""):
+def get_expression(model,file_name="gene_expression_data.xlsx",gene_method="average",gene_prefix="",gene_sufix=""):
+    """
+    Reads the gene expression file
+    model: cobra model object
+    file_name: str
+          Name of the file with the gene expression data. It should be either a CSV or a XLSX file with gene names in the first column and gene expression value in the second column
+    gene_method: str
+          Determines wich gene expression value should be given to a gene when there are multiples entries for the same gene. It can either be "average" (it will use the average of all values), "maximum" (it will use the maximum) or "minimum" (it will use the minimum)
+    gene_prefix: str
+          Prefix used by genes in the cobra model but not present in the gene expression file
+    gene_sufix= str
+          Sufix  used by genes in the cobra model but not present in the gene expression file. In Recon 1 alternative transtricpts are indicated by appending _AT1, _AT2 , AT3_ at the end of gene. If in the gene expression file alternative scripts are not indicated in that case _AT should be defined as Sufix
+    """
     genexpraw_dict={}
+    spreadsheet_dict=read_spreadsheets(file_names=file_name,csv_delimiter=',',more_than_1=False,tkinter_title="Chose a file")
     gene_expression_dict=gene_expression_dict={}
-    wb = load_workbook(excel_name, read_only=True)
-    ws=wb.active
-    for row in ws.rows:
-        geneid=str(row[0].value)
-        gene_expression_value=(row[1].value)
+    #wb = load_workbook(file_name, read_only=True)
+    #ws=wb.active
+    for sheet in spreadsheet_dict:
+      for row in spreadsheet_dict[sheet]:
+        geneid=str(row[0])
+        gene_expression_value=float(row[1])
         if geneid==None or geneid=="":
            continue
         if gene_expression_value==None or geneid=="":
@@ -569,9 +686,15 @@ def get_expression(model,excel_name="gene_expression_data.xlsx",gene_method="ave
         regular_expression=""
         if gene_prefix=="":
            regular_expression+="^"
+        else:
+           regular_expression+=gene_prefix 
         regular_expression+=geneid
         if gene_sufix=="":
            regular_expression+="$"
+        elif gene_sufix==".":
+           regular_expression+="\." 
+        else:
+           regular_expression+=gene_sufix  
         print regular_expression
         for gene in gene_matches:
             if re.search(regular_expression,gene.id)!=None: 
@@ -582,9 +705,9 @@ def get_expression(model,excel_name="gene_expression_data.xlsx",gene_method="ave
         list_of_values=genexpraw_dict[geneid]
         if gene_method=="average" or "mean":
            value=np.mean(list_of_values)
-        elif gene_method=="max":
+        elif gene_method in("max","maximum"):
            value=max(list_of_values)
-        elif gene_method=="min":
+        elif gene_method in ("min","minimum"):
            value=min(list_of_values)
         else:
             print "Error: Method not supoprted"
@@ -597,8 +720,11 @@ def get_expression(model,excel_name="gene_expression_data.xlsx",gene_method="ave
 
 
 
-def get_gene_exp(model,absent_gene_expression=50,percentile=True,excel_name="gene_expression_data.xlsx",gene_method="average",gene_prefix="",gene_sufix=""):
-    genexpraw_dict,expression_dict=get_expression(model,excel_name=excel_name,gene_method=gene_method,gene_prefix=gene_prefix,gene_sufix=gene_sufix)
+def get_gene_exp(model,absent_gene_expression=50,percentile=True,file_name="gene_expression_data.xlsx",gene_method="average",gene_prefix="",gene_sufix=""):
+    """
+    Assigns each reaction a expression value based on the gene_expression file and the GPR rules
+    """
+    genexpraw_dict,expression_dict=get_expression(model,file_name=file_name,gene_method=gene_method,gene_prefix=gene_prefix,gene_sufix=gene_sufix)
     if percentile==True: #If percentile is set to True, low_expression_threshold and high_expression_threshold
        value_list=[] 
        for x in genexpraw_dict:
@@ -628,9 +754,9 @@ def get_gene_exp(model,absent_gene_expression=50,percentile=True,excel_name="gen
     return (reaction_expression_dict,genexpraw_dict,expression_dict)
 
 
-def gene_exp_classify_reactions(model,low_expression_threshold=25,high_expression_threshold=75,percentile=True,excel_name="gene_expression_data.xlsx",gene_method="average",gene_prefix="",gene_sufix=""):
+def gene_exp_classify_reactions(model,low_expression_threshold=25,high_expression_threshold=75,percentile=True,file_name="gene_expression_data.xlsx",gene_method="average",gene_prefix="",gene_sufix=""):
     
-    reaction_expression_dict,genexpraw_dict,expression_dict=get_gene_exp(model,absent_gene_expression=50,percentile=True,excel_name=excel_name,gene_method=gene_method,gene_prefix=gene_prefix,gene_sufix=gene_sufix)
+    reaction_expression_dict,genexpraw_dict,expression_dict=get_gene_exp(model,absent_gene_expression=50,percentile=True,file_name=file_name,gene_method=gene_method,gene_prefix=gene_prefix,gene_sufix=gene_sufix)
     if percentile==True: #If percentile is set to True, low_expression_threshold and high_expression_threshold
        value_list=[] 
        for x in genexpraw_dict:
@@ -638,7 +764,7 @@ def gene_exp_classify_reactions(model,low_expression_threshold=25,high_expressio
          
        high_expression_threshold=upper_percentile=np.percentile(value_list,high_expression_threshold)
        low_expression_threshold=lower_percentile=np.percentile(value_list,low_expression_threshold)
-    
+    print [high_expression_threshold,low_expression_threshold]
     hex_reactions=[]
     lex_reactions=[]
     iex_reactions=[] #Inconclusive reactions
@@ -655,6 +781,7 @@ def gene_exp_classify_reactions(model,low_expression_threshold=25,high_expressio
 
 number_finder = re.compile("[\d]+\.?[\d]*")
 class gene_expression_score:
+    """Based on the work by : #Schmidt BJ1, Ebrahim A, Metz TO, Adkins JN, Palsson B, Hyduke DR. GIM3E: condition-specific models of cellular metabolism developed from metabolomics and expression data Bioinformatics. 2013 Nov 15;29(22):2900-8. doi: 10.1093/bioinformatics/btt493. Epub 2013 Aug 23."""
     def __init__(self, value):
         self.str_value = str(value)
         self.value = float(value)
@@ -693,64 +820,48 @@ def evaluate_gene_expression_string(gene_expression_string):
     return eval(gene_expression_string).value
 
 
-"""
-def imat_classify_reactions(cobra_model, expression_dict={},low_expression_threshold=0,high_expression_threshold=0):
-    #Function based on the work by : #Schmidt BJ1, Ebrahim A, Metz TO, Adkins JN, Palsson B, Hyduke DR. GIM3E: condition-specific models of cellular metabolism developed from metabolomics and expression data Bioinformatics. 2013 Nov 15;29(22):2900-8. doi: 10.1093/bioinformatics/btt493. Epub 2013 Aug 23.
-    from copy import deepcopy
-    import re
-    f=open("ReactionExpression","w")     
-    for cur_gene in cobra_model.genes:
-        if cur_gene.id not in expression_dict:
-           expression_dict[cur_gene.id]=(low_expression_threshold+high_expression_threshold)/2
-    hex_reactions=[]
-    lex_reactions=[]
-    iex_reactions=[] #Inconclusive reactions
-    for the_reaction in cobra_model.reactions:
-        if the_reaction.reflection != None and ((the_reaction.reflection.id in lex_reactions) or (the_reaction.reflection.id in hex_reactions) or (the_reaction.reflection.id in iex_reactions)):
-           continue
-        if the_reaction.gene_reaction_rule != "" : 
-           the_gene_reaction_relation = deepcopy(the_reaction.gene_reaction_rule)
-           for the_gene in the_reaction.get_gene(): 
-               the_gene_re = re.compile('(^|(?<=( |\()))%s(?=( |\)|$))'%re.escape(the_gene.id))
-               the_gene_reaction_relation = the_gene_re.sub(str(expression_dict[the_gene.id]), the_gene_reaction_relation) 
-           expression_value=evaluate_gene_expression_string( the_gene_reaction_relation)
-           f.write(the_reaction.id+" "+str(expression_value)+"\n")
-           #print(the_reaction.id+" "+str(expression_value))    
-           if expression_value > high_expression_threshold: 
-              hex_reactions.append(the_reaction.id) 
-           elif expression_value < low_expression_threshold:      
-                lex_reactions.append(the_reaction.id)
-           else :      
-                iex_reactions.append(the_reaction.id)
-    f.close()
-    return (hex_reactions, lex_reactions, iex_reactions )  """
 
 
-
-
-
-
-
-"""
-if True:
-   gene_expression_model=copy.deepcopy(model)
-   for reaction in gene_expression_model.reactions: #TODO Add support for multiple objectives
-       if reaction.objective_coefficient!=0:
-          fva=flux_variability_analysis(gene_expression_model,fraction_of_optimum=fraction_of_optimum,reaction_list=[reaction])
-          reaction.lower_bound=round(fva[reaction.id]["minimum"],5)
-          reaction.upper_bound=round(fva[reaction.id]["maximum"],5)  
-          reaction.objective_coefficient=0
-          break 
-   hexs,lexs,iexs=gene_exp_classify_reactions(model,low_expression_threshold=25,high_expression_threshold=75,percentile=True,excel_name="gene_expression_data.xlsx",label_model=label_model,gene_method="average")
-   convert_to_irreversible_with_indicators( gene_expression_model,hexs,lexs,metabolite_list=["lanost_r"], mutually_exclusive_directionality_constraint = True,label_model=label_model)
-   add_turnover_metabolites(gene_expression_model, metabolite_id_list=[], epsilon=0.01,maxupper_bound=1000,label_model=label_model)
-   #imat( gene_expression_model,hex_reactions=hexs,lex_reactions=lexs,epsilon=0.1,lex_epsilon=0.001,objective="imat",imat_lower_bound=0.0,sense="maximize",output=True,solver="cplex")
-   fva=imat_variability(gene_expression_model,hexs,lexs,0.1,lex_epsilon=0.0001,fraction_of_optimum=1,check_hex=True,objective=None,all_reactions=False)
-
-"""
-
-
-def integrate_omics_imat(metabolic_model,excel_name,fraction_of_optimum=1,low_expression_threshold=25,high_expression_threshold=75,percentile=True,gene_method="average",gene_prefix="",gene_sufix="",metabolite_list_fname=None,epsilon=0.1,lex_epsilon=0.0001,imat_fraction_optimum=1,label_model=None,add_as_constraints=True,boundaries_precision=0.001,solver=None):
+def integrate_omics_imat(metabolic_model,gene_expression_file,fraction_of_optimum=1,low_expression_threshold=25,high_expression_threshold=75,percentile=True,gene_method="average",gene_prefix="",gene_sufix="",metabolite_list_fname=None,epsilon=0.1,lex_epsilon=0.0001,imat_fraction_optimum=1,label_model=None,add_as_constraints=True,boundaries_precision=0.001,solver=None):
+   """
+   Functions that reads gene expression data and optionally qualtitaive metabolomics data and uses the iMAT algorythm to find the flux distribution that is most consistent with such data. Optionally,you can use the results to constraint the cobra model
+   metabolic_model: COBRA model object
+             Model where the gene expression data and metabolomics data will be integrated
+   gene_expression_file: str
+             Name of the XLSX or CSV file that describes gene expression. In the first row it should have the gene identifiers and the second column the gene expression value. It is important that the type of identifier used in the file is the same as the one used in the metabolic model. 
+   fraction_of_optimum: float
+             Fraction of the model objective reactions that must be fulfilled
+   low_expression_threshold: float
+             Threshold at which a gene is considered lowly expressed- If percentile is set to True this will be a percentile
+   high_expression_threshold: float
+             Threshold at which a gene is considered highly expressed- If percentile is set to True this will be a percentile
+   percentile: bool
+              If True the low_expression_threshold and absent_gene_expression will be percintiles
+   gene_method: str
+          Determines wich gene expression value should be given to a gene when there are multiples entries for the same gene. It can either be "average" (it will use the average of all values), "maximum" (it will use the maximum) or "minimum" (it will use the minimum)
+   gene_prefix: str
+          Prefix used by genes in the cobra model but not present in the gene expression file
+   gene_sufix= str
+          Sufix  used by genes in the cobra model but not present in the gene expression file. In Recon 1 alternative transtricpts are indicated by appending _AT1, _AT2 , AT3_ at the end of gene. If in the gene expression file alternative scripts are not indicated in that case "_AT" should be defined as Sufix
+   metabolite_list_fname: string, optional
+          The path of a XLSX or CSV file that indicates the metabolites that have been detected in the study conditions. Metabolites can be indicated either from metabolite name or metabolite ID. 
+   label_model: label_model object, optional
+          If a label_model object is provided the algorythm will ensure that all metabolites whose isotopologues are quantified can be produced 
+   epsilon: float
+          Minimum flux to consider a reaction active
+   lex_epsilon: float
+          Maximum flux to consider a reaction innactive. Alos, this is used for setting the lower bound on turnover reactions
+   gim3e_fraction_optimum: float
+          Fraction of gim3e optimum that must be fulfilled. Must have a value bewteen 0 and 1
+   add_as_constraints: bool
+          If True the gim3e results will be used to constraint the input model
+   boundaries_precision: float 
+          If add_as_constraints is set to True this determines the precision of the constraints that will be added
+   """
+   if percentile in (True,"true","True",1,"1","yes"):
+      percentile=True
+   else:
+      percentile=False
    if solver==None:
       if "cplex" in solver_dict:
           solver="cplex"
@@ -761,7 +872,7 @@ def integrate_omics_imat(metabolic_model,excel_name,fraction_of_optimum=1,low_ex
           
    precision=int(-1*(math.log10(boundaries_precision)))
    gene_expression_model=copy.deepcopy(metabolic_model)
-   if metabolite_list_fname!=None: 
+   if metabolite_list_fname!=None and metabolite_list_fname!="": 
       metabolite_list=read_metabolomics_data(gene_expression_model,metabolite_list_fname)
    else:
       metabolite_list=[]
@@ -773,14 +884,14 @@ def integrate_omics_imat(metabolic_model,excel_name,fraction_of_optimum=1,low_ex
           reaction.objective_coefficient=0
           break
    
-   hexs,lexs,iexs=gene_exp_classify_reactions(metabolic_model,low_expression_threshold=low_expression_threshold,high_expression_threshold=high_expression_threshold,percentile=percentile,excel_name=excel_name,gene_method=gene_method,gene_prefix=gene_prefix,gene_sufix=gene_sufix)
+   hexs,lexs,iexs=gene_exp_classify_reactions(metabolic_model,low_expression_threshold=low_expression_threshold,high_expression_threshold=high_expression_threshold,percentile=percentile,file_name=gene_expression_file,gene_method=gene_method,gene_prefix=gene_prefix,gene_sufix=gene_sufix)
    print hexs,lexs
    convert_to_irreversible_with_indicators( gene_expression_model,hexs+lexs,metabolite_list=metabolite_list, mutually_exclusive_directionality_constraint = True,label_model=label_model)
    add_turnover_metabolites(gene_expression_model, metabolite_id_list=metabolite_list, epsilon=epsilon,label_model=label_model)
    print gene_expression_model.optimize(solver=solver)
-   objective,status=imat( gene_expression_model,hex_reactions=hexs,lex_reactions=lexs,epsilon=0.1,lex_epsilon=lex_epsilon,objective="imat",imat_lower_bound=0.0,sense="maximize",output=True,solver=solver)
+   objective,status=imat( gene_expression_model,hex_reactions=hexs,lex_reactions=lexs,epsilon=epsilon,lex_epsilon=lex_epsilon,objective="imat",imat_lower_bound=0.0,sense="maximize",output=True,solver=solver)
    print objective,status
-   fva=imat_variability(gene_expression_model,hexs,lexs,epsilon=epsilon,lex_epsilon=lex_epsilon,fraction_of_optimum=imat_fraction_optimum,check_hex=True,all_reactions=False)
+   fva=imat_variability(gene_expression_model,hexs,lexs,epsilon=epsilon,lex_epsilon=lex_epsilon,fraction_of_optimum=imat_fraction_optimum,check_hex=True,all_reactions=True,solver=solver)
    print fva
    if add_as_constraints==True:
      for reaction_id in fva: 
@@ -789,8 +900,19 @@ def integrate_omics_imat(metabolic_model,excel_name,fraction_of_optimum=1,low_ex
        upper_bound=fva[reaction_id]["maximum"]
        #reaction.lower_bound=max(round_down(fva[reaction_id]["minimum"],precision),reaction.lower_bound)
        #reaction.upper_bound=min(round_up(fva[reaction_id]["maximum"],precision),reaction.upper_bound)
-       
-       if abs(lower_bound)<=lex_epsilon:
+       reaction.upper_bound=min(round_up(upper_bound,precision),reaction.upper_bound)  
+       reaction.lower_bound=max(round_down(fva[reaction_id]["minimum"],precision),reaction.lower_bound)
+     """if label_model!=None:
+        for group_reaction_id in label_groups_reactions_dict:
+            group_reaction=metabolic_model.reactions.get_by_id(group_reaction_id)
+            lower_bound=0
+            upper_bound=0
+            for group_memeber_id in label_groups_reactions_dict["group_reaction_id"]:
+                group_member_reaction=metabolic_model.reactions.get_by_id(group_memeber_id)
+                coef=label_groups_reactions_dict["group_reaction_id"]["group_memeber_id"]
+                lower_bound+=coef*group_member_reaction.lower_bound
+                upper_bound+=coef*group_member_reaction.lower_bound"""
+     """if abs(lower_bound)<=lex_epsilon:
           reaction.lower_bound=max(0,reaction.lower_bound)
        else:
           reaction.lower_bound=max(round_down(fva[reaction_id]["minimum"],precision),reaction.lower_bound)
@@ -798,14 +920,48 @@ def integrate_omics_imat(metabolic_model,excel_name,fraction_of_optimum=1,low_ex
           reaction.upper_bound=min(0,reaction.upper_bound)
        else:
           reaction.upper_bound=min(round_up(upper_bound,precision),reaction.upper_bound)  
-       reaction.objective_coefficient=0.0
-   return hexs,lexs,objective,status, fva
+       reaction.objective_coefficient=0.0"""
+   return hexs,lexs,[objective,int(objective*imat_fraction_optimum)],status, fva
 
 
-def integrate_omics_gim3e(metabolic_model,excel_name,fraction_of_optimum=1,low_expression_threshold=25,absent_gene_expression=50,percentile=True,gene_method="average",gene_prefix="",gene_sufix="",metabolite_list_fname=None,label_model=None,epsilon=0.0001,gim3e_fraction_optimum=0.75,add_as_constraints=True,boundaries_precision=0.001):
+def integrate_omics_gim3e(metabolic_model,gene_expression_file,fraction_of_optimum=1,low_expression_threshold=25,absent_gene_expression=50,percentile=True,gene_method="average",gene_prefix="",gene_sufix="",metabolite_list_fname=None,label_model=None,epsilon=0.0001,gim3e_fraction_optimum=0.75,add_as_constraints=True,boundaries_precision=0.001):
+   """
+   Functions that reads gene expression data and optionally qualtitaive metabolomics data and uses the GIM3E algorythm to find the flux distribution that is most consistent with such data. Optionally,you can use the results to constraint the cobra model.
+   metabolic_model
+             Model where the gene expression data and metabolomics data will be integrated
+   fraction_of_optimum: float
+             Fraction of the model objective reactions that must be fulfilled
+   low_expression_threshold: float
+             Threshold at which a gene is considered lowly expressed- If percentile is set to True this will be a percentile
+   absent_gene_expression: Gene expression level given to genes that are not measured.  If percentile is set to True this will be a percentile
+   percentile: bool
+              If True the low_expression_threshold and absent_gene_expression will be percintiles
+    gene_method: str
+          Determines wich gene expression value should be given to a gene when there are multiples entries for the same gene. It can either be "average" (it will use the average of all values), "maximum" (it will use the maximum) or "minimum" (it will use the minimum)
+    gene_prefix: str
+          Prefix used by genes in the cobra model but not present in the gene expression file
+    gene_sufix= str
+          Sufix  used by genes in the cobra model but not present in the gene expression file. In Recon 1 alternative transtricpts are indicated by appending _AT1, _AT2 , AT3_ at the end of gene. If in the gene expression file alternative scripts are not indicated in that case "_AT" should be defined as Sufix
+   metabolite_list_fname: string, optional
+          The path of a XLSX or CSV file that indicates the metabolites that have been detected in the study conditions. Metabolites can be indicated either from metabolite name or metabolite ID. 
+   label_model: label_model object, optional
+          If a label_model object is provided the algorythm will ensure that all metabolites whose isotopologues are quantified can be produced 
+   epsilon: float
+          Maximum flux to consider a reaction inaactive. Used for setting the lower bound on turnover reactions
+   gim3e_fraction_optimum: float
+          Fraction of gim3e optimum that must be fulfilled. Must have a value bewteen 0 and 1
+   add_as_constraints: bool
+          If True the gim3e results will be used to constraint the input model
+   boundaries_precision: float 
+          If add_as_constraints is set to True this determines the precision of the constraints that will be added
+   """
+   if percentile in (True,"true","True",1,"1","yes"):
+      percentile=True
+   else:
+      percentile=False
    precision=int(-1*(math.log10(boundaries_precision)))
    gene_expression_model=copy.deepcopy(metabolic_model)
-   if metabolite_list_fname!=None: 
+   if metabolite_list_fname!=None and metabolite_list_fname!="": 
       metabolite_list=read_metabolomics_data(gene_expression_model,metabolite_list_fname)
    else:
       metabolite_list=[]
@@ -817,13 +973,15 @@ def integrate_omics_gim3e(metabolic_model,excel_name,fraction_of_optimum=1,low_e
           reaction.lower_bound=max(round_down(fva[reaction.id]["minimum"]-boundaries_precision/2.0,precision),reaction.lower_bound)
           reaction.upper_bound=min(round_up(fva[reaction.id]["maximum"]+boundaries_precision/2.0,precision),reaction.upper_bound)  
           reaction.objective_coefficient=0
-   penalty_dict=create_gim3e_model(gene_expression_model,excel_name=excel_name,metabolite_list=metabolite_list,label_model=label_model,epsilon=epsilon,gene_method=gene_method,gene_prefix=gene_prefix,gene_sufix=gene_sufix,low_expression_threshold=low_expression_threshold,absent_gene_expression=100,percentile=True)
+   penalty_dict=create_gim3e_model(gene_expression_model,file_name=gene_expression_file,metabolite_list=metabolite_list,label_model=label_model,epsilon=epsilon,gene_method=gene_method,gene_prefix=gene_prefix,gene_sufix=gene_sufix,low_expression_threshold=low_expression_threshold,absent_gene_expression=100,percentile=True)
    gene_expression_model.optimize()
    objective=gene_expression_model.solution.f    
    fva=flux_variability_analysis(gene_expression_model,fraction_of_optimum=1.0/gim3e_fraction_optimum)
    if add_as_constraints==True:
      for reaction_id in fva: 
        if reaction_id in metabolic_model.reactions:
+          if "RGROUP_" in reaction_id:
+              continue
           reaction=metabolic_model.reactions.get_by_id(reaction_id)
           lower_bound=fva[reaction_id]["minimum"]#round_down(fva[reaction_id]["minimum"],precision)  
           upper_bound=fva[reaction_id]["maximum"]#round_up(fva[reaction_id]["maximum"],precision)  
@@ -847,99 +1005,8 @@ def integrate_omics_gim3e(metabolic_model,excel_name,fraction_of_optimum=1,low_e
    return penalty_dict,objective,fva
    
     
-"""def read_metabolomics_data(metabolic_model,metabolite_list_fname=None):
-    data_dict=read_spreadsheets(file_names=metabolite_list_fname,csv_delimiter=',',more_than_1=False,tkinter_title="Chose a file")
-    #Build a name id dict
-    name_id_dict={}
-    for metabolite in metabolic_model.metabolites:
-        if metabolite.name.lower() not in name_id_dict:
-           name_id_dict[metabolite.name.lower()]=[metabolite.id]
-        else:
-           name_id_dict[metabolite.name.lower()].append(metabolite.id)
-    metabolite_list=[]
-    for sheet in data_dict:
-        for row in data_dict[sheet]:
-          metabolite_found=False 
-          local_metabolite_list=[]
-          for cell in row:
-            value_list=str(cell).split(",") 
-            for value in value_list:
-               print value
-               if value in metabolic_model.metabolites:
-                  local_metabolite_list.append(value)
-               elif value.lower() in name_id_dict:
-                  for met_id in name_id_dict[value.lower()]:
-                      local_metabolite_list.append(met_id)
-          if local_metabolite_list!=[]:
-             metabolite_list.append(local_metabolite_list)
-    return  metabolite_list """     
-              
-
-
-
-"""
 
 
 
 
 
-
-
-if True:
-   excel_name="gene_expression_data.xlsx"
-   fraction_of_optimum=1
-   low_expression_threshold=25
-   high_expression_threshold=75
-   percentile=True
-   gene_method="average"
-   metabolite_id_list=[]
-   epsilon=0.1
-   lex_epsilon=0.0001
-   imat_fraction_optimum=1
-   maxupper_bound=1000
-   gene_expression_model=copy.deepcopy(label_model.constrained_model)
-   for reaction in gene_expression_model.reactions: #TODO Add support for multiple objectives
-       if reaction.objective_coefficient!=0:
-          fva=flux_variability_analysis(gene_expression_model,fraction_of_optimum=fraction_of_optimum,reaction_list=[reaction])
-          reaction.lower_bound=round(fva[reaction.id]["minimum"],3)
-          reaction.upper_bound=round(fva[reaction.id]["maximum"],3)  
-          reaction.objective_coefficient=0
-          break 
-   hexs,lexs,iexs=gene_exp_classify_reactions(model,low_expression_threshold=low_expression_threshold,high_expression_threshold=high_expression_threshold,percentile=percentile,excel_name=excel_name,label_model=label_model,gene_method=gene_method)
-   #hexs,lexs,iexs=gene_exp_classify_reactions(model,low_expression_threshold=25,high_expression_threshold=75,percentile=True,excel_name="gene_expression_data.xlsx",label_model=label_model,gene_method="average")
-   convert_to_irreversible_with_indicators( gene_expression_model,hexs,lexs,metabolite_list=metabolite_id_list, mutually_exclusive_directionality_constraint = True,label_model=label_model)
-   add_turnover_metabolites(gene_expression_model, metabolite_id_list=[], epsilon=epsilon,maxupper_bound=maxupper_bound,label_model=label_model)
-   #imat( gene_expression_model,hex_reactions=hexs,lex_reactions=lexs,epsilon=0.1,lex_epsilon=0.001,objective="imat",imat_lower_bound=0.0,sense="maximize",output=True,solver="cplex")
-   fva=imat_variability(gene_expression_model,hexs,lexs,epsilon=epsilon,lex_epsilon=lex_epsilon,fraction_of_optimum=imat_fraction_optimum,check_hex=True,objective=None,all_reactions=False)
-   print fva
-   for reaction_id in fva: 
-       reaction=label_model.constrained_model.reactions.get_by_id(reaction_id)
-       lower_bound=fva[reaction_id]["minimum"]  
-       upper_bound=fva[reaction_id]["maximum"]  
-       if abs(lower_bound)<lex_epsilon:
-          lower_bound=0
-       if abs(upper_bound)<lex_epsilon:
-          upper_bound=0
-
-
-
-
-
-
-model=label_model.constrained_model=copy.deepcopy(label_model.metabolic_model)
-hexs,lexs,objective,status, fva=integrate_gene_expression(label_model,excel_name="gene_expression_data.xlsx",fraction_of_optimum=1,low_expression_threshold=25,high_expression_threshold=75,percentile=True,gene_method="average",metabolite_id_list=[],epsilon=0.1,lex_epsilon=0.0001,imat_fraction_optimum=1,maxupper_bound=1000)
-
-
-turnover_model=copy.deepcopy(model)
-convert_to_irreversible_with_indicators( turnover_model,hexs,lexs,["lanost_r"], mutually_exclusive_directionality_constraint = True)
-
-
-gene_expression_model=copy.deepcopy(label_model.constrained_model)
-add_turnover_metabolites(turnover_model, [], epsilon=0.01,maxupper_bound=1000,label_model=label_model)
-#TODO Fer que no afegixi les reaccions que nomes interconverteixen metabolites d'un mateix pool 
-    
-imat(gene_expression_model,hex_reactions=[],lex_reactions=[],epsilon=1,lex_epsilon=0.001,objective="imat",imat_lower_bound=0.0,sense="maximize",output=False,solver="cplex")
-
-
-problem=cplex_create_imat_problem(gene_expression_model,hex_reactions=[],lex_reactions=[],epsilon=1,lex_epsilon=0.0001,imat_lower_bound=0.0,imat_upper_bound=2000.0,objective="imat")"""
-   

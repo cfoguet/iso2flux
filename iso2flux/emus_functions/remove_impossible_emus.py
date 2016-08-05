@@ -2,6 +2,10 @@ from cobra import Model, Reaction, Metabolite
 from cobra.flux_analysis.variability import flux_variability_analysis
 import copy
 def remove_impossible_emus(label_model):
+   """
+   Removes emus that cannot with labelled substrates used in the experiment
+    
+   """
    #size_expanded_model2_dict={} 
    possible_isotopomers=[]
    impossible_isotopomers=[]
@@ -109,7 +113,6 @@ def remove_impossible_emus(label_model):
 
 
 def remove_m0_reactions(label_model,impossible_isotopomers,possible_isotopomers):
-    label_model.temp=copy.deepcopy(label_model.size_expanded_model_dict[2])
     #This will remove all reactions that have only m0 substrates and products
     only_m0_list=[]
     for emu in label_model.emu_dict:

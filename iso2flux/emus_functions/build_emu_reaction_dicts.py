@@ -1,4 +1,6 @@
 def build_emu_reaction_dicts(label_model):
+    "Builds the dict of the emu reactions"
+    "label_model: label_model object"
     label_model.reaction_n_dict={}
     label_model.n_reaction_dict={}
     sorted_reactions=sorted(label_model.reaction_emu_dict.keys())

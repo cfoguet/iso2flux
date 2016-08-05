@@ -17,6 +17,7 @@ if __name__=="__main__":
 import numpy as np
 t=np.linspace(0,1000,2)
 nt=len(t)-1 #position where the final solution will be found
+
 def check_dy(label_model,condition):
     sumt=0
     label_model.active_condition=condition
@@ -27,6 +28,7 @@ def check_dy(label_model,condition):
     return sumt 
 
 def error_dump(label_model,e_type=None):
+    #Fucntion used for debbuging
     dump_dict={"parameter_dict":label_model.parameter_dict,"flux_dict":label_model.flux_dict,"turnover_dict":label_model.turnover_flux_dict,"e_type":e_type}
     fname="zzzzzz"+str(time.time())
     with open(fname+".json", 'w') as fp:
@@ -34,6 +36,22 @@ def error_dump(label_model,e_type=None):
     cobra.io.write_sbml_model(label_model.constrained_model, fname+"sbml")
 
 def solver(label_model,mode="fsolve",fba_mode="fba",model=None,check_unity=True,hot_start=False):
+    """
+    Function that computes the steady state isotopologue fractions by solving the emu balances model. 
+
+    label_model: label_model object
+    mode: str, optional
+	Either "fsolve" (default) or "ODE". Indicates how should the problem be solved
+    fba_mode: str,optional
+        Either "fba" (flux balance analysis,default) or "pfba" (parsimonious). Indicates wich method should be used to generate the set of setady state fluxes from the COBRA model
+    model: COBRApy model object, optional
+           COBRApy model that will be used to compute the steady state flux distribution. If none is provided it will use the constrained_model in the label_model object
+    check_unity: bool, optional
+	If set to True it will check that isotoplogues fractions for a given EMU are never larger than 1
+    hot_start: bool, deprectated
+        currently unnused
+           
+    """
     label_model.solver_flag="success"
     if model==None:
        model=label_model.constrained_model
@@ -54,7 +72,7 @@ def solver(label_model,mode="fsolve",fba_mode="fba",model=None,check_unity=True,
          yy0=label_model.condition_size_yy_dict
       else:
          yy0=label_model.condition_size_yy0_dict
-      get_fluxes(label_model,model,precision=13)
+      get_fluxes(label_model,model,precision=12)
       for condition in label_model.initial_label:
          label_model.active_condition=condition
          if mode=="fsolve":
@@ -66,7 +84,7 @@ def solver(label_model,mode="fsolve",fba_mode="fba",model=None,check_unity=True,
                    if max_value>1.001 or min_value<-0.001:
                       label_model.solver_flag="fail"
                       print mode+" failed unity check"+str([max_value,min_value])
-                      #error_dump(label_model,e_type="solver error") 
+                      error_dump(label_model,e_type="fsolve error") 
                       break
                       
          elif mode=="ode":

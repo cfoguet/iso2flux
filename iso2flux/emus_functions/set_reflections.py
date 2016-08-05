@@ -1,4 +1,8 @@
 def set_reflections(emu_model_dict):
+   """
+   Identfies reaction of the emu_model that are reflections (reverse of one another)
+   emu_model_dict
+   """
    print("setting reflections...")
    count=0
    if not isinstance(emu_model_dict,dict):

@@ -1,5 +1,6 @@
 import openpyxl 
 import Tkinter
+import tkFileDialog
 from ..misc.write_spreadsheet import write_spreadsheet
 
 def export_constraints(model,fn=None,ratio_dict={}):

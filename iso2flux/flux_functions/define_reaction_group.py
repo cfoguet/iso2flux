@@ -1,4 +1,5 @@
 from cobra import Model, Reaction, Metabolite
+from ..misc.round_functions import round_up, round_down 
 def define_reaction_group(model,reaction_dict,group_reaction_id=None,lower_bound=None,upper_bound=None,objective_coefficient=0):
     new_reaction_id="RGROUP"
     if group_reaction_id!=None:
@@ -9,6 +10,8 @@ def define_reaction_group(model,reaction_dict,group_reaction_id=None,lower_bound
     else:
        for reaction_id in reaction_dict:
            new_reaction_id+="_"+reaction_id
+    if new_reaction_id in model.reactions:
+       model.reactions.get_by_id(new_reaction_id).remove_from_model()
     new_reaction_name="Reaction Group:"
     for reaction_id in reaction_dict:
         if  reaction_dict[reaction_id]>0:
@@ -32,8 +35,12 @@ def define_reaction_group(model,reaction_dict,group_reaction_id=None,lower_bound
         theoretical_upper_bound+=reaction.upper_bound
         theoretical_lower_bound+=reaction.lower_bound
     if lower_bound==None:
-        group_reaction.lower_bound=theoretical_lower_bound
+        group_reaction.lower_bound=min(round_down(theoretical_lower_bound,2),-1000)
+    else:
+        group_reaction.lower_bound=lower_bound
     if upper_bound==None:
-        group_reaction.upper_bound=theoretical_upper_bound
+        group_reaction.upper_bound=max(round_up(theoretical_upper_bound,2),1000)
+    else:
+        group_reaction.upper_bound=upper_bound
 
 

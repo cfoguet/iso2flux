@@ -3,6 +3,12 @@ from get_emu_metabolite import get_emu_metabolite
 import copy
 
 def build_emu_model(label_model,emu0_dict):
+  """
+  A function that constructs the emu reaction newtork
+  label_model: label_model object
+  emu0_dict: emu dict, optional
+      dictionary of the emus that must be produced by the emu network. If not provided it will take them from the variable emu0_dict from label_model 
+  """
   if emu0_dict!={} or emu0_dict!=None:
      label_model.emu0_dict=emu0_dict
   else:
@@ -127,7 +133,7 @@ def build_emu_model(label_model,emu0_dict):
                      new_reaction.lower_bound = 0  # This is the default
                      new_reaction.upper_bound = 1000.  # This is the default
                      new_reaction.add_metabolites(metabolites_dict) 
-                     print [new_reaction.id,new_reaction.reaction]
+                     #print [new_reaction.id,new_reaction.reaction]
                      emu_model.add_reaction(new_reaction)
                      reaction_emu_dict[reaction.id].append(new_reaction.id)
                      emu_reaction_dict[new_reaction.id]=reaction.id

@@ -1,6 +1,14 @@
 import copy
 import numpy as np
 def set_equations_variables(label_model,force_balance=True,set_initial_label=True):
+    """
+    Creates the variables that will store the initial values and results of the simulations
+    label_model: label_model object
+    force_balance: bool,optional
+         If True it will not allocate space to the m0 isotoplogues as they will be computed through the other isotoplogues
+    set_initial_label: bool, optional
+	If False all isotopologues will have an initial fraction of 0 
+    """
     label_model.condition_size_timecourse_dict={}
     label_model.condition_size_transposed_timecourse_dict={}
     label_model.condition_size_yy0_dict={}

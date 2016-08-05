@@ -1,6 +1,10 @@
 from cobra import Model, Reaction, Metabolite
 import copy
 def split_model(label_model):
+   """
+   Splits the emu model into several submodels according to emu size
+   label_model: label_model object
+   """
    size_model_dict=label_model.size_model_dict
    reaction_size_dict={}
    for reaction in label_model.emu_model.reactions:

@@ -1,4 +1,7 @@
 def check_mass_balance(label_model):
+ """
+ checks if the mass is consdereved in the reactions of the emu model network. This function is currently not used in iso2flux
+ """ 
  for reaction in label_model.emu_model.reactions:
     mass_balance=0
     

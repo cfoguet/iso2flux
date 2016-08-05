@@ -4,6 +4,10 @@ import re
 from ..flux_functions.define_reaction_group import define_reaction_group
 
 def remove_identical_reactions(label_model):
+  """
+  identifies identical reactions in the emu_models and replaces them with a single reaction 
+  label_model: label_model object 
+  """
   count=0
   for size in label_model.size_model_dict:
    emu_model2=copy.deepcopy(label_model.size_model_dict[size])

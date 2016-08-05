@@ -85,10 +85,10 @@ class Label_model:
           self.split_reactions_dict={} #unused but keept for compatibility
           self.parameter_dict={}
           self.metabolic_model=model
-          
+          self.eqn_dir="equations"
           self.label_groups_reactions_dict={} #Add to save/load function
           self.reactions_propagating_label=[] #Add to save/load function
-          
+          self.p_dict={}
           
           #Create irreversible model
           self.reactions_with_forced_turnover=reactions_with_forced_turnover
@@ -178,6 +178,10 @@ class Label_model:
           emu_add_label_ouputs_inputs(self,excluded_outputs_inputs)
           remove_identical_reactions(self) 
           expand_emu_models(self)
+          if turnover_exclude_EX!=True and turnover_exclude_EX in ("true",1,"yes","True","Yes"):
+             turnover_exclude_EX=True
+          else: 
+             turnover_exclude_EX=False
           for initial_label in self.labelled_substrates:
               l0=initial_label
               set_initial_label(l0["met_id"],self,l0["label_patterns"],l0["condition"],l0["total_concentration"])
@@ -196,8 +200,12 @@ class Label_model:
           sys.path.insert(0, self.eqn_dir)
           #os.chdir(self.eqn_dir)
           #print os.getcwd()
-          from get_equations import get_equations
-          get_equations(self.size_emu_c_eqn_dict)
+          import get_equations
+          """try:
+            get_equations=reload(get_equations)
+          except:
+            pass"""
+          get_equations.get_equations(self.size_emu_c_eqn_dict)
           #os.chdir(original_directory)  
           self.constrained_model=copy.deepcopy(self.metabolic_model)
           """if default_turnover==None:
@@ -212,12 +220,12 @@ class Label_model:
                if reaction+"_reverse" in self.reaction_emu_dict:#self.simplified_metabolic_model.reactions :
                   if reaction in self.merged_reactions_reactions_dict:
                      reaction=self.merged_reactions_reactions_dict[reaction][0]
+                  print [self.reactions_with_forced_turnover]
                   if ("EX_" in reaction and turnover_exclude_EX) and (reaction not in self.reactions_with_forced_turnover):
                       self.turnover_flux_dict[reaction]={"v":0,"lb":0,"ub":0}
                   else:
                       self.turnover_flux_dict[reaction]={"v":turnover_upper_bound/2.0,"lb":0,"ub":turnover_upper_bound}
-                      #Add turnover for inputs and outputs
-                    
+                      #Add turnover for inputs and outputs         
           if clear_intermediate_data:
              del self.irreversible_metabolic_model
              del self.size_model_dict

@@ -110,14 +110,14 @@ def read_flux_constraints(metabolic_model,ratio_dict={},file_name=None,create_co
                          str_coef,reaction_id=reaction_string.split("*")
                          coef=float(str_coef)
                         except:
-                         add_raction_group=False
+                         add_reaction_group=False
                       else:
                          coef=1      
                          reaction_id=reaction_string
                       if reaction_id in model.reactions:
                          reaction_group_dict[str(reaction_id)]=coef
                       else:
-                         add_raction_group=False
+                         add_reaction_group=False
                   if add_reaction_group:
                     if row_len>1:
                        if row[1]!=None and row[1]!="":
