@@ -3,17 +3,11 @@
 Options:
 
 -e , --experimental_data_file=    Name of file(s) containing the C13 patterns. If more than one file must be entered this can be defined by putting the name of the files in a string separated by a coma (e.g. "file1,file2")
-
 -l , --label_propagation_rules= Name of the file describing the label propagation rules. 
-
 -c,--constrained_based_model=  Name of the file (sbml, xslx or csv) describing the constraint based model that will be used
--f, --flux_constraints= : Name of the file describing additional constraints for the fluxes in the constraint based model
--p,--settings_file=     Name of the file (xlsx or csv) defining additional settings for Iso2flux (Optional)
-
-c-,--flux_constraints_file=   Name of the file containing additional constraints for the constraint based model (Optional)
-
+-f, --flux_constraints= : Name of the file describing additional constraints for the fluxes in the constraint based model (optional)
+-s,--settings_file=     Name of the file (xlsx or csv) defining additional settings for Iso2flux (Optional)
 -o,--output_prefix=         Prefix appended to all the output files (Optional)
-
 -q,--quick_analysis When this flag is used it disables the confidence interval analysis (Optional)
 -w,--working_directory= Name of the working directory (Optional). If none is defined it will use the one where the script is run
 -g --gene_expression_file=  Name of the file (xlsx or csv) indicating the gene expression in the conditions of study (Optional)
