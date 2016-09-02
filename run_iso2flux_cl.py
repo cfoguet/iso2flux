@@ -185,17 +185,12 @@ if __name__ == "__main__":
      fraction_of_optimum=p_dict["fraction_of_optimum"]
      
      
-        
+     
      #model,ratio_dict=read_flux_constraints(model,file_name="normoxia_constraints.xlsx")
      fva=flux_variability_analysis(model,fraction_of_optimum=1)
      write_fva(model,fn=output_prefix+"initial_solution_space.csv",fraction=p_dict["fraction_of_optimum"],remove0=False,change_threshold=0.001,mode="full",lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"])
      #Remember which reactions can be negative to add them as turnover later as negative lower bound may be removed when minimizing flux
      reactions_with_forced_turnover=p_dict["reactions_with_forced_turnover"]
-     """for reaction in model.reactions:
-         if "EX_" not in reaction.id and reaction.lower_bound<0:
-            reactions_with_forced_turnover.append(reaction.id) 
-     reversible_fva=add_flux_limit_constraints(model,fraction_of_optimum_objective=0, fraction_of_flux_minimum=10,boundaries_precision=0.001,solver="cplex")
-     write_fva(model,fn="normoxia_minimum_fluxes.xlsx",fraction=1,remove0=False,change_threshold=0.001,mode="full",lp_tolerance_feasibility=1e-6)"""
      label_model=Label_model(model,lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"],parameter_precision=p_dict["parameter_precision"],reactions_with_forced_turnover=reactions_with_forced_turnover) #initialize the label model class   
      read_isotopomer_model(label_model,iso_model_file,header=True)
      find_missing_reactions(label_model)
@@ -214,15 +209,21 @@ if __name__ == "__main__":
      check_simulated_fractions(label_model)
      find_missing_reactions(label_model)
      
-     
+     if gene_expression_file!=None:
+        if str(p_dict["gene_expression_mode"]).lower()=="imat":
+           hexs,lexs,objective,status, genefva=integrate_omics_imat(label_model.constrained_model,gene_expression_file,fraction_of_optimum=fraction_of_optimum,low_expression_threshold=p_dict["gene_expression_low_expression_threshold"],high_expression_threshold=p_dict["gene_expression_high_expression_threshold"],percentile=p_dict["gene_expression_percentile"],gene_method=p_dict["gene_expression_gene_method"],gene_prefix=p_dict["gene_expression_gene_prefix"],gene_sufix=p_dict["gene_expression_gene_sufix"],metabolite_list_fname=metabolomics_file,epsilon=p_dict["gene_expression_epsilon"],lex_epsilon=p_dict["gene_expression_lex_epsilon"],imat_fraction_optimum=p_dict["gene_expression_fraction_optimum"],label_model=label_model,add_as_constraints=True,boundaries_precision=p_dict["parameter_precision"],solver=None) 
+           
+           #hexs,lexs,objective,status, genefva=integrate_omics_imat(model,file_name=gene_expression_file,fraction_of_optimum=fraction_of_optimum,low_expression_threshold=25,high_expression_threshold=75,percentile=True,gene_method="max",gene_prefix="",gene_sufix="AT",metabolite_list_fname=None,epsilon=0.1,lex_epsilon=0.0001,imat_fraction_optimum=1,label_model=None,add_as_constraints=True,boundaries_precision=0.01,solver=None) 
+     #penalty_dict,objective,genefva=integrate_omics_gim3e(model,file_name="condition1.csv",fraction_of_optimum=p_dict["fraction_of_optimum"],low_expression_threshold=25,absent_gene_expression=50,percentile=True,gene_method="max",gene_prefix="",gene_sufix="AT",metabolite_list_fname=None,label_model=None,epsilon=0.0001,gim3e_fraction_optimum=0.75,add_as_constraints=True,boundaries_precision=0.001) 
+        elif str(p_dict["gene_expression_mode"]).lower()=="gim3e" or str(p_dict["gene_expression_mode"]).lower()=="gimme": 
+           penalty_dict,objective,genefva=integrate_omics_gim3e(label_model.constrained_model,gene_expression_file,fraction_of_optimum=p_dict["fraction_of_optimum"],low_expression_threshold=p_dict["gene_expression_low_expression_threshold"],absent_gene_expression=p_dict["gene_expression_absent_gene_expression_value"],percentile=p_dict["gene_expression_percentile"],gene_method=p_dict["gene_expression_gene_method"],gene_prefix=p_dict["gene_expression_gene_prefix"],gene_sufix=p_dict["gene_expression_gene_sufix"],metabolite_list_fname=metabolomics_file,label_model=label_model,epsilon=p_dict["gene_expression_lex_epsilon"],gim3e_fraction_optimum=p_dict["gene_expression_fraction_optimum"],add_as_constraints=True,boundaries_precision=p_dict["parameter_precision"])  
+        write_fva(label_model.constrained_model,fn=output_prefix+p_dict["gene_expression_mode"]+"_solution.csv",fraction=p_dict["fraction_of_optimum"],remove0=False,change_threshold=0.001,mode="full",lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"])
      
      #launch_gui(label_model)
      
      a,b=solver(label_model,mode="fsolve")
      get_objective_function(label_model,output=True)
-     def test1(): solver(label_model,mode="fsolve")
      
-     timeit(test1,number=1)
      #model=label_model.constrained_model=copy.deepcopy(label_model.metabolic_model)
      #best_parameters=parameters=identify_free_parameters(label_model,parameter_dict={},fraction_of_optimum=fraction_of_optimum,change_threshold=p_dict["identify_free_parameters_change_threshold"],add_turnover=p_dict["identify_free_parameters_add_turnover"],parameter_precision=label_model.parameter_precision,n_samples=p_dict["identify_free_parameters_n_samples"])
      relative_max_sample=p_dict["annealing_relative_max_sample"]
