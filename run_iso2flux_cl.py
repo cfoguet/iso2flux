@@ -3,18 +3,24 @@
 Options:
 
 -e , --experimental_data_file=    Name of file(s) containing the C13 patterns. If more than one file must be entered this can be defined by putting the name of the files in a string separated by a coma (e.g. "file1,file2")
+
 -l , --label_propagation_rules= Name of the file describing the label propagation rules. 
+
 -c,--constrained_based_model=  Name of the file (sbml, xslx or csv) describing the constraint based model that will be used
--f, --flux_constraints= : Name of the file describing additional constraints for the fluxes in the constraint based model (optional)
--s,--settings_file=     Name of the file (xlsx or csv) defining additional settings for Iso2flux (Optional)
+-f, --flux_constraints= : Name of the file describing additional constraints for the fluxes in the constraint based model
+-p,--settings_file=     Name of the file (xlsx or csv) defining additional settings for Iso2flux (Optional)
+
+c-,--flux_constraints_file=   Name of the file containing additional constraints for the constraint based model (Optional)
+
 -o,--output_prefix=         Prefix appended to all the output files (Optional)
+
 -q,--quick_analysis When this flag is used it disables the confidence interval analysis (Optional)
 -w,--working_directory= Name of the working directory (Optional). If none is defined it will use the one where the script is run
 -g --gene_expression_file=  Name of the file (xlsx or csv) indicating the gene expression in the conditions of study (Optional)
 -m --metabolomics_file=     Name of the file (xlsx or csv) indicating the metabolites that have been detected in the conditions of study (Optional). It will only be used if a gene expression file is provided.
 -t --targetted_fluxes       Name of the files (xlsx or csv) indicating the list of fluxes whose confidence intervals will be computed (Optional). If none is provided confidence intervals will be computed for all fluxes.
 """
-p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 3, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 10, 'confidence_perturbation': 0.1, 'annealing_m': 500, 'annealing_n': 10, 'annealing_relative_max_sample': 0.4, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.005, 'parameter_precision': 0.0001, 'fraction_of_optimum': 0, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.25, 'annealing_iterations': 2,"gene_expression_mode":"gim3e", "gene_expression_low_expression_threshold":25,"gene_expression_high_expression_threshold":75,"gene_expression_percentile":True,"gene_expression_gene_method":"avearge", "gene_expression_gene_prefix":"","gene_expression_gene_sufix":"_AT","gene_expression_epsilon":1, "gene_expression_lex_epsilon":1e-6,"gene_expression_fraction_optimum":1, "gene_expression_absent_gene_expression_value":50}
+p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 3, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 10, 'confidence_perturbation': 0.1, 'annealing_m': 20, 'annealing_n': 10, 'annealing_relative_max_sample': 0.4, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.005, 'parameter_precision': 0.0001, 'fraction_of_optimum': 0, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.25, 'annealing_iterations': 2,"gene_expression_mode":"gim3e", "gene_expression_low_expression_threshold":25,"gene_expression_high_expression_threshold":75,"gene_expression_percentile":True,"gene_expression_gene_method":"avearge", "gene_expression_gene_prefix":"","gene_expression_gene_sufix":"_AT","gene_expression_epsilon":1, "gene_expression_lex_epsilon":1e-6,"gene_expression_fraction_optimum":1, "gene_expression_absent_gene_expression_value":50}
 if __name__ == "__main__":
      try:
         import iso2flux
