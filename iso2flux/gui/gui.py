@@ -7,6 +7,7 @@ import math
 import numpy
 import os
 import sys
+import time
 #Ilabel imports
 import cobra
 from cobra.flux_analysis.variability import flux_variability_analysis
@@ -87,14 +88,15 @@ class GUI:
           filemenu.add_command(label="Save", command=self.save_model) #TODO Swicth to save model
           #TODO Save constraints/Load constraints
           menubar.add_cascade(label="File", menu=filemenu)
-          fittingmenu = Menu(menubar, tearoff=0)
-          fittingmenu.add_command(label="Automatically add parameters", command=self.create_add_parameters_window)
-          fittingmenu.add_command(label="View parameters", command=self.create_view_parameters_window)
-          fittingmenu.add_command(label="Fit parameters", command=self.create_fitting_window)
-          fittingmenu.add_command(label="Sampling", command=self.create_sampling_window)
-          fittingmenu.add_command(label="Calculate confidence intervals", command=self.create_confidence_interval_window)
-          menubar.add_cascade(label="Fitting", menu=fittingmenu)
-          options = Menu(menubar, tearoff=0)
+          if self.label_model.emu_dict!={}: #Create the fitting menu only if a label model exists
+             fittingmenu = Menu(menubar, tearoff=0)
+             fittingmenu.add_command(label="Automatically add parameters", command=self.create_add_parameters_window)
+             fittingmenu.add_command(label="View parameters", command=self.create_view_parameters_window)
+             fittingmenu.add_command(label="Fit parameters", command=self.create_fitting_window)
+             fittingmenu.add_command(label="Sampling", command=self.create_sampling_window)
+             fittingmenu.add_command(label="Calculate confidence intervals", command=self.create_confidence_interval_window)
+             menubar.add_cascade(label="Fitting", menu=fittingmenu)
+             options = Menu(menubar, tearoff=0)
            
           add_constrain_menu = Menu(menubar, tearoff=0)
           add_constrain_menu.add_command(label="Load constraints", command=self.load_constraints)
@@ -112,7 +114,8 @@ class GUI:
           export_menu.add_command(label="Export Fluxes", command=self.export_fluxes)
           export_menu.add_command(label="Export Constraints", command=self.export_constraints)
           export_menu.add_command(label="Export model", command=self.export_model) 
-          export_menu.add_command(label="Export label simulation results", command=self.export_label)
+          if self.label_model.emu_dict!={}: #Create the fitting menu only if a label model exists
+             export_menu.add_command(label="Export label simulation results", command=self.export_label)
           menubar.add_cascade(label="Export", menu=export_menu)
           
           add_help_menu = Menu(menubar, tearoff=0)
@@ -153,12 +156,13 @@ class GUI:
           filters_labelframe.pack(side=LEFT,expand=False)
           show_frame=Frame(filters_labelframe)
           show_frame.pack(side=TOP)
-          radiobutton1 = Radiobutton(show_frame, text="Show all reactions", variable=self.show_variable, value=0)
-          radiobutton1.pack( side = LEFT)
-          radiobutton2 = Radiobutton(show_frame, text="Show only label reactions", variable=self.show_variable, value=1)
-          radiobutton2.pack( side = LEFT)
-          radiobutton3 = Radiobutton(show_frame, text="Show only metabolic reactions", variable=self.show_variable, value=2)
-          radiobutton3.pack( side = LEFT)
+          if self.label_model.emu_dict!={}: #Create the only if a label model exists
+             radiobutton1 = Radiobutton(show_frame, text="Show all reactions", variable=self.show_variable, value=0)
+             radiobutton1.pack( side = LEFT)
+             radiobutton2 = Radiobutton(show_frame, text="Show only label reactions", variable=self.show_variable, value=1)
+             radiobutton2.pack( side = LEFT)
+             radiobutton3 = Radiobutton(show_frame, text="Show only metabolic reactions", variable=self.show_variable, value=2)
+             radiobutton3.pack( side = LEFT)
           
       
       
@@ -888,7 +892,12 @@ class GUI:
              
       
       def save_model(self):
-          save_iso2flux_model(self.label_model,name="project",write_sbml=True,gui=True)
+          project_name=save_iso2flux_model(self.label_model,name="project",write_sbml=True,gui=True)
+          self.label_model.project_name=project_name
+          self.log_name=project_name[:-9]+"_log.text"
+          self.root.title(self.label_model.project_name)
+          f=open(self.log_name, "w")
+          f.write(time.strftime("%c")+"//"+"Instance created")
           """fileName = tkFileDialog.asksaveasfilename(parent=self.root,title="Save the parameters as...",filetypes=[("parameters",".par")])
           if len(fileName)>0:
               reaction_dict={}
@@ -1221,10 +1230,11 @@ class GUI:
              obj=reaction.objective_coefficient
              print reaction.objective_coefficient
              self.varoptimizacion.set(int(obj))
-             if self.active_reaction_get_bounds in self.label_model.parameter_dict:
-                self.parameter_button.config(text="Remove from parameters")
-             else:
-                self.parameter_button.config(text="Make parameter")
+             if self.label_model.emu_dict!={}: #Create the fitting menu only if a label model exists
+                if self.active_reaction_get_bounds in self.label_model.parameter_dict:
+                   self.parameter_button.config(text="Remove from parameters")
+                else:
+                   self.parameter_button.config(text="Make parameter")
              text=(self.active_reaction_get_bounds)
              if len(text)>=2*(self.average_width+1):
                 text=text[:(2*(self.average_width))]+".."
@@ -1317,8 +1327,9 @@ class GUI:
          self.frame_boundaries = Frame(labelframe_boundaries_objective_turnover)
          frame_flux_boundaries=Frame(self.frame_boundaries)
          frame_flux_boundaries.pack(side=TOP,fill="y", expand=True)
-         self.parameter_button=add_parameter_button = Button(self.frame_boundaries, text="Make parameter",command=self.add_parameter)
-         add_parameter_button.pack(side=TOP)
+         if self.label_model.emu_dict!={}: #Create the fitting menu only if a label model exists
+            self.parameter_button=add_parameter_button = Button(self.frame_boundaries, text="Make parameter",command=self.add_parameter)
+            add_parameter_button.pack(side=TOP)
          sublabelframe_boundaries_lb = Frame(frame_flux_boundaries)
          self.boundaries_lb_spinbox = Spinbox(sublabelframe_boundaries_lb, from_=-99999, to=99999, increment = 0.01, format="%.2f", width = 7)
          reaction_selector,self.boundaries_reaction_selector_listbox=self.reaction_selector(labelframe_boundaries_objective_turnover)
@@ -1653,8 +1664,9 @@ class GUI:
         button72.pack( side = LEFT )"""
            
       def label_button(self):
-          button01 = Button(self.root, text="Simulate Label",command=self.create_figure_window)
-          button01.pack( side = TOP)
+          if self.label_model.emu_dict!={}: #Create the button only if a label model exists
+             button01 = Button(self.root, text="Simulate Label",command=self.create_figure_window)
+             button01.pack( side = TOP)
           
       """def add_turnover_display(self):
           add_turnover_frame=LabelFrame(self.root,text="Set flux turnover")
@@ -2119,6 +2131,7 @@ class GUI:
           print self.label_model.p_dict
           self.change_threshold=self.label_model.p_dict["identify_free_parameters_change_threshold"]
           root.title(self.label_model.project_name)
+          self.log_name=self.label_model.project_name[:-9]+"_log.text"
           self.label_model.constrained_model=label_model.constrained_model
           self.backup_constrained_model=copy.deepcopy(label_model.constrained_model) #Used to restore bounds and objectives
           self.backup_turnover_flux_dict=copy.deepcopy(label_model.turnover_flux_dict) #Used to restore bounds and objectives
@@ -2254,8 +2267,8 @@ class build_model_gui:
         self.settings_entry.insert(0,str(loaded_file.name))
     def new_model(self):
         self.store_inputs()
-        if ""==self.sbml_entry.get() or ""==self.e_data_entry.get or ""==self.label_rules_entry.get():
-             print "Mandatory Input missing"
+        if ""==self.sbml_entry.get():# or ""==self.e_data_entry.get or ""==self.label_rules_entry.get():
+             print "A constrained model must be defined"
              return
         p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 3, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 10, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 20, 'annealing_relative_max_sample': 0.4, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.001, 'parameter_precision': 0.0001, 'fraction_of_optimum': 1, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.25, 'annealing_iterations': 2,"gene_expression_mode":"imat", "gene_expression_low_expression_threshold":25,"gene_expression_high_expression_threshold":75,"gene_expression_percentile":True,"gene_expression_gene_method":"avearge", "gene_expression_gene_sufix":"_AT","gene_expression_gene_prefix":"","gene_expression_epsilon":1, "gene_expression_lex_epsilon":1e-6,"gene_expression_fraction_optimum":1, "gene_expression_absent_gene_expression_value":50}
         #p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 4, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 100, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 10, 'annealing_relative_max_sample': 0.35, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.005, 'parameter_precision': 0.0001, 'fraction_of_optimum': 0, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.2, 'annealing_iterations': 2,"gene_prefix":"gene","gene_sufix":"_AT"}
@@ -2274,24 +2287,42 @@ class build_model_gui:
           print "Settings loaded"
         except:
           pass 
-        project_name = tkFileDialog.asksaveasfilename(title="Save project as...",filetypes=[("iso2flux",".iso2flux")])
-        if ".iso2flux" not in project_name:
-            project_name+=".iso2flux"
+        self.project_name = tkFileDialog.asksaveasfilename(title="Save project as...",filetypes=[("iso2flux",".iso2flux")])
+        if ".iso2flux" not in self.project_name:
+            self.project_name+=".iso2flux"
+        log_name=self.project_name[:-9]+"_log.text"
+        f=open(log_name, "w")
+        f.write(time.strftime("%c")+"//"+"Instance created")
         self.label_model=label_model=Label_model(model,lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"],parameter_precision=p_dict["parameter_precision"],reactions_with_forced_turnover=p_dict["reactions_with_forced_turnover"])
         self.label_model.p_dict=p_dict
-        self.label_model.eqn_dir=project_name[:-9]+"_equations"
-        read_isotopomer_model(label_model,self.label_rules_entry.get())
-        find_missing_reactions(label_model)
-        #loaded_file = tkFileDialog.askopenfile(title='Choose experimental measuments file',filetypes=[("xlsx",".xlsx")]) 
-        #fileName=loaded_file.name
-        e_data_names=self.e_data_entry.get().replace("[","").replace("]","").split(",")
-        emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,e_data_names,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
-        label_model.build(emu_dict0,force_balance=True,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=False,turnover_exclude_EX=p_dict['turnover_exclude_EX'])
+        self.label_model.eqn_dir=self.project_name[:-9]+"_equations"
+        try:  
+          read_isotopomer_model(label_model,self.label_rules_entry.get())
+          missing_reactions_list= find_missing_reactions(label_model).keys()
+          if len(missing_reactions_list)>0:
+             raise Exception ("Some reactions lack label propagation rules: "+str(missing_reactions_list)) 
+          #loaded_file = tkFileDialog.askopenfile(title='Choose experimental measuments file',filetypes=[("xlsx",".xlsx")]) 
+          #fileName=loaded_file.name
+          e_data_names=self.e_data_entry.get().replace("[","").replace("]","").split(",")
+          emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,e_data_names,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
+          label_model.build(emu_dict0,force_balance=True,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=False,turnover_exclude_EX=p_dict['turnover_exclude_EX'])
+          self.finish_create_new_model() 
+        except:
+           top=Toplevel()
+           input_missing_label=Label(top,text="Warning:\nIso2flux was unable to build the label propagation\nmodel due to missing or wrong inputs.\nThis will prevent simulating 13C propagation.\n Do you wish to continue?")
+           input_missing_label.pack(side=TOP)
+           yes_button=Button(top,text="Yes",command=self.finish_create_new_model) 
+           yes_button.pack(side=TOP)
+           no_button=Button(top,text="No",command=top.destroy) 
+           no_button.pack(side=TOP)
+           label_model.constrained_model=copy.deepcopy(label_model.metabolic_model)
+        #save_iso2flux_model(label_model,name=self.project_name,write_sbml=True,gui=False)
+        #self.root.destroy()
+    
+    def finish_create_new_model(self):
+        save_iso2flux_model(self.label_model,name=self.project_name,write_sbml=True,gui=False)
+        self.root.destroy()  
         
-        save_iso2flux_model(label_model,name=project_name,write_sbml=True,gui=False)
-        self.root.destroy()
-    
-    
     def validate_model(self):
         self.root.withdraw() 
         self.store_inputs()
@@ -2327,7 +2358,7 @@ class build_model_gui:
         #self.label_model.p_dict=p_dict
         #save_iso2flux_model(label_model,name="project",write_sbml=True,gui=True)
         #self.root.destroy()
-        top=Toplevel(self.root)
+        top=Toplevel()
         top.protocol("WM_DELETE_WINDOW",self.restart_script)
         if steady_state_flag and len(missing_dict)==0:
            validation_summary=Label(top,text="Succesfully validated\n")

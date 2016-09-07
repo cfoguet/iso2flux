@@ -4,6 +4,7 @@ import cobra
 from ..classes.isotopomer import isotopomer #Import the label_model class
 from ..label_propagation_functions.add_label_reactions import add_label_reactions
 from ..misc.read_spreadsheets import read_spreadsheets
+from ..label_propagation_functions.find_missing_reactions import find_missing_reactions
 #def read_experimental_mid(label_model,file_name,emu0_dict={},experimental_dict={},minimum_sd=0.01): 
 
 
@@ -28,10 +29,13 @@ def read_isotopomer_model(label_model,file_name,header=True):
     reactions_rows=[]
     for data in sheet_rows_dict:
         for row in sheet_rows_dict[data]:
+           try:
             if row[0].split(",")[0] in label_model.metabolic_model.metabolites: #Check if you are looking at the list of metabolites
                metabolites_rows.append(row)
             elif row[0].split(",")[0] in label_model.metabolic_model.reactions:
                reactions_rows.append(row)
+           except:
+               pass 
     for n,row in enumerate(metabolites_rows):
                if row[0]==None:
                   continue
@@ -143,7 +147,7 @@ def read_isotopomer_model(label_model,file_name,header=True):
                              label_propagation["prod"+str(n_prod)].append([substrate_id,substrate_n])
                #print [label_propagation,products_dict,substrates_dict]
                add_label_reactions(label_model,reaction_id,label_propagation=label_propagation,products_dict=products_dict,substrates_dict=substrates_dict)
-
+    add_missing_uni_uni_reactions(label_model)
 
 
 
@@ -158,8 +162,19 @@ def remove_produced_inputs(label_model):
                if coef>0.0:
                   print reaction
                   reaction.add_metabolites({metabolite:-coef})
-               
 
+def add_missing_uni_uni_reactions(label_model):
+    missing_reactions_dict=find_missing_reactions(label_model,verbose=False)
+    print missing_reactions_dict
+    for missing_reaction in missing_reactions_dict:
+        substrates=missing_reactions_dict[missing_reaction][0]
+        products=missing_reactions_dict[missing_reaction][1]
+        if len(products)==1 and len(substrates)==1: #Identfy uni-uni reactions
+           substrate_object= label_model.met_id_isotopomer_dict[substrates[0]]
+           product_object= label_model.met_id_isotopomer_dict[products[0]]
+           if product_object.n==substrate_object.n: #Check if they have the same number of carbons
+              add_label_reactions(label_model,missing_reaction)
+    #Check if they are any reactions still missing              
 #read_isotopomer_model(label_model,"isotopomer_model.xlsx",header=True)
 
 

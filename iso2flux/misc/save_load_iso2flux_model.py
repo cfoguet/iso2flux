@@ -55,6 +55,7 @@ def save_iso2flux_model(label_model,name="project",write_sbml=True,ask_sbml_name
    with open(project_name, 'w') as fp:
          json.dump(project_dict, fp)
    label_model.project_name=project_name.split("/")[-1]
+   return project_name
 
 
 

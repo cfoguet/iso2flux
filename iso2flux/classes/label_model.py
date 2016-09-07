@@ -89,7 +89,26 @@ class Label_model:
           self.label_groups_reactions_dict={} #Add to save/load function
           self.reactions_propagating_label=[] #Add to save/load function
           self.p_dict={}
-          
+          self.emu_dict0={}
+          self.emu_dict={} #Dictionary of all emus in the model
+          self.emu_size_dict={} #Ditctionady of all emus sorted by size
+          self.reaction_emu_dict={} #Dictionary metabolic reactions -> emu reactions
+          self.emu_reaction_dict={} #Dictionady emu reactions -> reactions 
+          self.metabolite_emu_dict={} #Dictionary metabolite -> emu
+          self.emu_metabolite_dict={} #Dictionadyr emu -> metabolites
+          self.expanded_reaction_emu_dict={}
+          self.emu_reaction_expanded_dict={}
+          self.expanded_emu_dict={}
+          self.size_variable_dict={}
+          self.size_inverse_variable_dict={}
+          self.input_n_dict={}
+          self.reaction_n_dict={}
+          self.n_reaction_dict={}
+          self.size_emu_c_eqn_dict={} #Dict of the size-> equations systems
+          self.force_balance=True 
+          self.experimental_dict={}
+          self.input_m0_list={}
+          self.data_name_emu_dict={}
           #Create irreversible model
           self.reactions_with_forced_turnover=reactions_with_forced_turnover
           self.irreversible_metabolic_model=copy.deepcopy(model)

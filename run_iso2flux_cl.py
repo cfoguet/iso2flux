@@ -10,7 +10,7 @@ Options:
 -f, --flux_constraints= : Name of the file describing additional constraints for the fluxes in the constraint based model
 -s,--settings_file=     Name of the file (xlsx or csv) defining additional settings for Iso2flux (Optional)
 
-c-,--flux_constraints_file=   Name of the file containing additional constraints for the constraint based model (Optional)
+f-,--flux_constraints_file=   Name of the file containing additional constraints for the constraint based model (Optional)
 
 -o,--output_prefix=         Prefix appended to all the output files (Optional)
 
