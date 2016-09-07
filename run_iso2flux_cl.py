@@ -198,7 +198,9 @@ if __name__ == "__main__":
      write_fva(model,fn="normoxia_minimum_fluxes.xlsx",fraction=1,remove0=False,change_threshold=0.001,mode="full",lp_tolerance_feasibility=1e-6)"""
      label_model=Label_model(model,lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"],parameter_precision=p_dict["parameter_precision"],reactions_with_forced_turnover=reactions_with_forced_turnover) #initialize the label model class   
      read_isotopomer_model(label_model,iso_model_file,header=True)
-     find_missing_reactions(label_model)
+     missing_reactions_list= find_missing_reactions(label_model).keys()
+     if len(missing_reactions_list)>0:
+        raise Exception ("Some reactions lack label propagation rules: "+str(missing_reactions_list)) 
      
      #emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,mid_data_name,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
      try:
@@ -212,7 +214,7 @@ if __name__ == "__main__":
      label_model.turnover_flux_dict["gludxm"]={"ub":1000,"lb":0,"v":500}"""
      check_steady_state(label_model,only_initial_m0=True,threshold=1e-9)#Check initial dy for steady state deviations
      check_simulated_fractions(label_model)
-     find_missing_reactions(label_model)
+
      
      
      
