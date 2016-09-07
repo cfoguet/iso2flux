@@ -8,7 +8,7 @@ Options:
 
 -c,--constrained_based_model=  Name of the file (sbml, xslx or csv) describing the constraint based model that will be used
 -f, --flux_constraints= : Name of the file describing additional constraints for the fluxes in the constraint based model
--p,--settings_file=     Name of the file (xlsx or csv) defining additional settings for Iso2flux (Optional)
+-s,--settings_file=     Name of the file (xlsx or csv) defining additional settings for Iso2flux (Optional)
 
 c-,--flux_constraints_file=   Name of the file containing additional constraints for the constraint based model (Optional)
 
