@@ -132,7 +132,7 @@ class GUI:
       def load_constraints(self):
           #self.reset_all_bounds()
           clear_parameters(self.label_model,parameter_dict=None,parameter_list=[], clear_ratios=False,clear_turnover=False,clear_fluxes=True) 
-          self.label_model.metabolic_model,self.label_model.ratio_dict=read_flux_constraints(label_model.constrained_model,ratio_dict=self.label_model.ratio_dict,file_name=None,create_copies=True) 
+          self.label_model.constrained_model,self.label_model.ratio_dict=read_flux_constraints(self.label_model.constrained_model,ratio_dict=self.label_model.ratio_dict,file_name=None,create_copies=True) 
           self.update_ratio_list()
       
       def reset_model(self):
@@ -1177,14 +1177,14 @@ class GUI:
                  string=("    "+flux+"=%s ")%( min_flux)
               else:
                  string=("%s < "+flux+" <%s ")%( min_flux, max_flux)"""
-              if (max_flux-min_flux)>1.5*self.change_threshold and flux not in self.label_model.parameter_dict:
+              if (round(min_flux,4)!=round(max_flux,4) and (max_flux-min_flux)>1.1*self.change_threshold) and flux not in self.label_model.parameter_dict:#if (max_flux-min_flux)>1.5*self.change_threshold and flux not in self.label_model.parameter_dict:
                  string=("%s < "+flux+" <%s ")%( round(min_flux,3), round(max_flux,3))
                  self.fva_listbox.insert(END, string)
                  self.free_fluxes_n_dict[flux]=n
                  self.n_free_fluxes_dict[n]=flux
                  n+=1
               else:
-                  optimal_flux=round(self.solution_dict[flux],4)
+                  optimal_flux=round((max_flux+min_flux)/2,4)
                   string=(flux+"=%s ")%( optimal_flux) 
                   self.optimal_solution_listbox.insert(END, string)
          
@@ -1541,18 +1541,18 @@ class GUI:
          #self.search_term_flux_active=""
          #average_width=int(numpy.mean([len(x.id) for x in label_model.constrained_model.reactions] ))
          labelframe6.pack(fill=Y, expand=False)
-         label_frame_determined_fluxes = LabelFrame(labelframe6,text="Uniquelly determined fluxes")
+         label_frame_determined_fluxes = LabelFrame(labelframe6,text="Fluxes with a single solution")
          label_frame_determined_fluxes.pack(side = LEFT,fill=Y,expand=True)
          scrollbar612 = Scrollbar(label_frame_determined_fluxes)
          scrollbar612.pack( side = RIGHT, fill=Y,expand=True)
          scrollbar613 = Scrollbar(label_frame_determined_fluxes,orient=HORIZONTAL)
-         self.optimal_solution_listbox = Listbox(label_frame_determined_fluxes, yscrollcommand = scrollbar612.set,xscrollcommand = scrollbar613.set, width= self.average_width+10 )
+         self.optimal_solution_listbox = Listbox(label_frame_determined_fluxes, yscrollcommand = scrollbar612.set,xscrollcommand = scrollbar613.set, width= self.average_width+20 )
          scrollbar612.config( command = self.optimal_solution_listbox.yview ) 
          scrollbar613.config( command = self.optimal_solution_listbox.xview ) 
          self.optimal_solution_listbox.pack( side = TOP, fill=Y,expand=True)
          scrollbar613.pack( side = TOP, fill=X,expand=False) 
          
-         label_frame_fva = LabelFrame(labelframe6,text="Free Fluxes")
+         label_frame_fva = LabelFrame(labelframe6,text="Fluxes with a solution range")
          frame_fva_list=Frame(label_frame_fva)
          frame_fva_list.pack(side = TOP,fill=Y,expand=True)
          label_frame_fva.pack(side = LEFT,fill=Y,expand=True)
@@ -1637,20 +1637,24 @@ class GUI:
       
       
       def export_fluxes(self):
-           fileName = tkFileDialog.asksaveasfilename(parent=self.root,title="Save fluxes as...",filetypes=[("xlsx","*.xlsx"),("csv","*.csv")],defaultextension=".csv")
+           fileName = tkFileDialog.asksaveasfilename(parent=self.root,title="Save fluxes as...",filetypes=[("xlsx","*.xlsx"),("csv","*.csv")])
+           if "xlsx" not in fileName.lower() and "csv" not in filename.lower():
+               fileName+=".csv"  
            if len(fileName)>0:
-                write_fva(self.label_model.constrained_model, fn=fileName,fraction=self.fraction_of_optimum,remove0=False,change_threshold=10*self.parameter_precision, mode="reduced", lp_tolerance_feasibility=self.label_model.lp_tolerance_feasibility)
+                write_fva(self.label_model.constrained_model, fn=fileName,fraction=self.fraction_of_optimum,remove0=False,change_threshold=10*self.parameter_precision, mode="full", lp_tolerance_feasibility=self.label_model.lp_tolerance_feasibility)
       
           
       def export_model(self):
            fileName = tkFileDialog.asksaveasfilename(parent=self.root,title="Save model with constrains as...",filetypes=[("sbml","*.sbml"),("xml","*.xml"),("xlsx","*.xlsx"),("csv","*.csv")])
-           if ".sbml" in fileName or ".xml" in fileName:
+           if ".sbml" in fileName.lower() or ".xml" in fileName.lower():
               cobra.io.write_sbml_model(self.label_model.constrained_model, fileName)
            else:
               convert_model_to_spreadsheet(self.label_model.constrained_model,fileName) 
       
       def export_label(self):
-           fileName = tkFileDialog.asksaveasfilename(parent=self.root,title="Save label simulation results as...",filetypes=[("xlsx",".xlsx"),("csv",".csv")],defaultextension=".csv")
+           fileName = tkFileDialog.asksaveasfilename(parent=self.root,title="Save label simulation results as...",filetypes=[("xlsx",".xlsx"),("csv",".csv")])
+           if "xlsx" not in fileName.lower() and "csv" not in filename.lower():
+               fileName+=".csv"  
            if len(fileName)>0:
               a1,b=solver(self.label_model,mode="fsolve",fba_mode=self.fba_mode.get().lower())
               a2,b,c=get_objective_function(self.label_model,force_balance=self.label_model.force_balance,output=True)

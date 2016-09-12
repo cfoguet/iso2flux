@@ -1,6 +1,6 @@
 from ..flux_functions.apply_ratios import remove_ratio
 
-def clear_parameters(label_model,parameter_dict=None,parameter_list=[], clear_ratios=True,clear_turnover=True,clear_fluxes=True,restore_objectives=True):
+def clear_parameters(label_model,parameter_dict=None,parameter_list=[], clear_ratios=True,clear_turnover=True,clear_fluxes=True,restore_objectives=True,delete_parameters=False):
     if parameter_dict==None:
        parameter_dict=label_model.parameter_dict
     if parameter_list==[]:
@@ -28,4 +28,7 @@ def clear_parameters(label_model,parameter_dict=None,parameter_list=[], clear_ra
                   label_model.turnover_flux_dict[reaction_id]["v"]=(label_model.turnover_flux_dict[reaction_id]["ub"]+label_model.turnover_flux_dict[reaction_id]["lb"])/2.0
         elif  label_model.parameter_dict[parameter]["type"]=="ratio" and clear_ratios:
                remove_ratio(label_model.constrained_model,parameter,label_model.ratio_dict)
+    if delete_parameters==True:
+       for parameter in parameter_list:
+            del(label_model.parameter_dict[parameter])
                

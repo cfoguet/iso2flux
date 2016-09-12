@@ -1,6 +1,7 @@
 import random
 import copy
 from apply_parameters import apply_parameters 
+from clear_parameters import clear_parameters
 from cobra.flux_analysis.variability import flux_variability_analysis
 from ..flux_functions.apply_ratios import apply_ratios
 from identify_free_parameters import identify_free_fluxes
@@ -15,13 +16,15 @@ def sampling(label_model,n=100,fraction_of_optimum=0,output_emu_list=None,max_tu
     precision=int(-1*(math.log10(parameter_precision)))
     #print ["hello",label_model.constrained_model.reactions.get_by_id("biomass").lower_bound]
     original_model=copy.deepcopy(label_model.constrained_model)
-    original_turnover=copy.copy(label_model.turnover_flux_dict)
+    original_turnover=copy.deepcopy(label_model.turnover_flux_dict)
     apply_parameters(label_model,parameter_dict)
     #model=label_model.constrained_model
     #try:
-    if fraction_of_optimum!=0:
+    objective_dict={}
+    if fraction_of_optimum!=0:       
        for reaction in label_model.constrained_model.objective: 
             fva=flux_variability_analysis(label_model.constrained_model,reaction_list=[reaction], fraction_of_optimum=fraction_of_optimum,tolerance_feasibility=label_model.lp_tolerance_feasibility)
+            objective_dict[reaction]={"lb":reaction.lower_bound,"ub":reaction.upper_bound,"obj":reaction.objective_coefficient}
             reaction.lower_bound=round_down(fva[reaction.id]["minimum"],precision)
             reaction.upper_bound=round_up(fva[reaction.id]["maximum"],precision)
             reaction.objective_coefficient=0
@@ -55,6 +58,7 @@ def sampling(label_model,n=100,fraction_of_optimum=0,output_emu_list=None,max_tu
     #Generate the samples
     free_parameters={}
     for i in range(0,n):
+         clear_parameters(label_model,parameter_dict=free_parameters,parameter_list=[], clear_ratios=True,clear_turnover=True,clear_fluxes=True,restore_objectives=True,delete_parameters=True)
          free_parameters=identify_free_fluxes(label_model,parameter_dict=free_parameters,fraction_of_optimum=0,change_threshold=change_threshold,parameter_precision=parameter_precision,max_d=0.1,key_reactions=[],original_fva=None,debug=False)
          for reaction_id in free_parameters:
             reaction=label_model.constrained_model.reactions.get_by_id(reaction_id)
@@ -75,13 +79,13 @@ def sampling(label_model,n=100,fraction_of_optimum=0,output_emu_list=None,max_tu
          for turnover in label_model.turnover_flux_dict:
              if (turnover+"_turnover") not in parameter_dict: 
                 lb=label_model.turnover_flux_dict[turnover]["lb"]
-                ub=label_model.turnover_flux_dict[turnover]["lb"]
+                ub=label_model.turnover_flux_dict[turnover]["ub"]
                 new_value=round(random.uniform(lb,ub),precision) 
+                print new_value
                 label_model.turnover_flux_dict[turnover]["v"]=new_value
+         print label_model.turnover_flux_dict     
          #apply_parameters(label_model,parameter_dict=free_parameters,parameter_list=turnover_parameter_list,parameter_precision=parameter_precision)
-         print label_model.constrained_model.optimize()
          a,b=solver(label_model,mode="fsolve",fba_mode=fba_mode)
-         print a
          #Store output
          for condition in output_dict:
             for size in output_dict[condition]:
@@ -100,8 +104,14 @@ def sampling(label_model,n=100,fraction_of_optimum=0,output_emu_list=None,max_tu
          #Restore original values for flux constraints
          #except:
           # continue
+    clear_parameters(label_model,parameter_dict=free_parameters,parameter_list=[], clear_ratios=True,clear_turnover=True,clear_fluxes=True,restore_objectives=True,delete_parameters=True)
+    
+    for  reaction in objective_dict:
+         reaction.lower_bound=objective_dict[reaction]["lb"]
+         reaction.lower_bound=objective_dict[reaction]["ub"]
+         reaction.objective_coefficienT=objective_dict[reaction]["obj"]
     label_model.turnover_flux_dict=original_turnover
-    label_model.constrained_model=original_model
+    #label_model.constrained_model=original_model
     #print ["hello",label_model.constrained_model.reactions.get_by_id("biomass").lower_bound]
     #apply_parameters(label_model,parameter_dict=None,parameter_precision=parameter_precision)
     a,b=solver(label_model,mode="fsolve",fba_mode=fba_mode)
