@@ -2378,18 +2378,21 @@ class build_model_gui:
         with open("inputs.temp", 'w') as fp:
              json.dump({"sbml":self.sbml_entry.get(),"label_rules":self.label_rules_entry.get(),"e_data":self.e_data_entry.get(),"constraints":self.constraints_entry.get(),"settings":self.settings_entry.get()}, fp)
     def load_inputs(self):
-        with open("inputs.temp", 'r') as fp:
+        try:
+          with open("inputs.temp", 'r') as fp:
                   loaded_inputs=json.load(fp)
-        self.sbml_entry.delete(0, END) 
-        self.sbml_entry.insert(0,str(loaded_inputs["sbml"]))
-        self.label_rules_entry.delete(0, END) 
-        self.label_rules_entry.insert(0,str(loaded_inputs["label_rules"]))
-        self.e_data_entry.delete(0, END) 
-        self.e_data_entry.insert(0,str(loaded_inputs["e_data"]))
-        self.constraints_entry.delete(0, END) 
-        self.constraints_entry.insert(0,str(loaded_inputs["constraints"]))
-        self.settings_entry.delete(0, END) 
-        self.settings_entry.insert(0,str(loaded_inputs["settings"]))
+          self.sbml_entry.delete(0, END) 
+          self.sbml_entry.insert(0,str(loaded_inputs["sbml"]))
+          self.label_rules_entry.delete(0, END) 
+          self.label_rules_entry.insert(0,str(loaded_inputs["label_rules"]))
+          self.e_data_entry.delete(0, END) 
+          self.e_data_entry.insert(0,str(loaded_inputs["e_data"]))
+          self.constraints_entry.delete(0, END) 
+          self.constraints_entry.insert(0,str(loaded_inputs["constraints"]))
+          self.settings_entry.delete(0, END) 
+          self.settings_entry.insert(0,str(loaded_inputs["settings"]))
+        except:
+          pass
         
     def __init__(self,root):
         self.root=root

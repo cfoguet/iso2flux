@@ -16,9 +16,12 @@ def launch_build_model_gui():
 
 def load_model():
     tk.withdraw()
-    global label_model
-    label_model=load_iso2flux_model(gui=True)
-    tk.destroy()
+    try:
+      global label_model
+      label_model=load_iso2flux_model(gui=True)
+      tk.destroy()
+    except:
+       pass
     
 
 if __name__ == "__main__": 

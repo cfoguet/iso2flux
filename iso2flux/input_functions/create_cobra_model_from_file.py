@@ -8,7 +8,7 @@ def create_cobra_model_from_file(fn):
     candidate_metabolites=[]
     for data in data_rows_dict:
         for row in data_rows_dict[data]:
-          print row
+          #print row
           if len(row)>1:
             if row[1]==None:
                continue
@@ -34,7 +34,7 @@ def create_cobra_model_from_file(fn):
                except:
                   print rid+": ub not added"
                try:
-                  new_reaction.objective_coefficient=str(float(row[5]))   
+                  new_reaction.objective_coefficient=float(row[5])   
                except:
                   print rid+": Objective coefficient not added"
                try:
@@ -45,8 +45,12 @@ def create_cobra_model_from_file(fn):
                  candidate_metabolites.append(row)
     #Check if all candidate metabolites are efectivelly metabolites
     for row in  candidate_metabolites:
-        if row[0] in model.metabolites:
-           metabolite=model.metabolites.get_by_id(row[0])
+        try:
+          str(row[0])
+        except:
+          continue
+        if str(row[0]) in model.metabolites:
+           metabolite=model.metabolites.get_by_id(str(row[0]))
            try:
              metabolite.name=str(row[1])
            except:
@@ -59,4 +63,5 @@ def create_cobra_model_from_file(fn):
              metabolite.formula=str(row[2])
            except:
              print row[0]+": formula not added"
+     
     return model
