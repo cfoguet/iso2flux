@@ -42,7 +42,10 @@ def read_isotopomer_model(label_model,file_name,header=True):
                reference_metabolites=str(row[0].replace(" ","")).split(",")
                if len(row)>1:
                   if row[1]!=None:
-                      ncarbons=int(row[1])
+                      try:
+                         ncarbons=int(row[1])
+                      except:
+                         ncarbons=-1
                   else:
                       ncarbons=-1
                if len(row)>2:
