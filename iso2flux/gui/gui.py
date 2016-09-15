@@ -2248,12 +2248,12 @@ class build_model_gui:
         self.sbml_entry.insert(0,str(loaded_file.name)) 
     
     def get_label_propagation_rules(self):
-        loaded_file = tkFileDialog.askopenfile(title='Choose a set of label propagation rules',filetypes=[("xlsx","*.xlsx"),("CSV","*.csv")],parent=self.root)
+        loaded_file = tkFileDialog.askopenfile(title='Choose a set of label propagation rules',filetypes=[("xlsx","*.xlsx"),("csv","*.csv"),('All files','*.*')],parent=self.root)
         self.label_rules_entry.delete(0, END) 
         self.label_rules_entry.insert(0,str(loaded_file.name))
         
     def get_exp_data(self):
-        loaded_files = tkFileDialog.askopenfiles(title='Choose epxerimental isotopologues data',filetypes=[("xlsx","*.xlsx"),("CSV","*.csv")],parent=self.root)
+        loaded_files = tkFileDialog.askopenfiles(title='Choose epxerimental isotopologues data',filetypes=[("xlsx","*.xlsx"),("csv","*.csv"),('All files','*.*')],parent=self.root)
         file_names=[x.name for x in loaded_files]
         self.e_data_entry.delete(0, END) 
         for file_name in file_names:
@@ -2261,12 +2261,12 @@ class build_model_gui:
         self.e_data_entry.delete(len(self.e_data_entry.get())-1) #delete last coma
         
     def get_flux_constraints(self):
-        loaded_file = tkFileDialog.askopenfile(title='Chose constraints file',filetypes=[("xlsx","*.xlsx"),("CSV","*.csv")],parent=self.root)
+        loaded_file = tkFileDialog.askopenfile(title='Chose constraints file',filetypes=[("xlsx","*.xlsx"),("csv","*.csv"),('All files','*.*')],parent=self.root)
         self.constraints_entry.delete(0, END) 
         self.constraints_entry.insert(0,str(loaded_file.name))
         
     def get_settings(self):
-        loaded_file = tkFileDialog.askopenfile(title='Chose Settings file',filetypes=[("xlsx","*.xlsx"),("CSV","*.csv")],parent=self.root)
+        loaded_file = tkFileDialog.askopenfile(title='Chose Settings file',filetypes=[("xlsx","*.xlsx"),("csv","*.csv"),('All files','*.*')],parent=self.root)
         self.settings_entry.delete(0, END) 
         self.settings_entry.insert(0,str(loaded_file.name))
     def new_model(self):
@@ -2350,6 +2350,7 @@ class build_model_gui:
         except:
           pass 
         self.label_model=label_model=Label_model(model,lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"],parameter_precision=p_dict["parameter_precision"],reactions_with_forced_turnover=p_dict["reactions_with_forced_turnover"])
+        self.label_model.project_name="validation"
         read_isotopomer_model(label_model,self.label_rules_entry.get())
         missing_dict=find_missing_reactions(label_model,fn="validation_results.txt",fn_mode="w")
         #loaded_file = tkFileDialog.askopenfile(title='Choose experimental measuments file',filetypes=[("xlsx",".xlsx")]) 
