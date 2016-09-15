@@ -10,10 +10,10 @@ def read_spreadsheets(file_names=None,csv_delimiter=',',more_than_1=True,tkinter
       tk=Tkinter.Tk()
       tk.withdraw()
       if more_than_1==True:
-         loaded_files = tkFileDialog.askopenfiles(title=tkinter_title,filetypes=[("xlsx","*.xlsx"),("csv","*.csv"),('All files','*.*')]) 
+         loaded_files = tkFileDialog.askopenfiles(title=tkinter_title,filetypes=[(("csv","*.csv"),"xlsx","*.xlsx"),('All files','*.*')]) 
          file_names=[x.name for x in loaded_files]
       else:
-         loaded_file = tkFileDialog.askopenfile(title=tkinter_title,filetypes=[("xlsx","*.xlsx"),("csv","*.csv"),('All files','*.*')])  
+         loaded_file = tkFileDialog.askopenfile(title=tkinter_title,filetypes=[("csv","*.csv"),("xlsx","*.xlsx"),('All files','*.*')])  
          file_names=[loaded_file.name]
       tk.destroy()
       print file_names  
