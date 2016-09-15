@@ -121,7 +121,8 @@ def read_isotopomer_model(label_model,file_name,header=True):
                products_dict={}
                label_propagation={}
                print reaction_id
-               if row[1]!=None and row[2]!=None:
+               if len(row)>3:
+                 if row[1] not in (None,""," ") and row[2] not in (None,""," "):
                   #Get substrates
                   substrates_list=row[1].replace(" ","").split("+")
                   #print substrates_list
