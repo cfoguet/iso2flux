@@ -2253,7 +2253,7 @@ class build_model_gui:
         self.label_rules_entry.insert(0,str(loaded_file.name))
         
     def get_exp_data(self):
-        loaded_files = tkFileDialog.askopenfiles(title='Choose epxerimental isotopologues data',filetypes=[("xlsx","*.xlsx"),("csv","*.csv"),('All files','*.*')],parent=self.root)
+        loaded_files = tkFileDialog.askopenfiles(title='Choose experimental isotopologues data',filetypes=[("xlsx","*.xlsx"),("csv","*.csv"),('All files','*.*')],parent=self.root)
         file_names=[x.name for x in loaded_files]
         self.e_data_entry.delete(0, END) 
         for file_name in file_names:
@@ -2274,7 +2274,7 @@ class build_model_gui:
         if ""==self.sbml_entry.get():# or ""==self.e_data_entry.get or ""==self.label_rules_entry.get():
              print "A constrained model must be defined"
              return
-        p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 3, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 10, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 20, 'annealing_relative_max_sample': 0.4, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.001, 'parameter_precision': 0.0001, 'fraction_of_optimum': 1, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.25, 'annealing_iterations': 2,"gene_expression_mode":"imat", "gene_expression_low_expression_threshold":25,"gene_expression_high_expression_threshold":75,"gene_expression_percentile":True,"gene_expression_gene_method":"avearge", "gene_expression_gene_sufix":"_AT","gene_expression_gene_prefix":"","gene_expression_epsilon":1, "gene_expression_lex_epsilon":1e-6,"gene_expression_fraction_optimum":1, "gene_expression_absent_gene_expression_value":50}
+        p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 3, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 100, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 20, 'annealing_relative_max_sample': 0.4, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.001, 'parameter_precision': 0.0001, 'fraction_of_optimum': 1, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.25, 'annealing_iterations': 2,"gene_expression_mode":"imat", "gene_expression_low_expression_threshold":25,"gene_expression_high_expression_threshold":75,"gene_expression_percentile":True,"gene_expression_gene_method":"avearge", "gene_expression_gene_sufix":"_AT","gene_expression_gene_prefix":"","gene_expression_epsilon":1, "gene_expression_lex_epsilon":1e-6,"gene_expression_fraction_optimum":1, "gene_expression_absent_gene_expression_value":50}
         #p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 4, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 100, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 10, 'annealing_relative_max_sample': 0.35, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.005, 'parameter_precision': 0.0001, 'fraction_of_optimum': 0, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.2, 'annealing_iterations': 2,"gene_prefix":"gene","gene_sufix":"_AT"}
         model_file=self.sbml_entry.get()
         if ".sbml" in model_file.lower() or ".xml" in model_file.lower():
@@ -2353,16 +2353,19 @@ class build_model_gui:
         self.label_model.project_name="validation"
         read_isotopomer_model(label_model,self.label_rules_entry.get())
         missing_dict=find_missing_reactions(label_model,fn="validation_results.txt",fn_mode="w")
-        #loaded_file = tkFileDialog.askopenfile(title='Choose experimental measuments file',filetypes=[("xlsx",".xlsx")]) 
-        #fileName=loaded_file.name
-        e_data_names=self.e_data_entry.get().replace("[","").replace("]","").split(",")
-        emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,e_data_names,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
-        label_model.build(emu_dict0,force_balance=False,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=False,turnover_exclude_EX=p_dict['turnover_exclude_EX'])
-        steady_state_flag=check_steady_state(label_model,only_initial_m0=True,threshold=1e-9,fn="validation_results.txt",fn_mode="a")#Check initial dy for steady state deviations
-        #check_simulated_fractions(label_model)
-        #self.label_model.p_dict=p_dict
-        #save_iso2flux_model(label_model,name="project",write_sbml=True,gui=True)
-        #self.root.destroy()
+        if len(missing_dict)==0:
+           #loaded_file = tkFileDialog.askopenfile(title='Choose experimental measuments file',filetypes=[("xlsx",".xlsx")]) 
+           #fileName=loaded_file.name
+           e_data_names=self.e_data_entry.get().replace("[","").replace("]","").split(",")
+           emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,e_data_names,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
+           label_model.build(emu_dict0,force_balance=False,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=False,turnover_exclude_EX=p_dict['turnover_exclude_EX'])
+           steady_state_flag=check_steady_state(label_model,only_initial_m0=True,threshold=1e-9,fn="validation_results.txt",fn_mode="a")#Check initial dy for steady state deviations
+            #check_simulated_fractions(label_model)
+            #self.label_model.p_dict=p_dict
+            #save_iso2flux_model(label_model,name="project",write_sbml=True,gui=True)
+            #self.root.destroy()
+        else:
+           steady_state_flag=False    
         top=Toplevel()
         top.protocol("WM_DELETE_WINDOW",self.restart_script)
         if steady_state_flag and len(missing_dict)==0:
