@@ -44,7 +44,7 @@ def add_turnover_metabolites(cobra_model, metabolite_id_list=[], epsilon=1e-6,la
            if len(label_model.isotopomer_id_metabolite_id_dict[iso_id])>1:
               group_metabolites.append(label_model.isotopomer_id_metabolite_id_dict[iso_id])
            else:
-              single_metabolites.append(label_model.isotopomer_id_metabolite_id_dict[iso_id][0])
+              single_metabolites.append(str(label_model.isotopomer_id_metabolite_id_dict[iso_id][0]))
     for metabolite in metabolite_id_list:
         if isinstance(metabolite,list) and len(metabolite)>1:
            group_metabolites.append(metabolite)
@@ -57,7 +57,7 @@ def add_turnover_metabolites(cobra_model, metabolite_id_list=[], epsilon=1e-6,la
               met_id=""
               for metabolite in metabolites:
                   met_id+=metabolite+"_"
-              met_id=met_id[:-1]
+              met_id=str(met_id[:-1])
               #print isotopomer_object.ref_met
               sum_abs_source_reaction_bounds = 0
               v_metabolite = Metabolite("TM_" + met_id)
@@ -84,7 +84,7 @@ def add_turnover_metabolites(cobra_model, metabolite_id_list=[], epsilon=1e-6,la
     print single_metabolites
     for metabolite_id in single_metabolites:
         print metabolite_id
-        v_metabolite = Metabolite("TM_" + metabolite_id)
+        v_metabolite = Metabolite("TM_" + str(metabolite_id))
         # Now for reactions.  We include all reactions 
         # that create or consume the real metabolite.
         # These reactions therefore also drive creation of the
