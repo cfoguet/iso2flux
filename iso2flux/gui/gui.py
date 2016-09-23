@@ -1653,7 +1653,7 @@ class GUI:
       
       def export_label(self):
            fileName = tkFileDialog.asksaveasfilename(parent=self.root,title="Save label simulation results as...",filetypes=[("xlsx",".xlsx"),("csv",".csv")])
-           if "xlsx" not in fileName.lower() and "csv" not in filename.lower():
+           if "xlsx" not in fileName.lower() and "csv" not in fileName.lower():
                fileName+=".csv"  
            if len(fileName)>0:
               a1,b=solver(self.label_model,mode="fsolve",fba_mode=self.fba_mode.get().lower())
