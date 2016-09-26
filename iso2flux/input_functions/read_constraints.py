@@ -27,7 +27,7 @@ def read_flux_constraints(metabolic_model,ratio_dict={},file_name=None,create_co
     ratio_re=re.compile("^(.+)/(.+)")
     row_list=[]
     if ".xlsx"in file_name:
-        wb = load_workbook(file_name, read_only=True)
+        wb = load_workbook(file_name, read_only=True,data_only=True)
         ws=wb.active
         for n,row_xlsx in enumerate(ws.rows):
             row=[]
