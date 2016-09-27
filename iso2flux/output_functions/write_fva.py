@@ -6,7 +6,6 @@ from ..misc.write_spreadsheet import write_spreadsheet
 
 def write_fva(model,fn="reaction_fluxes.xlsx",fraction=1,remove0=True,change_threshold=0.001,mode="full",lp_tolerance_feasibility=1e-6,flux_precision=1e-3):
     precision=max(int(-1*(math.log10(flux_precision))),6)
-    #ToDO:Export to excel
     fva=flux_variability_analysis(model,fraction_of_optimum=fraction,tolerance_feasibility=lp_tolerance_feasibility)
     if mode=="full":
        row=["ID","Name","Stoichiometry","Minimum","Maximum"]
@@ -36,7 +35,7 @@ def write_fva(model,fn="reaction_fluxes.xlsx",fraction=1,remove0=True,change_thr
             sheet_row_data_dict["fva"].append(row)
             #f.write(reaction.name+";"+reaction.subsystem+" ;"+reaction.reaction+";"+str(fva[x]["minimum"])+";"+str(fva[x]["maximum"])+"\n")
     print 1
-    write_spreadsheet(file_name=fn,sheet_row_data_dict=sheet_row_data_dict)
+    write_spreadsheet(file_name=fn,sheet_row_data_dict=sheet_row_data_dict,force_extension=True)
 
 
 

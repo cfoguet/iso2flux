@@ -4,7 +4,7 @@ import csv
 
 alphabet=list(string.ascii_uppercase)
 
-def write_spreadsheet(file_name,sheet_row_data_dict,sheet_order=None):
+def write_spreadsheet(file_name,sheet_row_data_dict,sheet_order=None,force_extension=False):
     if sheet_order==None or sheet_order==[]:
        sheet_order=sorted(sheet_row_data_dict)
     print file_name
@@ -16,6 +16,7 @@ def write_spreadsheet(file_name,sheet_row_data_dict,sheet_order=None):
               sheet = wb.active
               sheet.title=sheet_title
            else:
+                          
               sheet=wb.create_sheet(title=sheet_title)
            for n_row, row in enumerate(sheet_row_data_dict[sheet_id]):
                for n_col,data in enumerate(sheet_row_data_dict[sheet_id][n_row]):
@@ -23,7 +24,8 @@ def write_spreadsheet(file_name,sheet_row_data_dict,sheet_order=None):
        wb.save(file_name)
        return
     else:
-        print "A"
+        if ".txt" not in file_name.lower() and ".csv" not in file_name.lower() and force_extension: 
+           file_name+=".csv" 
         csvFile = open(file_name, 'w')
         outputWriter = csv.writer(csvFile)
         for n_sheet,sheet_id in enumerate(sheet_order):

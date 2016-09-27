@@ -1638,7 +1638,7 @@ class GUI:
       
       def export_fluxes(self):
            fileName = tkFileDialog.asksaveasfilename(parent=self.root,title="Save fluxes as...",filetypes=[("xlsx","*.xlsx"),("csv","*.csv")])
-           if "xlsx" not in fileName.lower() and "csv" not in filename.lower():
+           if "xlsx" not in fileName.lower() and "csv" not in fileName.lower():
                fileName+=".csv"  
            if len(fileName)>0:
                 write_fva(self.label_model.constrained_model, fn=fileName,fraction=self.fraction_of_optimum,remove0=False,change_threshold=10*self.parameter_precision, mode="full", lp_tolerance_feasibility=self.label_model.lp_tolerance_feasibility)
