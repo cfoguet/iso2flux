@@ -536,6 +536,7 @@ def cycle(cycle_arg_dict):
     original_f_best=local_cycle_arg_dict["f_best"]
     model=local_cycle_arg_dict["label_model"].constrained_model
     precision=int(-1*(math.log10(local_cycle_arg_dict["parameter_precision"])))
+    #backup_parameters=copy.deepcopy(local_cycle_arg_dict["current_parameters"]
     #print ["initialfc", local_cycle_arg_dict["fc"]]
     for j in range(local_cycle_arg_dict["m"]):
         #print "j"+str(j)
@@ -609,7 +610,7 @@ def cycle(cycle_arg_dict):
            if model.optimize(tolerance_feasibility=local_cycle_arg_dict["label_model"].lp_tolerance_feasibility).status!="optimal": 
               print ["not optimal 1",j,model.optimize(tolerance_feasibility=local_cycle_arg_dict["label_model"].lp_tolerance_feasibility)]
               failure_flag=True
-              error_dump(local_cycle_arg_dict["label_model"],"not optimal 1","not_optimal_1")
+              error_dump(local_cycle_arg_dict["label_model"],"not optimal 1a","not_optimal_1a")
               local_cycle_arg_dict["label_model"].error_parameters=local_cycle_arg_dict["current_parameters"]
               #return
         if failure_flag==False:
@@ -647,7 +648,9 @@ def cycle(cycle_arg_dict):
                   if failure_flag==True:
                      print "not optimal 1"
                      error_dump(local_cycle_arg_dict["label_model"],"error1")
-                     apply_parameters(local_cycle_arg_dict["label_model"], local_cycle_arg_dict["current_parameters"],apply_flux_values=True,parameter_precision=local_cycle_arg_dict["parameter_precision"])
+                     clear_parameters(local_cycle_arg_dict["label_model"],parameter_dict={},parameter_list=[], clear_ratios=True,clear_turnover=False,clear_fluxes=True,restore_objectives=False)
+                     apply_parameters(local_cycle_arg_dict["label_model"], local_cycle_arg_dict["best_parameters"],apply_flux_values=True,parameter_precision=local_cycle_arg_dict["parameter_precision"])
+                     local_cycle_arg_dict["current_parameters"]=copy.deepcopy(local_cycle_arg_dict["best_parameters"])
                      #return 
                   else:
                      lb=max(lb_list)
@@ -708,6 +711,9 @@ def cycle(cycle_arg_dict):
             #print label_model.constrained_model.optimize()
         else:
            fi=99999999
+           clear_parameters(local_cycle_arg_dict["label_model"],parameter_dict={},parameter_list=[],   clear_ratios=True,clear_turnover=False,clear_fluxes=True,restore_objectives=False)
+           apply_parameters(local_cycle_arg_dict["label_model"], local_cycle_arg_dict["best_parameters"],apply_flux_values=True,parameter_precision=local_cycle_arg_dict["parameter_precision"])
+           local_cycle_arg_dict["current_parameters"]=copy.deepcopy(local_cycle_arg_dict["best_parameters"])
            #print "Code 1" 
         DeltaE = abs(fi-local_cycle_arg_dict["fc"])
         #print [fi-local_cycle_arg_dict["fc"],local_cycle_arg_dict["DeltaE_avg"],local_cycle_arg_dict["t"],fi,local_cycle_arg_dict["fc"],local_cycle_arg_dict["f_best"]] #remove me
@@ -820,11 +826,12 @@ def cycle(cycle_arg_dict):
                        reaction.upper_bound=round(current_parameters[parameter]["v"]+0.5*parameter_precision,precision+1)"""
     #apply_parameters(local_cycle_arg_dict["label_model"], local_cycle_arg_dict["best_parameters"],apply_flux_values=True,parameter_precision=local_cycle_arg_dict["parameter_precision"]) 
     f_best1=f_best2=9999999
-    if original_f_best!=local_cycle_arg_dict["f_best"]:
+    try:
+     if original_f_best!=local_cycle_arg_dict["f_best"]:
        f_best1, parameter_dict1,best_flux_dict1=coordinate_descent(local_cycle_arg_dict["label_model"],parameter_dict=local_cycle_arg_dict["best_parameters"],parameter_to_be_fitted=local_cycle_arg_dict["parameter_to_be_fitted"],parameter_precision=local_cycle_arg_dict["parameter_precision"],perturbation=0.01,max_perturbation=local_cycle_arg_dict["max_perturbation"],force_flux_value_bounds=False,mode="fsolve",fba_mode="fba",debug=False,is_subprocess=True)
-    if local_cycle_arg_dict["fc"]!=local_cycle_arg_dict["f_best"]:
+     if local_cycle_arg_dict["fc"]!=local_cycle_arg_dict["f_best"]:
        f_best2, parameter_dict2,best_flux_dict2=coordinate_descent(local_cycle_arg_dict["label_model"],parameter_dict=local_cycle_arg_dict["current_parameters"],parameter_to_be_fitted=local_cycle_arg_dict["parameter_to_be_fitted"],parameter_precision=local_cycle_arg_dict["parameter_precision"],perturbation=0.01,max_perturbation=local_cycle_arg_dict["max_perturbation"],force_flux_value_bounds=False,mode="fsolve",fba_mode="fba",debug=False,is_subprocess=True)
-    if  f_best1<f_best2:
+     if  f_best1<f_best2:
        print ["coordinated1"]
        local_cycle_arg_dict["f_best"]=f_best1
        local_cycle_arg_dict["fc"]=f_best1
@@ -832,7 +839,7 @@ def cycle(cycle_arg_dict):
        local_cycle_arg_dict["best_flux_dict"]=copy.deepcopy(best_flux_dict1)
        local_cycle_arg_dict["current_parameters"]=copy.deepcopy(parameter_dict1)
        local_cycle_arg_dict["DeltaE_avg"] = (local_cycle_arg_dict["DeltaE_avg"] * (na-1.0) +  abs(f_best1-original_f_best)) / na
-    elif f_best2<f_best1 and f_best2<original_f_best:
+     elif f_best2<f_best1 and f_best2<original_f_best:
        print ["coordinated2"]
        local_cycle_arg_dict["DeltaE_avg"] = (local_cycle_arg_dict["DeltaE_avg"] * (na-1.0) +  abs(f_best2-local_cycle_arg_dict["fc"])) / na
        local_cycle_arg_dict["f_best"]=f_best2
@@ -840,7 +847,10 @@ def cycle(cycle_arg_dict):
        local_cycle_arg_dict["best_parameters"]=copy.deepcopy(parameter_dict2)
        local_cycle_arg_dict["best_flux_dict"]=copy.deepcopy(best_flux_dict2)
        local_cycle_arg_dict["current_parameters"]=copy.deepcopy(parameter_dict2)
-          
+    except:
+       print "Error with coordinated descent, returning best_parameters instead"
+       local_cycle_arg_dict["current_parameters"]=copy.deepcopy(local_cycle_arg_dict["best_parameters"])      
+       apply_parameters(local_cycle_arg_dict["label_model"], local_cycle_arg_dict["best_parameters"],apply_flux_values=True,parameter_precision=local_cycle_arg_dict["parameter_precision"])
     """print ["current_f_best",local_cycle_arg_dict["f_best"]]
     if original_f_best!=local_cycle_arg_dict["f_best"]:
        f_best1, parameter_dict1,best_flux_dict1=coordinate_descent(local_cycle_arg_dict["label_model"],parameter_dict=local_cycle_arg_dict["best_parameters"],parameter_to_be_fitted=local_cycle_arg_dict["parameter_to_be_fitted"],parameter_precision=local_cycle_arg_dict["parameter_precision"],perturbation=0.01,max_perturbation=local_cycle_arg_dict["max_perturbation"],force_flux_value_bounds=False,mode="fsolve",fba_mode="fba",debug=False,is_subprocess=True)
