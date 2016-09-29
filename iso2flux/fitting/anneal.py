@@ -359,6 +359,7 @@ def annealing(label_model,parameter_dict=None,parameter_to_be_fitted=[],paramete
   for i in range(n):
     cycle_arg_dict={"label_model":label_model,"m":m,"i":i,"max_perturbation":max_perturbation,"min_perturbation":min_perturbation,"current_parameters":current_parameters,"parameter_to_be_fitted":parameter_to_be_fitted, "min_random_sample":min_random_sample,"max_random_sample":max_random_sample,"parameter_precision":parameter_precision,"DeltaE_avg":DeltaE_avg,"fc":fc, "f_best":f_best,"t":t,"flux_value_parameter_list":flux_value_parameter_list,"mode":mode,"fba_mode":fba_mode,"na":na,"best_parameters":best_parameters,"best_flux_dict":best_flux_dict,"force_flux_value_bounds":force_flux_value_bounds}
     print 'Cycle: ' + str(i) + ' with Temperature: ' + str(t)+" best fit:"+str(fc)
+    print cycle_arg_dict["label_model"].constrained_model.optimize()
     #print label_model.constrained_model.optimize()
     #cycle_arg_dict["i"]=i
     #pool = Pool(processes=4)
@@ -420,7 +421,7 @@ def annealing(label_model,parameter_dict=None,parameter_to_be_fitted=[],paramete
     #apply_parameters(label_model,current_parameters,parameter_precision=parameter_precision)
     #solver(label_model,mode=mode)
     #fi,b,c=get_objective_function(label_model)    
-    print [fi,b,c]
+    #print [fi,b,c]
     #error_dump(label_model,e_type=None,extra_id="coord")
     #return
     if gui!=None:
@@ -434,10 +435,10 @@ def annealing(label_model,parameter_dict=None,parameter_to_be_fitted=[],paramete
                   if n_processes>1:
                      pool.close()
                   return best_parameters,best_flux_dict, f_best
-    print ["f_best",best_result["f_best"]]      
+    #print ["f_best",best_result["f_best"]]      
     #cycle_arg_dict=results[0] #TODO GET THE BEST FIT
     #cycle_arg_dict=cycle(cycle_arg_dict)
-    print ["f_best2",f_best]
+    #print ["f_best2",f_best]
     #print ["f",fc,f_best]
     # Record the best x values at the end of every cycle
     """x[i+1][0] = copy.deepcopy(current_parameters)
@@ -454,6 +455,7 @@ def annealing(label_model,parameter_dict=None,parameter_to_be_fitted=[],paramete
      plt.savefig('annealing.png')
      parameter_dict=best_parameters
      plt.clf() #Clears buffer"""
+  #END FOR LOOP
   if n_processes>1:
      pool.close()
   best_parameters=best_result["best_parameters"]
@@ -465,7 +467,7 @@ def annealing(label_model,parameter_dict=None,parameter_to_be_fitted=[],paramete
   apply_parameters(label_model,best_parameters,parameter_precision=parameter_precision)
   solver(label_model,mode=mode)
   fi,b,c=get_objective_function(label_model)
-  print fi
+  #print fi
   for reaction_id in original_objectives_bounds:
             reaction=model.reactions.get_by_id(reaction_id)
             reaction.lower_bound=original_objectives_bounds[reaction_id]["lb"]
@@ -507,7 +509,8 @@ def cycle(cycle_arg_dict):
         dict with all the parameters for running a cycle of simulated annealing
     """
     debug=False
-    local_cycle_arg_dict=cycle_arg_dict
+    local_cycle_arg_dict=copy.deepcopy(cycle_arg_dict)
+    #print local_cycle_arg_dict["label_model"].constrained_model.optimize()
     #local_cycle_arg_dict=copy.deepcopy(cycle_arg_dict)
     #print local_cycle_arg_dict
     #return local_cycle_arg_dict
@@ -536,6 +539,9 @@ def cycle(cycle_arg_dict):
     original_f_best=local_cycle_arg_dict["f_best"]
     model=local_cycle_arg_dict["label_model"].constrained_model
     precision=int(-1*(math.log10(local_cycle_arg_dict["parameter_precision"])))
+    apply_parameters(local_cycle_arg_dict["label_model"], local_cycle_arg_dict["current_parameters"],apply_flux_values=True,parameter_precision=local_cycle_arg_dict["parameter_precision"])
+    #print local_cycle_arg_dict["label_model"].constrained_model.optimize()
+    #local_cycle_arg_dict["current_parameters"]=copy.deepcopy(local_cycle_arg_dict["current_parameters"])
     #backup_parameters=copy.deepcopy(local_cycle_arg_dict["current_parameters"]
     #print ["initialfc", local_cycle_arg_dict["fc"]]
     for j in range(local_cycle_arg_dict["m"]):
@@ -816,7 +822,7 @@ def cycle(cycle_arg_dict):
             #If we rejected the simulation we need to restore the flux bound to the value of current_parameters
             #print "Solution Rejected"
             #print "rejected" 
-            #apply_parameters(local_cycle_arg_dict["label_model"], local_cycle_arg_dict["current_parameters"],apply_flux_values=True,parameter_precision=local_cycle_arg_dict["parameter_precision"],parameter_list=working_parameters_sample)
+            #apply_parameters(local_cycle_arg_dict["label_model"], local_cycle_arg_dict["current_parameters"],apply_flux_values=True,parameter_precision=local_cycle_arg_dict["parameter_precision"])
             apply_parameters(local_cycle_arg_dict["label_model"], local_cycle_arg_dict["current_parameters"],apply_flux_values=True,parameter_precision=local_cycle_arg_dict["parameter_precision"],parameter_list=working_parameters_sample)
             ###print ["reject",model.optimize(tolerance_feasibility=local_cycle_arg_dict["label_model"].lp_tolerance_feasibility)]
             """for parameter in sampled_flux_value_parameters: 
@@ -847,10 +853,14 @@ def cycle(cycle_arg_dict):
        local_cycle_arg_dict["best_parameters"]=copy.deepcopy(parameter_dict2)
        local_cycle_arg_dict["best_flux_dict"]=copy.deepcopy(best_flux_dict2)
        local_cycle_arg_dict["current_parameters"]=copy.deepcopy(parameter_dict2)
+     else: 
+       apply_parameters(local_cycle_arg_dict["label_model"], local_cycle_arg_dict["current_parameters"],apply_flux_values=True,parameter_precision=local_cycle_arg_dict["parameter_precision"])
+       #print local_cycle_arg_dict["label_model"].constrained_model.optimize()
     except:
        print "Error with coordinated descent, returning best_parameters instead"
        local_cycle_arg_dict["current_parameters"]=copy.deepcopy(local_cycle_arg_dict["best_parameters"])      
        apply_parameters(local_cycle_arg_dict["label_model"], local_cycle_arg_dict["best_parameters"],apply_flux_values=True,parameter_precision=local_cycle_arg_dict["parameter_precision"])
+       
     """print ["current_f_best",local_cycle_arg_dict["f_best"]]
     if original_f_best!=local_cycle_arg_dict["f_best"]:
        f_best1, parameter_dict1,best_flux_dict1=coordinate_descent(local_cycle_arg_dict["label_model"],parameter_dict=local_cycle_arg_dict["best_parameters"],parameter_to_be_fitted=local_cycle_arg_dict["parameter_to_be_fitted"],parameter_precision=local_cycle_arg_dict["parameter_precision"],perturbation=0.01,max_perturbation=local_cycle_arg_dict["max_perturbation"],force_flux_value_bounds=False,mode="fsolve",fba_mode="fba",debug=False,is_subprocess=True)
