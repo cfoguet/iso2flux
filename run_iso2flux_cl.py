@@ -19,6 +19,7 @@ f-,--flux_constraints_file=   Name of the file containing additional constraints
 -m --metabolomics_file=     Name of the file (xlsx or csv) indicating the metabolites that have been detected in the conditions of study (Optional). It will only be used if a gene expression file is provided.
 -t --targetted_fluxes       Name of the files (xlsx or csv) indicating the list of fluxes whose confidence intervals will be computed (Optional). If none is provided confidence intervals will be computed for all fluxes.
 """
+
 p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 3, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 10, 'confidence_perturbation': 0.1, 'annealing_m': 20, 'annealing_n': 10, 'annealing_relative_max_sample': 0.4, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.005, 'parameter_precision': 0.0001, 'fraction_of_optimum': 0, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.25, 'annealing_iterations': 2,"gene_expression_mode":"gim3e", "gene_expression_low_expression_threshold":25,"gene_expression_high_expression_threshold":75,"gene_expression_percentile":True,"gene_expression_gene_method":"avearge", "gene_expression_gene_prefix":"","gene_expression_gene_sufix":"_AT","gene_expression_epsilon":1, "gene_expression_lex_epsilon":1e-6,"gene_expression_fraction_optimum":1, "gene_expression_absent_gene_expression_value":50}
 if __name__ == "__main__":
      try:
@@ -97,7 +98,7 @@ if __name__ == "__main__":
      fluxes_to_evaluate_file=None
      try:
       argv=sys.argv[1:]
-      argv=("-e hypoxia_label.xlsx -l isotopomer_model_anusha.xlsx -c reference_model.sbml -o esborram_ -f constraints_hipoxia.xlsx -t esborraml.csv").split()
+      #Aargv=("-e hypoxia_label.xlsx -l isotopomer_model_anusha.xlsx -c reference_model.sbml -o esborram_ -f constraints_hipoxia.xlsx -t esborraml.csv").split()
       #argv=("-e output_Midcor_input_iso2flux-2.csv -l isotopomer_model_reduit2.xlsx -p parameters.csv -s simple_model.sbml -t 18 -f Ctr -o example_").split()
       opts, args = getopt.getopt(argv,"e:l:c:s:f:o:w:g:m:qt:",["experimental_data_file=","label_propagation_rules=","constraint_based_model=","settings_file=","flux_constraints=","output_prefix=","working_directory=","gene_expression_file=","metabolomics_file=","quick_analysis","targetted_fluxes="])
       #opts, args = getopt.getopt(argv,"e:l:s:p:c:o:t:f:w:g:m:q",["experimental_data_file=","label_propagation_files=","sbml_model=","parameters_file=","constraints_file=","output_prefix=","time=","factor=","working_directory=","gene_expression_file=","metabolomics_file=","quick_analysis"])
@@ -273,6 +274,3 @@ if __name__ == "__main__":
         export_label_results(label_model,fn=(output_prefix+"best_label.csv"),show_chi=True)
         write_fva(label_model.constrained_model,fn=output_prefix+"best_fluxes.csv",fraction=1,remove0=False,change_threshold=0.001,mode="full",lp_tolerance_feasibility=1e-6)
         label_model.constrained_model=constrained_model
-     
-     
-     
