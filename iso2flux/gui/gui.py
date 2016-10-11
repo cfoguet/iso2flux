@@ -8,6 +8,7 @@ import numpy
 import os
 import sys
 import time
+import random
 #Ilabel imports
 import cobra
 from cobra.flux_analysis.variability import flux_variability_analysis
@@ -542,6 +543,14 @@ class GUI:
           self.n_process_entry.insert(0, self.annealing_n_processes) 
           self.n_process_entry.pack(side=LEFT)
           
+          annealing_n_iterations=Frame(top) 
+          annealing_n_iterations.pack(side=TOP)
+          Label(annealing_n_iterations,text="Number of iterations of the annealing algorythm").pack(side=LEFT)
+          self.annealing_n_iterations_entry=Entry(annealing_n_iterations)
+          self.annealing_n_iterations_entry.delete(0, END)
+          self.annealing_n_iterations_entry.insert(0, self.annealing_n_processes) 
+          self.annealing_n_iterations_entry.pack(side=LEFT)
+          
           Label(top,text="n parameters is "+str(len(self.label_model.parameter_dict))).pack(side=TOP)
           
           max_sampleframe=Frame(top) 
@@ -644,6 +653,15 @@ class GUI:
           self.n_process_confidence_entry.delete(0, END)
           self.n_process_confidence_entry.insert(0, self.annealing_n_processes) 
           self.n_process_confidence_entry.pack(side=LEFT)
+          
+          annealing_n_iterations=Frame(annealing_parameters_frame) 
+          annealing_n_iterations.pack(side=TOP)
+          Label(annealing_n_iterations,text="Number of iterations of the annealing algorythm").pack(side=LEFT)
+          self.annealing_n_iterations_entry=Entry(annealing_n_iterations)
+          self.annealing_n_iterations_entry.delete(0, END)
+          self.annealing_n_iterations_entry.insert(0, self.annealing_n_processes) 
+          self.annealing_n_iterations_entry.pack(side=LEFT)
+          
           
           Label(annealing_parameters_frame,text="n parameters is "+str(len(self.label_model.parameter_dict))).pack(side=TOP)
           
@@ -779,6 +797,7 @@ class GUI:
           self.annealing_m=annealing_m=int(self.mframe_confidence_entry.get())
           self.annealing_p0=annealing_p0=float(self.p0frame_confidence_entry.get())
           self.annealing_pf=annealing_pf=float(self.pfframe_confidence_entry.get())
+          self.annealing_n_iterations=int(self.annealing_n_iterations_entry.get())
           output=True
           self.annealing_n_processes=annealing_n_processes=int(self.n_process_confidence_entry.get())
           annealing_cycle_time_limit=self.label_model.p_dict['annealing_cycle_time_limit']#(annealing_m*50)
@@ -791,7 +810,7 @@ class GUI:
                 sbml_name = tkFileDialog.asksaveasfilename(parent=self.root,title="Save SBML as...",filetypes=[("SBML","*.sbml"),("XML","*.xml")])
           else:
                 sbml_name=None 
-          parameter_confidence_interval_dict , flux_confidence_interval_dict, chi_parameters_sets_dict,constrained_model =estimate_confidence_intervals(self.label_model,significance=signficance,perturbation=setp_size,min_absolute_perturbation=0.01,max_absolute_perturbation=self.label_model.p_dict["confidence_max_absolute_perturbation"],parameter_precision=self.parameter_precision,best_parameter_dict=self.label_model.parameter_dict,parameter_list=parameter_list,fraction_of_optimum=self.fraction_of_optimum,relative_max_random_sample=relative_max_random_sample, relative_min_random_sample= relative_min_random_sample,annealing_n=annealing_n,annealing_m=annealing_m,annealing_p0=annealing_p0,annealing_pf=annealing_pf,output=output,annealing_n_processes=annealing_n_processes,annealing_cycle_time_limit=annealing_cycle_time_limit, annealing_cycle_max_attempts=annealing_cycle_max_attempts,fname=fname,sbml_name=sbml_name,annealing_iterations=self.label_model.p_dict["annealing_iterations"])
+          parameter_confidence_interval_dict , flux_confidence_interval_dict, chi_parameters_sets_dict,constrained_model =estimate_confidence_intervals(self.label_model,significance=signficance,perturbation=setp_size,min_absolute_perturbation=0.01,max_absolute_perturbation=self.label_model.p_dict["confidence_max_absolute_perturbation"],parameter_precision=self.parameter_precision,best_parameter_dict=self.label_model.parameter_dict,parameter_list=parameter_list,fraction_of_optimum=self.fraction_of_optimum,relative_max_random_sample=relative_max_random_sample, relative_min_random_sample= relative_min_random_sample,annealing_n=annealing_n,annealing_m=annealing_m,annealing_p0=annealing_p0,annealing_pf=annealing_pf,output=output,annealing_n_processes=annealing_n_processes,annealing_cycle_time_limit=annealing_cycle_time_limit, annealing_cycle_max_attempts=annealing_cycle_max_attempts,fname=fname,sbml_name=sbml_name,annealing_iterations=self.annealing_n_iterations)
           if self.confidence_constraint.get()==1:
              self.label_model.constrained_model=constrained_model
           self.waiting.destroy()
@@ -832,6 +851,7 @@ class GUI:
           self.relative_max_random_sample=float(max_sample)/len(self.label_model.parameter_dict)
           self.relative_min_random_sample=float(min_sample)/len(self.label_model.parameter_dict)
           self.annealing_n_processes=n_processes=int(self.n_process_entry.get())
+          self.annealing_n_iterations=n_iterations=int(self.annealing_n_iterations_entry.get())
           cycle_time_limit=(m*50)
           print [max_sample,min_sample]
           """max_d=0.1
@@ -845,13 +865,47 @@ class GUI:
              identify_parameters(self.label_model,add_to_parameter_dict=True,fraction_of_optimum=fraction_of_optimum,change_threshold=0.01,max_d=max_d,add_turnover=True"""
           #print [max_d,p0,pf,n,m,max_perturbation]
           self.fitting_window.destroy()
-          best_parameters,best_flux_dict, f_best=annealing(self.label_model,max_random_sample=max_sample,min_random_sample=min_sample,n=n,m=m,p0=p0,pf=pf,parameter_precision=self.parameter_precision,max_perturbation=max_perturbation,fraction_of_optimum=fraction_of_optimum,gui=self,n_processes=n_processes,cycle_time_limit=cycle_time_limit)
+          f_best=999999999999
+          backup_parameters=copy.deepcopy(self.label_model.parameter_dict)
+          f_list=[]
+          for x in range(0,self.annealing_n_iterations):
+             if x>0:
+              clear_parameters(self.label_model,parameter_dict=None,parameter_list=[], clear_ratios=True,clear_turnover=False,clear_fluxes=True,restore_objectives=False) #Clear previous parameters
+              for parameter in self.label_model.parameter_dict: 
+                lb_list=[]
+                ub_list=[]
+                if self.label_model.parameter_dict[parameter]["type"]=="flux value":
+                   for reaction_id in  self.label_model.parameter_dict[parameter]["reactions"]:
+                       fva=flux_variability_analysis(self.label_model.constrained_model, reaction_list=[reaction_id],fraction_of_optimum=0,tolerance_feasibility=self.label_model.lp_tolerance_feasibility)
+                       lb_list.append(fva[reaction_id]["minimum"])
+                       ub_list.append(fva[reaction_id]["maximum"])
+                   new_value=random.uniform(max(lb_list),min(ub_list))
+                   self.label_model.parameter_dict[parameter]["v"]=new_value
+                elif self.label_model.parameter_dict[parameter]["type"]=="turnover": 
+                     for reaction_id in  self.label_model.parameter_dict[parameter]["reactions"]:       
+                         lb_list.append(self.label_model.turnover_flux_dict[reaction_id]["lb"])
+                         ub_list.append(self.label_model.turnover_flux_dict[reaction_id]["ub"])
+                     new_value=round(random.uniform(max(lb_list),min(ub_list)),self.precision) 
+                     self.label_model.parameter_dict[parameter]["v"]=new_value
+                apply_parameters(self.label_model,parameter_list=[parameter],parameter_precision=self.parameter_precision)
+             #self.label_model.parameter_dict=copy.deepcopy(backup_parameters)
+             
+             parameters,best_flux_dict, f=annealing(self.label_model,max_random_sample=max_sample,min_random_sample=min_sample,n=n,m=m,p0=p0,pf=pf,parameter_precision=self.parameter_precision,max_perturbation=max_perturbation,fraction_of_optimum=fraction_of_optimum,gui=self,n_processes=n_processes,cycle_time_limit=cycle_time_limit)
+             if f<f_best:
+                f_best=f
+                best_parameters=copy.deepcopy(parameters)
+             f_list.append(f)
+          self.label_model.parameter_dict=best_parameters
+          apply_parameters(self.label_model,parameter_precision=self.parameter_precision)
+          #best_parameters,best_flux_dict, f_best=annealing(self.label_model,max_random_sample=max_sample,min_random_sample=min_sample,n=n,m=m,p0=p0,pf=pf,parameter_precision=self.parameter_precision,max_perturbation=max_perturbation,fraction_of_optimum=fraction_of_optimum,gui=self,n_processes=n_processes,cycle_time_limit=cycle_time_limit)
           parameters=self.label_model.parameter_dict=best_parameters
           for parameter in parameters:
              if parameters[parameter]["type"]=="turnover":
                  for reaction_id in parameters[parameter]["reactions"]:
                      if reaction_id not in self.modified_turnovers:
                         self.modified_turnovers.append(reaction_id)
+          print f_list
+          print "Annealing completed, best Chi is %s"%(f_best)
           #self.highlight_modified(self.turnover_selector_listbox,self.modified_turnovers) 
           self.get_bounds_objective() 
           self.run_fva()
@@ -1893,7 +1947,7 @@ class GUI:
           return fig
       
       def update_label(self):
-        print self.label_model.flux_dict
+        #print self.label_model.flux_dict
         a,b,simulation_not_rsm=get_objective_function(self.label_model,force_balance=self.label_model.force_balance,output=False,rsm="never")
         a,b,simulation_with_rsm=get_objective_function(self.label_model,force_balance=self.label_model.force_balance,output=False,rsm="always")
         for condition in self.simulated_points_object_dict:
@@ -1913,7 +1967,7 @@ class GUI:
                     fig.delete(oval_id)
                     oval_id=fig.create_oval((base+new_value*100*2)-3, pos+5-2, (base+new_value*100*2)+3, pos+5+2, fill="red")
                     self.simulated_points_object_dict[condition][emu_id][n]=[oval_id,pos]
-                    print emu_id+" updatded"+str(new_value)  
+                    #print emu_id+" updatded"+str(new_value)  
       
       
       
@@ -2132,6 +2186,7 @@ class GUI:
           self.root.protocol("WM_DELETE_WINDOW",self.restore_original_parameters)
           self.label_model=label_model
           self.parameter_precision=label_model.parameter_precision
+          self.precision=int(-1*(math.log10(self.parameter_precision)))
           print self.label_model.p_dict
           self.change_threshold=self.label_model.p_dict["identify_free_parameters_change_threshold"]
           root.title(self.label_model.project_name)
@@ -2168,6 +2223,7 @@ class GUI:
           self.annealing_p0=self.label_model.p_dict["annealing_p0"]
           self.annealing_pf=self.label_model.p_dict["annealing_pf"]
           self.annealing_n_processes=self.label_model.p_dict["annealing_n_processes"]
+          self.annealing_n_iterations=self.label_model.p_dict["annealing_iterations"]
           self.relative_max_random_sample=self.label_model.p_dict["annealing_relative_max_sample"]
           self.relative_min_random_sample=self.label_model.p_dict["annealing_relative_min_sample"]
           #Build reaction name_dict:
@@ -2274,7 +2330,7 @@ class build_model_gui:
         if ""==self.sbml_entry.get():# or ""==self.e_data_entry.get or ""==self.label_rules_entry.get():
              print "A constrained model must be defined"
              return
-        p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 3, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 100, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 20, 'annealing_relative_max_sample': 0.4, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.001, 'parameter_precision': 0.0001, 'fraction_of_optimum': 1, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.25, 'annealing_iterations': 2,"gene_expression_mode":"imat", "gene_expression_low_expression_threshold":25,"gene_expression_high_expression_threshold":75,"gene_expression_percentile":True,"gene_expression_gene_method":"avearge", "gene_expression_gene_sufix":"_AT","gene_expression_gene_prefix":"","gene_expression_epsilon":1, "gene_expression_lex_epsilon":1e-6,"gene_expression_fraction_optimum":1, "gene_expression_absent_gene_expression_value":50}
+        p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 3, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 100, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 20, 'annealing_relative_max_sample': 0.4, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.001, 'parameter_precision': 0.0001, 'fraction_of_optimum': 1, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 400, 'annealing_relative_min_sample': 0.25, 'annealing_iterations': 2,"gene_expression_mode":"imat", "gene_expression_low_expression_threshold":25,"gene_expression_high_expression_threshold":75,"gene_expression_percentile":True,"gene_expression_gene_method":"avearge", "gene_expression_gene_sufix":"_AT","gene_expression_gene_prefix":"","gene_expression_epsilon":1, "gene_expression_lex_epsilon":1e-6,"gene_expression_fraction_optimum":1, "gene_expression_absent_gene_expression_value":50}
         #p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 4, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 100, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 10, 'annealing_relative_max_sample': 0.35, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.005, 'parameter_precision': 0.0001, 'fraction_of_optimum': 0, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.2, 'annealing_iterations': 2,"gene_prefix":"gene","gene_sufix":"_AT"}
         model_file=self.sbml_entry.get()
         if ".sbml" in model_file.lower() or ".xml" in model_file.lower():
