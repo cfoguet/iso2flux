@@ -21,6 +21,7 @@ def expand_emu_models(label_model):
                label_model.expanded_emu_dict[met]=metabolite.id  
            label_model.emu_dict[metabolite.id]["mid"]=local_met_dict
       for original_reaction in label_model.size_model_dict[model_size].reactions:
+          print[original_reaction.id,original_reaction.reaction]
           new_reactions=[]
           subs=[]
           prod=None
@@ -30,10 +31,10 @@ def expand_emu_models(label_model):
                  prod=metabolite.id
               elif coef==-1:
                  subs.append(metabolite.id)
-              elif coef==-2:
-                 subs=[metabolite.id,metabolite.id]
               elif coef<0 and ("output" in original_reaction.id):
                  subs.append(metabolite.id)  
+              elif coef==-2:
+                 subs=[metabolite.id,metabolite.id]
               else: #The coeficient can only be different from 1 or 2 in input or output reactions   
                  raise ValueError("Error: wrong coeffient in "+original_reaction.id)
           if subs==[]: #input reactions, assumed to generate only m0
