@@ -29,7 +29,12 @@ def remove_impossible_emus(label_model):
                         label_model.initial_label[condition][label_model.emu_dict[emu]["mid"][mi]]=1
                      else:
                         label_model.initial_label[condition][label_model.emu_dict[emu]["mid"][mi]]=0
-                               
+   present_initial_label=[]
+   for condition in label_model.initial_label:  #For simplicity the label model is shared across all conditions
+        for label in label_model.initial_label[condition]:
+          if label_model.initial_label[condition][label]>0.0:
+             if label not in present_initial_label:
+                present_initial_label.append(label)                            
    for model_size in sorted(label_model.size_expanded_model_dict.keys()): #needs to be done in order of size
       expanded_emu_model=label_model.size_expanded_model_dict[model_size]
       label_exchange_reactions=[]
@@ -44,16 +49,13 @@ def remove_impossible_emus(label_model):
           label_exchange_reactions.append(reaction)
       for condition in label_model.initial_label:  #For simplicity the label model is shared across all conditions
         for label in label_model.initial_label[condition]:
-          if label_model.initial_label[condition][label]>0.0:
              ex_id="EX_"+label
              if ex_id in expanded_emu_model.reactions:
-                expanded_emu_model.reactions.get_by_id(ex_id).lower_bound=-1000
-          elif label in expanded_emu_model.metabolites: #Set all reactionns where emus with 0 frequency are consumed participate to 0
-              metabolite=expanded_emu_model.metabolites.get_by_id(label)
-              for reaction in metabolite.reactions:
-                  if reaction.metabolites[metabolite]<0.0:
-                     reaction.lower_bound=0
-                     reaction.upper_bound=0
+                if label in present_initial_label:
+                   expanded_emu_model.reactions.get_by_id(ex_id).lower_bound=-1000
+                else: 
+                    expanded_emu_model.reactions.get_by_id(ex_id).lower_bound=0
+                    expanded_emu_model.reactions.get_by_id(ex_id).upper_bound=0
         """for isotopomer in label_model.isotopomer_object_list:
             if isotopomer.input==True:
              if isotopomer.id in label_model.metabolite_emu_dict:
@@ -62,6 +64,10 @@ def remove_impossible_emus(label_model):
                    ex_id="EX_"+mid0
                    if ex_id in expanded_emu_model.reactions:
                       expanded_emu_model.reactions.get_by_id(ex_id).lower_bound=-1000"""
+      if model_size==1.0:
+         import cobra
+         cobra.io.write_sbml_model(expanded_emu_model,"size1.sbml")
+      
       for isotopomer in possible_isotopomers: #If a isotopomer is produced in a smaller size it should appear as present in this size
           ex_id="EX_"+isotopomer
           if ex_id in expanded_emu_model.reactions:
