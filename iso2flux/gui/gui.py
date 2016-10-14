@@ -2412,7 +2412,7 @@ class build_model_gui:
         self.label_model.project_name="validation"
         read_isotopomer_model(label_model,self.label_rules_entry.get())
         missing_dict=find_missing_reactions(label_model,fn="validation_results.txt",fn_mode="w")
-        print self.label_model.flux_dict
+        #print self.label_model.flux_dict
         if len(missing_dict)==0:
            #loaded_file = tkFileDialog.askopenfile(title='Choose experimental measuments file',filetypes=[("xlsx",".xlsx")]) 
            #fileName=loaded_file.name
@@ -2432,7 +2432,7 @@ class build_model_gui:
            validation_summary=Label(top,text="Succesfully validated\n")
         else:  
            validation_summary=Label(top,text="Validation failed,\nsee validation_results.txt for details\n")
-           print self.label_model.flux_dict
+           #print self.label_model.flux_dict
         validation_summary.pack(side=TOP)
         ok_button=Button(top,text="Ok",command=self.restart_script) 
         ok_button.pack(side=TOP)
