@@ -683,8 +683,8 @@ class GUI:
           
           self.confidence_sbml = IntVar()
           self.confidence_constraint = IntVar()
-          check_confidence_sbml=Checkbutton(top, text = "Save SBML", variable = self.confidence_sbml,onvalue = 1, offvalue = 0)
-          check_confidence_constraint=Checkbutton(top, text = "Add results as constraints", variable = self.confidence_constraint,onvalue = 1, offvalue = 0)
+          check_confidence_sbml=Checkbutton(top, text = "Save as Constrained Model", variable = self.confidence_sbml,onvalue = 1, offvalue = 0)
+          check_confidence_constraint=Checkbutton(top, text = "Add results as constraints to the active model", variable = self.confidence_constraint,onvalue = 1, offvalue = 0)
           evaluate_all_button = Button(top, text="Evaluate all fluxes",command=self.confidence_start_warning)
           evaluate_specific_button = Button(top, text="Evaluate specific fluxes & ratios",command=self.confidence_select_fluxes)
           check_confidence_sbml.pack(side=TOP)
@@ -896,7 +896,7 @@ class GUI:
                 best_parameters=copy.deepcopy(parameters)
              f_list.append(f)
              logfile=open(self.log_name, "a")
-             logfile.write(time.strftime("%c")+("//Annealing iteration %s of %s completed. Best Chi achieved is %s\n")%(x,self.annealing_n_iterations,f))
+             logfile.write(time.strftime("%c")+("//Annealing iteration %s of %s completed. Best Chi achieved is %s\n")%(x+1,self.annealing_n_iterations,f))
              logfile.close()
           self.label_model.parameter_dict=best_parameters
           apply_parameters(self.label_model,parameter_precision=self.parameter_precision)
@@ -954,7 +954,7 @@ class GUI:
           self.log_name=project_name[:-9]+"_log.text"
           self.root.title(self.label_model.project_name)
           f=open(self.log_name, "w")
-          f.write(time.strftime("%c")+"//"+"Instance created")
+          f.write(time.strftime("%c")+"//"+"Instance created\n")
           """fileName = tkFileDialog.asksaveasfilename(parent=self.root,title="Save the parameters as...",filetypes=[("parameters",".par")])
           if len(fileName)>0:
               reaction_dict={}
@@ -2302,7 +2302,8 @@ class build_model_gui:
         self.wd_entry.insert(0,wd) 
        
     def get_sbml_model(self):
-        loaded_file = tkFileDialog.askopenfile(title='Choose a Constraint based model',filetypes=[("sbml","*.sbml"),("xml","*.xml"),("xlsx","*.xlsx"),("CSV","*.csv"),("all files","*")],parent=self.root)
+        loaded_file = tkFileDialog.askopenfile(title='Choose a 
+ based model',filetypes=[("sbml","*.sbml"),("xml","*.xml"),("xlsx","*.xlsx"),("CSV","*.csv"),("all files","*")],parent=self.root)
         self.sbml_entry.delete(0, END) 
         self.sbml_entry.insert(0,str(loaded_file.name)) 
     
