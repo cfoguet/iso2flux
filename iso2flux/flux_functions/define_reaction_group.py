@@ -24,6 +24,8 @@ def define_reaction_group(model,reaction_dict,group_reaction_id=None,lower_bound
     group_reaction.subsystem = 'Reaction group'
     group_reaction.upper_bound=upper_bound 
     group_reaction.add_metabolites({metabolite:-1})
+    if objective_coefficient==None:
+        group_reaction.objective_coefficient=0
     group_reaction.objective_coefficient=objective_coefficient
     model.add_reaction(group_reaction)
     theoretical_lower_bound=0
