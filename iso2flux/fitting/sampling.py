@@ -68,22 +68,22 @@ def sampling(label_model,n=100,fraction_of_optimum=0,output_emu_list=None,max_tu
         
          working_flux_value_parameter_list=random.sample(free_parameters, len(free_parameters))
          #try:
-         print free_parameters
+         #print free_parameters
          for reaction_id in working_flux_value_parameter_list: 
             fva=flux_variability_analysis(label_model.constrained_model, reaction_list=[reaction_id],fraction_of_optimum=0,tolerance_feasibility=label_model.lp_tolerance_feasibility)
             if fva[reaction_id]["maximum"]-fva[reaction_id]["minimum"]>parameter_precision:
                new_value=random.uniform(fva[reaction_id]["minimum"],fva[reaction_id]["maximum"])
                free_parameters[reaction_id]["v"]=new_value
-               print [reaction_id,new_value]
+               #print [reaction_id,new_value]
                apply_parameters(label_model,parameter_dict=free_parameters,parameter_precision=parameter_precision,parameter_list=[reaction_id])
          for turnover in label_model.turnover_flux_dict:
              if (turnover+"_turnover") not in parameter_dict: 
                 lb=label_model.turnover_flux_dict[turnover]["lb"]
                 ub=label_model.turnover_flux_dict[turnover]["ub"]
                 new_value=round(random.uniform(lb,ub),precision) 
-                print new_value
+                #print new_value
                 label_model.turnover_flux_dict[turnover]["v"]=new_value
-         print label_model.turnover_flux_dict     
+         #print label_model.turnover_flux_dict     
          #apply_parameters(label_model,parameter_dict=free_parameters,parameter_list=turnover_parameter_list,parameter_precision=parameter_precision)
          a,b=solver(label_model,mode="fsolve",fba_mode=fba_mode)
          #Store output
