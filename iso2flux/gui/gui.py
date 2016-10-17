@@ -2302,8 +2302,7 @@ class build_model_gui:
         self.wd_entry.insert(0,wd) 
        
     def get_sbml_model(self):
-        loaded_file = tkFileDialog.askopenfile(title='Choose a 
- based model',filetypes=[("sbml","*.sbml"),("xml","*.xml"),("xlsx","*.xlsx"),("CSV","*.csv"),("all files","*")],parent=self.root)
+        loaded_file = tkFileDialog.askopenfile(title='Choose a constraint based model',filetypes=[("sbml","*.sbml"),("xml","*.xml"),("xlsx","*.xlsx"),("CSV","*.csv"),("all files","*")],parent=self.root)
         self.sbml_entry.delete(0, END) 
         self.sbml_entry.insert(0,str(loaded_file.name)) 
     
