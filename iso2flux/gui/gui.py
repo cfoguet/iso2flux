@@ -1213,7 +1213,8 @@ class GUI:
             self.fva={}
             print "solution not optimal"
           self.update_fva_listbox()
-       
+
+
       def update_fva_listbox(self):
           search_term=self.search_entry.get()
           reaction_list=self.search_function(search_term)                         
@@ -1228,22 +1229,28 @@ class GUI:
               """optimal_flux=round(solution_dict[flux],3)
               string=(flux+"=%s ")%( optimal_flux) 
               self.optimal_solution_listbox.insert(END, string)"""
-              max_flux=self.fva[flux]["maximum"]
-              min_flux=self.fva[flux]["minimum"]
-              """if max_flux==min_flux:
-                 string=("    "+flux+"=%s ")%( min_flux)
-              else:
-                 string=("%s < "+flux+" <%s ")%( min_flux, max_flux)"""
-              if (round(min_flux,4)!=round(max_flux,4) and (max_flux-min_flux)>1.1*self.change_threshold) and flux not in self.label_model.parameter_dict:#if (max_flux-min_flux)>1.5*self.change_threshold and flux not in self.label_model.parameter_dict:
+              try:
+                max_flux=self.fva[flux]["maximum"]
+                min_flux=self.fva[flux]["minimum"]
+                """if max_flux==min_flux:
+                   string=("    "+flux+"=%s ")%( min_flux)
+                   else:
+                   string=("%s < "+flux+" <%s ")%( min_flux, max_flux)"""
+                if (round(min_flux,4)!=round(max_flux,4) and (max_flux-min_flux)>1.1*self.change_threshold) and flux not in self.label_model.parameter_dict:#if (max_flux-min_flux)>1.5*self.change_threshold and flux not in self.label_model.parameter_dict:
                  string=("%s < "+flux+" <%s ")%( round(min_flux,3), round(max_flux,3))
                  self.fva_listbox.insert(END, string)
                  self.free_fluxes_n_dict[flux]=n
                  self.n_free_fluxes_dict[n]=flux
                  n+=1
-              else:
+                else:
                   optimal_flux=round((max_flux+min_flux)/2,4)
                   string=(flux+"=%s ")%( optimal_flux) 
                   self.optimal_solution_listbox.insert(END, string)
+              except:
+                  string=flux+"=NAN"
+                  self.optimal_solution_listbox.insert(END, string)
+
+
          
       
       def run_label_simulation(self):
