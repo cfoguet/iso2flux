@@ -124,7 +124,7 @@ def build_emu_model(label_model,emu0_dict):
                                emu_size_dict[size]=[emu_msub.id] 
                          #emu_met=get_emu_metabolite(temporary_dict,simp_model,emu_model)
                      reaction_id=reaction.id+sub_string
-                     if reaction_id in emu_model.reactions: 
+                     while(reaction_id in emu_model.reactions): 
                         reaction_id+="_bis"
                         #print reaction_id
                      new_reaction = Reaction(reaction_id)

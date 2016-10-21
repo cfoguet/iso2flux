@@ -99,9 +99,10 @@ def read_flux_constraints(metabolic_model,ratio_dict={},file_name=None,create_co
                         print "Ratio "+ratio_id+" added/updated" 
                        except:
                         print "Ratio "+contraint_id+" not valid"
-           elif "+" in contraint_id:
+           elif "+" in contraint_id or "-" in contraint_id:
                add_reaction_group=True
                reaction_group_dict={}
+               contraint_id=contraint_id.replace("-","+-1*")
                reaction_group_elements=contraint_id.split("+")
                if len(reaction_group_elements)>1:
                   for reaction_string in reaction_group_elements:
@@ -117,6 +118,7 @@ def read_flux_constraints(metabolic_model,ratio_dict={},file_name=None,create_co
                       if reaction_id in model.reactions:
                          reaction_group_dict[str(reaction_id)]=coef
                       else:
+                         print "Reaction "+reaction_id+" not valid"
                          add_reaction_group=False
                   if add_reaction_group:
                     if row_len>1:
@@ -150,11 +152,11 @@ def read_flux_constraints(metabolic_model,ratio_dict={},file_name=None,create_co
                             print contraint_id+": objective coefficient set to "+ str(float(row[3]))
                           except:
                             print contraint_id+": objective coefficient not valid"
-                            objective_coefficient=None
+                            objective_coefficient=0
                        else:
-                          objective_coefficient=None
+                          objective_coefficient=0
                     else:
-                        objective_coefficient=None
+                        objective_coefficient=0
                     
                     print reaction_group_dict  
                     define_reaction_group(model,reaction_dict=reaction_group_dict,group_reaction_id=None,lower_bound=lower_bound,upper_bound=upper_bound,objective_coefficient=objective_coefficient)    
