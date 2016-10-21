@@ -12,7 +12,11 @@ def export_label_results(label_model,fn="output.xlsx",show_chi=True):
          sheet_row_data_dict[condition][0].append("Chi Square") 
       row_n=1
       for emu in label_model.experimental_dict[condition]:
-         for mi in label_model.experimental_dict[condition][emu]:
+         rsm_show_chi=True
+         for mi in sorted(label_model.experimental_dict[condition][emu]):
+                if mi==0:
+                   if simulation_not_rsm[condition][emu][mi]>label_model.experimental_dict[condition][emu][mi]["m"]:
+                      rsm_show_chi=False
                 metabolite_name=emu[4:]
                 m_name="m"+str(mi)
                 """sim=label_model.condition_simulation_results_dict[condition][emu][mi]
@@ -32,25 +36,27 @@ def export_label_results(label_model,fn="output.xlsx",show_chi=True):
                    metabolite_name=label_model.data_name_emu_dict[emu]
                 row_n+=1
                 row=[metabolite_name,m_name,round(sim,4),round(exp_m,4),round(exp_sd,4)]
-                if show_chi==True:
+                if show_chi and not (emu in label_model.rsm_list and rsm_show_chi):
                    row.append(round(chi,4))
                 sheet_row_data_dict[condition].append(row)
          sheet_row_data_dict[condition].append([])
          if emu in label_model.rsm_list:
-            for mi in label_model.experimental_dict[condition][emu]:
+            
+            for mi in sorted(label_model.experimental_dict[condition][emu]):
                 if mi==0:
-                   continue
+                   continue 
                 metabolite_name=emu[4:]
                 m_name="m"+str(mi)+"/Sm"
                 sim=simulation_with_rsm[condition][emu][mi]   
                 exp_m=label_model.experimental_dict[condition][emu][mi]["m"]/(1-label_model.experimental_dict[condition][emu][0]["m"])
                 exp_sd=label_model.experimental_dict[condition][emu][mi]["sd"]/(1-label_model.experimental_dict[condition][emu][0]["m"]) 
-                chi=chi_dict_with_rsm[condition][emu][mi]   #round(pow((sim-exp_m)/exp_sd,2),3)
+                
                 if emu in label_model.data_name_emu_dict:
                    metabolite_name=label_model.data_name_emu_dict[emu]
                 row_n+=1
                 row=[metabolite_name,m_name,round(sim,4),round(exp_m,4),round(exp_sd,4)]
-                if show_chi==True:
+                if show_chi and rsm_show_chi:
+                   chi=chi_dict_with_rsm[condition][emu][mi]   #round(pow((sim-exp_m)/exp_sd,2),3)
                    row.append(round(chi,4))
                 sheet_row_data_dict[condition].append(row)
          sheet_row_data_dict[condition].append([])             

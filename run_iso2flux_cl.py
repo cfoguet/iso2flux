@@ -63,7 +63,7 @@ if __name__ == "__main__":
      from iso2flux.fitting.confidence_intervals import estimate_confidence_intervals
      from iso2flux.fitting.sampling import sampling
      from iso2flux.fitting.clear_parameters import clear_parameters
-     
+     from iso2flux.input_functions.create_cobra_model_from_file import create_cobra_model_from_file
      from iso2flux.misc.check_steady_state import check_steady_state
      from iso2flux.misc.check_simulated_fractions import check_simulated_fractions
      from iso2flux.flux_functions.expression_analysis import integrate_omics_imat,integrate_omics_gim3e
@@ -249,8 +249,8 @@ if __name__ == "__main__":
          if f<f_best:
             f_best=f
             best_parameters=copy.deepcopy(parameters)
-         clear_parameters(label_model,parameter_dict=None,parameter_list=[], clear_ratios=True,clear_turnover=True,clear_fluxes=True,restore_objectives=True) #Clear previous parameters
-         label_model.parameter_dict={} #Clear previous parameters
+         clear_parameters(self.label_model,parameter_dict=None,parameter_list=[], clear_ratios=True,clear_turnover=True,clear_fluxes=True,restore_objectives=True) #Clear previous parameters
+         self.label_model.parameter_dict={} #Clear previous parameters
      #Select parameters to evaluate
      parameters_to_evaluate=[]
      export_label_results(label_model,fn=(output_prefix+"best_label.csv"),show_chi=True)

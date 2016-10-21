@@ -951,7 +951,7 @@ class GUI:
       def save_model(self):
           project_name=save_iso2flux_model(self.label_model,name="project",write_sbml=True,gui=True)
           self.label_model.project_name=project_name
-          self.log_name=project_name[:-9]+"_log.text"
+          self.log_name=project_name[:-9]+"_log.txt"
           self.root.title(self.label_model.project_name)
           f=open(self.log_name, "w")
           f.write(time.strftime("%c")+"//"+"Instance created\n")
@@ -1213,8 +1213,8 @@ class GUI:
             self.fva={}
             print "solution not optimal"
           self.update_fva_listbox()
-
-
+      
+      
       def update_fva_listbox(self):
           search_term=self.search_entry.get()
           reaction_list=self.search_function(search_term)                         
@@ -1903,7 +1903,7 @@ class GUI:
                 fig.create_text(base-30, pos+5, text=string)
                 #print "d"
                 fig.create_rectangle(base, pos, base+(mean*2), pos+10, fill="gray")
-                fig.create_line(base+(mean*2)-(sd*2), pos+5, base+(mean*2)+(sd*2), pos+5)
+                fig.create_line(max(base+(mean*2)-(sd*2),base), pos+5, min(base+(mean*2)+(sd*2),base+210), pos+5)
                 if n in simulation_not_rsm[condition][emu_id]:
                    #n_emu=label_model.size_variable_dict[size][mid]
                    #print "e"
@@ -1939,7 +1939,7 @@ class GUI:
                        fig.create_text(base-30, pos+5, text=string)
                        #print "d"
                        fig.create_rectangle(base, pos, base+(mean*2), pos+10, fill="gray")
-                       fig.create_line(base+(mean*2)-(sd*2), pos+5, base+(mean*2)+(sd*2), pos+5)
+                       fig.create_line(max(base+(mean*2)-(sd*2),base), pos+5, min(base+(mean*2)+(sd*2),base+210), pos+5)
                        if n in simulation_with_rsm[condition][emu_id]:
                           #n_emu=label_model.size_variable_dict[size][mid]
                           #print "e"
@@ -2200,7 +2200,7 @@ class GUI:
           print self.label_model.p_dict
           self.change_threshold=self.label_model.p_dict["identify_free_parameters_change_threshold"]
           root.title(self.label_model.project_name)
-          self.log_name=self.label_model.project_name[:-9]+"_log.text"
+          self.log_name=self.label_model.project_name[:-9]+"_log.txt"
           self.label_model.constrained_model=label_model.constrained_model
           self.backup_constrained_model=copy.deepcopy(label_model.constrained_model) #Used to restore bounds and objectives
           self.backup_turnover_flux_dict=copy.deepcopy(label_model.turnover_flux_dict) #Used to restore bounds and objectives
@@ -2360,7 +2360,7 @@ class build_model_gui:
         self.project_name = tkFileDialog.asksaveasfilename(title="Save project as...",filetypes=[("iso2flux",".iso2flux")])
         if ".iso2flux" not in self.project_name:
             self.project_name+=".iso2flux"
-        log_name=self.project_name[:-9]+"_log.text"
+        log_name=self.project_name[:-9]+"_log.txt"
         f=open(log_name, "w")
         f.write(time.strftime("%c")+"//"+"Instance created")
         self.label_model=label_model=Label_model(model,lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"],parameter_precision=p_dict["parameter_precision"],reactions_with_forced_turnover=p_dict["reactions_with_forced_turnover"])
