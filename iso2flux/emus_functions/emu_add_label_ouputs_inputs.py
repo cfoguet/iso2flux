@@ -16,6 +16,7 @@ def emu_add_label_ouputs_inputs(label_model,excluded_reactions_id=[]):
       reactions_to_add=[]
       print("adding emu output reactions")
       for emu in label_model.emu_size_dict[size]:
+       
        met_id=label_model.emu_dict[emu]["met_id"]
        if label_model.id_isotopomer_object_dict[met_id].input==True:
           continue
@@ -121,11 +122,18 @@ def emu_add_label_ouputs_inputs(label_model,excluded_reactions_id=[]):
                  else:
                     continue
                  for emu in emus:
+                      symmetric=False
+                      if "symm_carbons" in  label_model.emu_dict[emu]:
+                          if label_model.emu_dict[emu]["symm_carbons"]!=[]:
+                             symmetric=True
                       size=label_model.emu_dict[emu]["size"]
                       emu_reaction=Reaction(reaction.id+"_"+emu+"_"+reaction_type)
                       emu_reaction.name=reaction.name+" ("+reaction_type+")"
                       emu_reaction.subsystem = ''
-                      emu_reaction.add_metabolites({label_model.size_model_dict[size].metabolites.get_by_id(emu): net_coef})
+                      if not symmetric:
+                             emu_reaction.add_metabolites({label_model.size_model_dict[size].metabolites.get_by_id(emu): net_coef})
+                      else:
+                             emu_reaction.add_metabolites({label_model.size_model_dict[size].metabolites.get_by_id(emu): 2*net_coef})
                       emu_reaction.lower_bound=0
                       label_model.size_model_dict[size].add_reaction(emu_reaction)
                       if reaction.id in label_model.reaction_emu_dict: 
