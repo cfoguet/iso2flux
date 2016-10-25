@@ -11,6 +11,8 @@ def convert_model_to_spreadsheet(model,fn):
     sheet_row_data_dict["model"].append(["Metabolite id","Metabolite Name","Formula",	"Compartment"])
     for metabolite in model.metabolites:
         sheet_row_data_dict["model"].append([metabolite.id,metabolite.name,metabolite.formula,	metabolite.compartment]) 
+    if not any(x in fn.lower() for x in ["xlsx","xlsm","xltx","xltm","csv","txt" ]): 
+       fn+=".xlsx" 
     write_spreadsheet(file_name=fn,sheet_row_data_dict=sheet_row_data_dict,sheet_order=None)    
 
 

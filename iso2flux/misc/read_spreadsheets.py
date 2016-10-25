@@ -28,8 +28,10 @@ def read_spreadsheets(file_names=None,csv_delimiter=',',more_than_1=True,tkinter
            for ws in wb.worksheets:
                   condition=ws.title
                   #
-                  if condition=="Sheet1" or condition=="Hoja1":
-                     condition="control"
+                  if "Sheet" in condition:
+                     condition=condition.replace("Sheet","Label_")
+                  elif "Hoja" in condition:
+                     condition=condition.replace("Hoja","Label_") 
                   condition_rows_dict[condition]=[]
                   for xlsx_row in ws.rows:
                       row=[]

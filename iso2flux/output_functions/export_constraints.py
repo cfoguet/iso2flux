@@ -9,8 +9,8 @@ def export_constraints(model,fn=None,ratio_dict={}):
        tk=Tkinter.Tk()
        tk.withdraw()
        fn = tkFileDialog.asksaveasfilename(parent=tk,title="Save constraints as...",filetypes=[("xlsx","*.xlsx"),("csv","*.csv")])
-       if ".xlsx" not in fn and ".csv" not in fn:
-          fn+=".csv"
+       if not any(x in fn.lower() for x in ["xlsx","xlsm","xltx","xltm","csv","txt" ]): 
+          fn+=".xlsx" 
        print fn
        tk.destroy()
      except:

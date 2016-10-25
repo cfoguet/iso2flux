@@ -58,6 +58,7 @@ from ..misc.write_spreadsheet import write_spreadsheet
 from ..misc.read_spreadsheets import read_spreadsheets
 from ..misc.check_steady_state import check_steady_state
 from ..misc.check_simulated_fractions import check_simulated_fractions
+known_extensions=["xlsx","xlsm","xltx","xltm","csv","txt" ]
 
 if __name__=="__main__":
    #from ilabel.fitting.anneal import annealing
@@ -805,7 +806,9 @@ class GUI:
           self.create_waiting_window() 
           self.confidence_warning_window.destroy()
           self.root.update_idletasks()
-          fname = tkFileDialog.asksaveasfilename(parent=self.root,title="Save results as...",filetypes=[("xlsx","*.xlsx"),("csv","*.csv")],defaultextension=".csv")
+          fname = tkFileDialog.asksaveasfilename(parent=self.root,title="Save results as...",filetypes=[("xlsx","*.xlsx"),("csv","*.csv")])
+          if not any(x in fname.lower() for x in ["xlsx","xlsm","xltx","xltm","csv","txt" ]): 
+             fname+=".xlsx" 
           if self.confidence_sbml.get()==1:
                 sbml_name = tkFileDialog.asksaveasfilename(parent=self.root,title="Save SBML as...",filetypes=[("SBML","*.sbml"),("XML","*.xml")])
           else:
@@ -1213,8 +1216,7 @@ class GUI:
             self.fva={}
             print "solution not optimal"
           self.update_fva_listbox()
-      
-      
+       
       def update_fva_listbox(self):
           search_term=self.search_entry.get()
           reaction_list=self.search_function(search_term)                         
@@ -1251,8 +1253,6 @@ class GUI:
                   self.optimal_solution_listbox.insert(END, string)
 
 
-         
-      
       def run_label_simulation(self):
           self.waiting_for_label_simulation=False 
           if self.label_window==True:
@@ -1702,8 +1702,9 @@ class GUI:
       
       def export_fluxes(self):
            fileName = tkFileDialog.asksaveasfilename(parent=self.root,title="Save fluxes as...",filetypes=[("xlsx","*.xlsx"),("csv","*.csv")])
-           if "xlsx" not in fileName.lower() and "csv" not in fileName.lower():
-               fileName+=".csv"  
+           #if "xlsx" not in fileName.lower() and "csv" not in fileName.lower()  and "txt" not in fileName.lower() and "xlsm" not in fileName.lower() and "xltx" not in fileName.lower() and "xltm" :
+           if not any(x in fileName.lower() for x in known_extensions): 
+                fileName+=".xlsx"  
            if len(fileName)>0:
                 write_fva(self.label_model.constrained_model, fn=fileName,fraction=self.fraction_of_optimum,remove0=False,change_threshold=10*self.parameter_precision, mode="full", lp_tolerance_feasibility=self.label_model.lp_tolerance_feasibility)
       
@@ -1717,8 +1718,8 @@ class GUI:
       
       def export_label(self):
            fileName = tkFileDialog.asksaveasfilename(parent=self.root,title="Save label simulation results as...",filetypes=[("xlsx",".xlsx"),("csv",".csv")])
-           if "xlsx" not in fileName.lower() and "csv" not in fileName.lower():
-               fileName+=".csv"  
+           if not any(x in fileName.lower() for x in known_extensions): 
+                fileName+=".xlsx"  
            if len(fileName)>0:
               a1,b=solver(self.label_model,mode="fsolve",fba_mode=self.fba_mode.get().lower())
               a2,b,c=get_objective_function(self.label_model,force_balance=self.label_model.force_balance,output=True)
@@ -1940,6 +1941,7 @@ class GUI:
                        #print "d"
                        fig.create_rectangle(base, pos, base+(mean*2), pos+10, fill="gray")
                        fig.create_line(max(base+(mean*2)-(sd*2),base), pos+5, min(base+(mean*2)+(sd*2),base+210), pos+5)
+                       #fig.create_line(base+(mean*2)-(sd*2), pos+5, base+(mean*2)+(sd*2), pos+5)
                        if n in simulation_with_rsm[condition][emu_id]:
                           #n_emu=label_model.size_variable_dict[size][mid]
                           #print "e"
@@ -2340,7 +2342,7 @@ class build_model_gui:
         if ""==self.sbml_entry.get():# or ""==self.e_data_entry.get or ""==self.label_rules_entry.get():
              print "A constrained model must be defined"
              return
-        p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 3, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 50, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 20, 'annealing_relative_max_sample': 0.4, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.001, 'parameter_precision': 0.0001, 'fraction_of_optimum': 1, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 400, 'annealing_relative_min_sample': 0.25, 'annealing_iterations': 2,"gene_expression_mode":"imat", "gene_expression_low_expression_threshold":25,"gene_expression_high_expression_threshold":75,"gene_expression_percentile":True,"gene_expression_gene_method":"avearge", "gene_expression_gene_sufix":"_AT","gene_expression_gene_prefix":"","gene_expression_epsilon":1, "gene_expression_lex_epsilon":1e-6,"gene_expression_fraction_optimum":1, "gene_expression_absent_gene_expression_value":50}
+        p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 3, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 100, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 20, 'annealing_relative_max_sample': 0.3, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.001, 'parameter_precision': 0.0001, 'fraction_of_optimum': 1, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 400, 'annealing_relative_min_sample': 0.1, 'annealing_iterations': 2,"gene_expression_mode":"imat", "gene_expression_low_expression_threshold":25,"gene_expression_high_expression_threshold":75,"gene_expression_percentile":True,"gene_expression_gene_method":"avearge", "gene_expression_gene_sufix":"_AT","gene_expression_gene_prefix":"","gene_expression_epsilon":1, "gene_expression_lex_epsilon":1e-6,"gene_expression_fraction_optimum":1, "gene_expression_absent_gene_expression_value":50}
         #p_dict={'reactions_with_forced_turnover': [], 'annealing_cycle_time_limit': 1800, 'confidence_max_absolute_perturbation': 10, 'turnover_exclude_EX': True, 'annealing_n_processes': 4, 'annealing_p0': 0.4, 'identify_free_parameters_add_turnover': True, 'minimum_sd': 0.01, 'annealing_max_perturbation': 1, 'turnover_upper_bound': 100, 'confidence_perturbation': 0.1, 'annealing_m': 1000, 'annealing_n': 10, 'annealing_relative_max_sample': 0.35, 'confidence_min_absolute_perturbation': 0.05, 'annealing_pf': 0.0001, 'confidence_significance': 0.95, 'identify_free_parameters_change_threshold': 0.005, 'parameter_precision': 0.0001, 'fraction_of_optimum': 0, 'lp_tolerance_feasibility': 1e-09, 'identify_free_parameters_n_samples': 200, 'annealing_relative_min_sample': 0.2, 'annealing_iterations': 2,"gene_prefix":"gene","gene_sufix":"_AT"}
         model_file=self.sbml_entry.get()
         if ".sbml" in model_file.lower() or ".xml" in model_file.lower():
