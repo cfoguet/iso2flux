@@ -14,11 +14,11 @@ def create_cobra_model_from_file(fn):
                continue
             if "->" in row[1] or "=>" in row[1] or "<-" in row[1]: #Is a reaction:
                rid=row[0]
-               new_reaction=Reaction(rid)
+               new_reaction=Reaction(str(rid))
                print row[1]
                try:
                   model.add_reaction(new_reaction)
-                  new_reaction.build_reaction_from_string(row[1])
+                  new_reaction.build_reaction_from_string(str(row[1]))
                except:
                   print rid+": not added"
                try:
