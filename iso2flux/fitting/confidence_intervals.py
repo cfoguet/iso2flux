@@ -419,7 +419,7 @@ def build_flux_confidence_interval_dict(label_model,flux_confidence_interval_dic
      for parameter in parameter_list:
           if "/" in parameter:
             try: 
-             value,lb,ub=get_ratios_bounds(label_model,parameter,0.1,label_model.lp_tolerance_feasibility,label_model.parameter_dict)
+             value,lb,ub=get_ratios_bounds(label_model,parameter,0.1,label_model.lp_tolerance_feasibility)
              if parameter not in flux_confidence_interval_dict:
                 flux_confidence_interval_dict[parameter]={"lb":lb,"ub":ub}
              else:
@@ -585,7 +585,7 @@ def get_ratios_bounds(label_model,ratio,perturbation,lp_tolerance_feasibility=1e
     remove_ratio(model,ratio,ratio_dict) #Remove the Ratio
     if parameter_dict!=None:
        apply_parameters(label_model,parameter_dict)
-       apply_ratios(label_model.constrained_model,label_model.ratio_dict) #Re add all ratios that migh have been disabled
+    apply_ratios(label_model.constrained_model,label_model.ratio_dict) #Re add all ratios that migh have been disabled
     return original_v,lb,ub
 
 

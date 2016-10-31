@@ -762,6 +762,8 @@ class GUI:
           for data in data_rows_dict:
               for row in data_rows_dict[data]:
                   for element in row:
+                      if element==None:
+                         continue
                       if element in self.confidence_selected_parameters:
                          continue 
                       if element in self.label_model.constrained_model.reactions:
@@ -2475,7 +2477,7 @@ class build_model_gui:
         #self.wd_entry=self.get_file(root,text="Working directory",default_file=os.getcwd(),open_file_widget=self.get_working_directory,row=)
         self.sbml_entry=self.get_file(root,text="Constraint based model",default_file=None,open_file_widget=self.get_sbml_model,row=0)
         self.label_rules_entry=self.get_file(root,text="Label propagation rules",default_file=None,open_file_widget=self.get_label_propagation_rules,row=1)
-        self.e_data_entry=self.get_file(root,text="13C Patterns",default_file=None,open_file_widget=self.get_exp_data,row=2)
+        self.e_data_entry=self.get_file(root,text="13C labelling patterns",default_file=None,open_file_widget=self.get_exp_data,row=2)
         self.constraints_entry=self.get_file(root,text="Flux constraints (Optional)",default_file=None,open_file_widget=self.get_flux_constraints,row=3)
         self.settings_entry=self.get_file(root,text="Advanced settings(Optional)",default_file=None,open_file_widget=self.get_settings,row=4)
         button1=Button(root,text="Create Iso2flux Instance",command=self.new_model)
