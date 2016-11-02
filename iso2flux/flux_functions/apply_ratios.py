@@ -15,6 +15,8 @@ def apply_ratios(constrained_model,ratio_dict):
                       ratio_reaction.add_metabolites({flux_metabolite:deltacoef}) 
          else:
             metabolite_dict={}
+            lower_bound=0
+            upper_bound=0
             for flux in ratio_dict[ratio]:
                 reaction=constrained_model.reactions.get_by_id(flux)
                 metabolite=Metabolite(ratio+"_"+flux,
@@ -23,13 +25,16 @@ def apply_ratios(constrained_model,ratio_dict):
                 reaction.add_metabolites({metabolite:1}) 
                 coef=ratio_dict[ratio][flux]
                 metabolite_dict[metabolite]=-coef
+                #upper_bound+=reaction.upper_bound*coef
+                #lower_bound+=reaction.lower_bound*coef
                 #print metabolite_dict
                 
             ratio_reaction = Reaction("RATIO_"+ratio)
             ratio_reaction.name = "RATIO_"+ratio
             ratio_reaction.subsystem = 'Flux ratio'
-            ratio_reaction.lower_bound = 0
-            ratio_reaction.upper_bound = 10000.  
+            
+            ratio_reaction.lower_bound = -1000000
+            ratio_reaction.upper_bound =  1000000 
             ratio_reaction.add_metabolites(metabolite_dict)
             constrained_model.add_reaction(ratio_reaction)
 
