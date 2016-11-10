@@ -183,7 +183,10 @@ if __name__ == "__main__":
      find_missing_reactions(label_model)
      
      #emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,mid_data_name,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
-     emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=factor,selected_time=time,minimum_sd=p_dict["minimum_sd"],rsm=False)
+     try:
+        emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=factor,selected_time=time,minimum_sd=p_dict["minimum_sd"],rsm=False)
+     except:
+        emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,mid_data_name,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
      print emu_dict0
      label_model.build(emu_dict0,force_balance=True,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=False,turnover_exclude_EX=p_dict['turnover_exclude_EX'])
      """label_model.turnover_flux_dict["glc6p_pdif"]={"ub":1000,"lb":0,"v":500}
