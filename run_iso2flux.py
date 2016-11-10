@@ -80,6 +80,7 @@ if __name__ == "__main__":
      from iso2flux.input_functions.read_isotoflux_settings import read_isotoflux_settings
      from iso2flux.input_functions.read_metabolights import read_metabolights
      from iso2flux.doc.open_manual import open_manual
+     from iso2flux.input_functions.create_cobra_model_from_file import create_cobra_model_from_file
      from iso2flux.flux_functions.check_feasibility import check_feasibility
      #from iso2flux.dynamic.interpolate_timecourse import interpolate_timecourse
      #from iso2flux.dynamic.interpolate_timecourse import interpolate_timecourse
@@ -115,7 +116,10 @@ if __name__ == "__main__":
          elif opt in ("--parameters_file=","-p"):
               p_dict.update(read_isotoflux_settings(arg))
          elif opt in ("--sbml_model=","-s"):
+             try:
               model=cobra.io.read_sbml_model(arg)
+             except:
+               model=create_cobra_model_from_file(arg)
          elif opt in ("--constraints_file=","-c"):
               constraints_file=arg
          elif opt in ("--output_prefix=","-o"):
