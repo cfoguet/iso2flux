@@ -17,6 +17,8 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
    label_model.data_name_emu_dict={}
    name_id_dict={}
    for x in label_model.metabolic_model.metabolites:
+       if x.name==None or x.name=="":
+          x.name=x.id
        if x.name.lower() not in  name_id_dict:
           name_id_dict[x.name.lower()]=[]
        name_id_dict[x.name.lower()].append(x.id)
