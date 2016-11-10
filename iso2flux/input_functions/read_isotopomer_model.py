@@ -13,17 +13,16 @@ def read_isotopomer_model(label_model,file_name,header=True):
     reads the label propagation model from an xlsx file
     label_model: label_model object
     file_name: string
-	name of the xlsx or CSVs files that contains the model. If its a xlsx file it should have to sheets, one containing the word "metabolite"s and and one containing the word "propagation" in their tittle. Alternatevly it can be 2 CSV files, one containing "metabolites" in the name and one containing "propagation" in the name 
-		The metabolites sheet should have the folowing infromation in that order: 
+	name of the xlsx or CSVs files that contains the model. It should define the metabolites that can labelled and the label propagation rules of reactions. 
+		The metabolites  should have the folowing infromation in that order: 
 			Metabolite/s (ID of the metabolites that are assumed to share label distribution separated by ",")	N carbons (Optional,number of carbons of the Metabolites/s)	Symmetry (Optional,TRUE or FALSE)	Constant(Optional,TRUE if the label distribution is not variable)
                 The propagation sheet should have the following information:
 			Reaction (Reaction/s id)	Substrates(Optional, ID Substrate1(c1,c2,c3,ci) +ID Substrate2(ci+1,ci+2,...) +ID SubstrateN ...)	Products (Optional, ID Product1(c1,c2,c3,ci) +ID Product2(ci+1,ci+2,...) +ID ProductN ...)
-   header: bool,optional:
-     indicates if the first row in the file is a header
+   header: bool,deprectaed
 
 
     """
-    sheet_rows_dict=read_spreadsheets(file_names=file_name,csv_delimiter=',',more_than_1=False,tkinter_title="Choose a Label Metabolites/Label propagation file(s)") 
+    sheet_rows_dict=read_spreadsheets(file_names=file_name,csv_delimiter=',',more_than_1=False,tkinter_title="Choose label propagation rules") 
     #wb = load_workbook(file_name, read_only=True)
     metabolites_rows=[]
     reactions_rows=[]
@@ -122,7 +121,7 @@ def read_isotopomer_model(label_model,file_name,header=True):
                label_propagation={}
                print reaction_id
                if len(row)>2:
-                 if row[1] not in (None,""," ") and row[2] not in (None,""," "):
+                 if (row[1] not in (None,""," ")) and (row[2] not in (None,""," ")):
                   #Get substrates
                   substrates_list=row[1].replace(" ","").split("+")
                   #print substrates_list
@@ -150,6 +149,7 @@ def read_isotopomer_model(label_model,file_name,header=True):
                              substrate_n=label_id_dict[label_id][1]
                              label_propagation["prod"+str(n_prod)].append([substrate_id,substrate_n])
                #print [label_propagation,products_dict,substrates_dict]
+               print [reaction_id,substrates_dict,substrates_dict]
                add_label_reactions(label_model,reaction_id,label_propagation=label_propagation,products_dict=products_dict,substrates_dict=substrates_dict)
     add_missing_uni_uni_reactions(label_model)
 

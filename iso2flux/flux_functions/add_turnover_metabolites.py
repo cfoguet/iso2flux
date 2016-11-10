@@ -85,6 +85,8 @@ def add_turnover_metabolites(cobra_model, metabolite_id_list=[], epsilon=1e-6,la
     for metabolite_id in single_metabolites:
         print metabolite_id
         v_metabolite = Metabolite("TM_" + str(metabolite_id))
+        if v_metabolite in cobra_model.metabolites:
+                 continue
         # Now for reactions.  We include all reactions 
         # that create or consume the real metabolite.
         # These reactions therefore also drive creation of the

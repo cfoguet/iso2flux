@@ -1,6 +1,7 @@
 def build_label_propagation_dict(label_model,reaction,label_propagation,substrates_dict,products_dict):
     product_propagation_dict=label_propagation
     substrate_propagation_dict={}
+    print product_propagation_dict 
     for substrate_key in  substrates_dict:
         substrate=substrates_dict[substrate_key] 
         substrate_propagation_dict[substrate_key]=[]

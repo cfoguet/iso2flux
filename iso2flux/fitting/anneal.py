@@ -466,7 +466,7 @@ def annealing(label_model,parameter_dict=None,parameter_to_be_fitted=[],paramete
   print("best Chi:"+str(f_best))
   apply_parameters(label_model,best_parameters,parameter_precision=parameter_precision)
   solver(label_model,mode=mode)
-  fi,b,c=get_objective_function(label_model)
+  f_best,b,c=get_objective_function(label_model)
   #print fi
   for reaction_id in original_objectives_bounds:
             reaction=model.reactions.get_by_id(reaction_id)
