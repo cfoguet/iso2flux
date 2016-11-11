@@ -144,7 +144,10 @@ if __name__ == "__main__":
      if model==None:
          model=cobra.io.read_sbml_model("simple_model.sbml")
      if constraints_file!=None:
-         model,ratio_dict=read_flux_constraints(model,ratio_dict={},file_name=constraints_file)
+         try:
+           model,ratio_dict=read_flux_constraints(model,ratio_dict={},file_name=constraints_file)
+         except:
+           pass
      print [iso_model_file]     
      
      """
