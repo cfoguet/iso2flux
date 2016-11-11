@@ -114,7 +114,10 @@ if __name__ == "__main__":
              if "]" in iso_model_file:
                 iso_model_file.replace("[","").replace("]","").split(",")       
          elif opt in ("--parameters_file=","-p"):
-              p_dict.update(read_isotoflux_settings(arg))
+              try:
+                p_dict.update(read_isotoflux_settings(arg))
+              except:
+                pass
          elif opt in ("--sbml_model=","-s"):
              try:
               model=cobra.io.read_sbml_model(arg)
