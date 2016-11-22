@@ -64,9 +64,9 @@ def remove_impossible_emus(label_model):
                    ex_id="EX_"+mid0
                    if ex_id in expanded_emu_model.reactions:
                       expanded_emu_model.reactions.get_by_id(ex_id).lower_bound=-1000"""
-      if model_size==1.0:
+      """if model_size==1.0:
          import cobra
-         cobra.io.write_sbml_model(expanded_emu_model,"size1.sbml")
+         cobra.io.write_sbml_model(expanded_emu_model,"size1.sbml")"""
       
       for isotopomer in possible_isotopomers: #If a isotopomer is produced in a smaller size it should appear as present in this size
           ex_id="EX_"+isotopomer
