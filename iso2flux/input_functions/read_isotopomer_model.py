@@ -22,6 +22,7 @@ def read_isotopomer_model(label_model,file_name,header=True):
 
 
     """
+    label_model.label_rules_file=file_name
     sheet_rows_dict=read_spreadsheets(file_names=file_name,csv_delimiter=',',more_than_1=False,tkinter_title="Choose label propagation rules") 
     #wb = load_workbook(file_name, read_only=True)
     metabolites_rows=[]
@@ -31,11 +32,13 @@ def read_isotopomer_model(label_model,file_name,header=True):
            try:
             if row[0].split(",")[0] in label_model.metabolic_model.metabolites: #Check if you are looking at the list of metabolites
                metabolites_rows.append(row)
+               print row
             elif row[0].split(",")[0] in label_model.metabolic_model.reactions:
                reactions_rows.append(row)
            except:
                pass 
     for n,row in enumerate(metabolites_rows):
+               print row
                if row[0]==None:
                   continue
                reference_metabolites=str(row[0].replace(" ","")).split(",")
@@ -102,10 +105,9 @@ def read_isotopomer_model(label_model,file_name,header=True):
                             label_model.metabolic_model.add_reaction(reaction)
                             
                             label_model.reactions_with_forced_turnover.append(reaction.id) 
-                            
-               #print[references_metabolites,ncarbons,symmetric]
+               
                iso=isotopomer(reference_metabolite_id=reference_metabolites,label_model=label_model,ncarbons=ncarbons,symmetric=symmetric,label_input=label_input,iso_id=None)
-               print iso.id
+               print iso.id      
     cobra.manipulation.convert_to_irreversible(label_model.irreversible_metabolic_model)#Convert any Exchange we migh have added to irreversible
     remove_produced_inputs(label_model) #Remove inputs that are products of irreversible reactions
     label_re=re.compile("(.+)[(](.+)[)]")
