@@ -93,7 +93,7 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
            injection=str(row[n_injection])
            print [replicate,injection]
            substrate=row[n_substrate]
-           abundance=row[n_lab_sub_abundance]
+           abundance=row[n_lab_sub_abundance]/100
            pattern=row[n_lab_pattern_substrate]
            print [substrate,n_substrate]
            isotopologue_abundance_str=row[n_isotopologue_abundance]
