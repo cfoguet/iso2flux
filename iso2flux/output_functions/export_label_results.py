@@ -6,7 +6,9 @@ def export_label_results(label_model,fn="output.xlsx",show_chi=True):
   a,chi_dict_not_rsm,simulation_not_rsm=get_objective_function(label_model,output=False,rsm="never")
   a,chi_dict_with_rsm,simulation_with_rsm=get_objective_function(label_model,output=False,rsm="always")
   sheet_row_data_dict={}
+  order_vector=[]
   for n_condition,condition in enumerate(label_model.initial_label):
+      order_vector.append(condition)
       sheet_row_data_dict[condition]=[["Metabolite/s","Isotopologue","Simulated value","Experimental Mean","Experimental SD"]]
       if show_chi==True:
          sheet_row_data_dict[condition][0].append("Chi Square") 
@@ -63,17 +65,19 @@ def export_label_results(label_model,fn="output.xlsx",show_chi=True):
                       
       for size in label_model.size_emu_c_eqn_dict:
            sheet=condition+" emu size%s"%(size)
+           order_vector.append(sheet)
            sheet_row_data_dict[sheet]=[]
            for n,x in enumerate(label_model.condition_size_yy_dict[condition][size]):
                 sheet_row_data_dict[sheet].append([label_model.size_inverse_variable_dict[size][n],x])
   row=["ID","Name","Stoichiometry","Value"]
-  sheet_row_data_dict["Reaction fluxes"]=[row]   
+  sheet_row_data_dict["Reaction fluxes"]=[row]
+  order_vector.append("Reaction fluxes")   
   for x in sorted(label_model.constrained_model.solution.x_dict,key=lambda v: v.upper()):  
          if "_RATIO" in x:
             continue
          reaction=label_model.constrained_model.reactions.get_by_id(x)
          sheet_row_data_dict["Reaction fluxes"].append([reaction.id,reaction.name,reaction.reaction,label_model.constrained_model.solution.x_dict[x]])
-  write_spreadsheet(file_name=fn,sheet_row_data_dict=sheet_row_data_dict,sheet_order=None)    
+  write_spreadsheet(file_name=fn,sheet_row_data_dict=sheet_row_data_dict,sheet_order=order_vector)    
   a,b,c=get_objective_function(label_model,force_balance=label_model.force_balance,output=False,rsm="dynamic")
   #wb = openpyxl.Workbook()
   """for n_condition,condition in enumerate(label_model.initial_label):
