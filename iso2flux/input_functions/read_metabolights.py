@@ -10,12 +10,14 @@ import numpy
 labelled_substrate_col_name="tracer molecule"
 label_pattern_col_name="labelled positions"
 lab_sub_abundance_col_name="abundance [%]"
+lab_sub_abundance_percentage=True
 replicate_col_name="replicate"
 injection_col_name="injection"
 metabolite_name_col_name="Metabolite name"
 atomic_positions_to_the_parent_molecule_col_name="atomic positions to the parent molecule/metabolite name"
 isotopologue_col_name="isotopologue"
 isotopologue_fraction_col_name="isotologue abundance [%]"
+isotopologue_fraction_abundance_percentage=True
 CHEBI_identifier_col_name="CHEBI identifier"
 
 if __name__=="__main__":
@@ -93,7 +95,7 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
            injection=str(row[n_injection])
            print [replicate,injection]
            substrate=row[n_substrate]
-           abundance=row[n_lab_sub_abundance]/100
+           abundance=row[n_lab_sub_abundance]
            pattern=row[n_lab_pattern_substrate]
            print [substrate,n_substrate]
            isotopologue_abundance_str=row[n_isotopologue_abundance]
@@ -101,11 +103,16 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
                continue
                #print "aaaaaaaaaaAAaa"
            #print "bbbbbbbb"
-           labelled_substrate=str(substrate)+"$/$"+str(pattern)+"$/$"+str(abundance)
            isotopologue=str(row[n_isotopologue].lower().replace("m","")) 
            print [n_isotopologue,row[n_isotopologue],isotopologue]
            isotopologue_abundance=float(row[n_isotopologue_abundance])
-           isotopologue_abundance/=100 
+           if lab_sub_abundance_percentage:
+              abundance/=100.0
+              print abundance
+           if isotopologue_fraction_abundance_percentage:
+              isotopologue_abundance/=100.0
+           labelled_substrate=str(substrate)+"$/$"+str(pattern)+"$/$"+str(abundance) 
+           print labelled_substrate
            #Define Emu
            if metabolite_name.lower() in name_id_dict:
               metabolite_id=name_id_dict[metabolite_name.lower()][0] #Assume that so far all metabolites are the same label pool regardles of the compartment
@@ -185,12 +192,11 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
        substrate_name=initial_label[0].lower()
        string_pattern=initial_label[1]
        abundance=float(initial_label[2]) 
-       
+       print initial_label
        condition_name=(substrate_name+"_"+str(string_pattern)+"_"+str(round(abundance,4))).replace(" ","")
        substrate_id=name_id_dict[substrate_name][0]
        pattern=[int(x) for x in string_pattern.split(",") ]
        label_model.add_initial_label(substrate_id,[[pattern,abundance]],condition=condition_name,total_concentration=1)
-       
        label_model.experimental_dict[condition_name]={}
        for emuid in labelled_substrate_emuid_isotopologue_replicate_injection_dict[labelled_substrate]:
            label_model.experimental_dict[condition_name][emuid]={}
