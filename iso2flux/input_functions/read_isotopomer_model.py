@@ -22,6 +22,7 @@ def read_isotopomer_model(label_model,file_name,header=True):
 
 
     """
+    label_model.rsm_metabolite_id_list=[]
     label_model.label_rules_file=file_name
     sheet_rows_dict=read_spreadsheets(file_names=file_name,csv_delimiter=',',more_than_1=False,tkinter_title="Choose label propagation rules") 
     #wb = load_workbook(file_name, read_only=True)
@@ -72,7 +73,10 @@ def read_isotopomer_model(label_model,file_name,header=True):
                      label_input=False
                if len(row)>4:
                   if row[4]!=None:
-                     if row[4]==True or str(row[4]).lower()=="true" or str(row[4]).lower()=="1" or str(row[4]).lower()=="yes": #Does it have a large unlabelled pool?
+                     if "/sm" in str(row[4]).lower():
+                        for metabolite_id in reference_metabolites:
+                            label_model.rsm_metabolite_id_list.append(metabolite_id) 
+                     elif row[4]==True or str(row[4]).lower()=="true" or str(row[4]).lower()=="1" or str(row[4]).lower()=="yes": #Does it have a large unlabelled pool?
                         for metabolite_id in reference_metabolites:
                             EX_present=False
                             EX_reaction_id="EX_"+metabolite_id

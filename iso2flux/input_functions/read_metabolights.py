@@ -177,6 +177,8 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
                   emu0_dict[emuid]= local_emu0_dict
                   if emuid not in label_model.data_name_emu_dict:
                      label_model.data_name_emu_dict[emuid]=metabolite_name+"_"+unrpocessed_carbon_range
+                  if metabolite_id in label_model.rsm_metabolite_id_list:
+                     label_model.rsm_list.append(emuid)
            if labelled_substrate not in labelled_substrate_emuid_isotopologue_replicate_injection_dict:
               labelled_substrate_emuid_isotopologue_replicate_injection_dict[labelled_substrate]={}
            if emuid not in labelled_substrate_emuid_isotopologue_replicate_injection_dict[labelled_substrate]:
