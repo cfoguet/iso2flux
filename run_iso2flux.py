@@ -242,7 +242,7 @@ if __name__ == "__main__":
      export_label_results(label_model,fn=(output_prefix+"best_label.csv"),show_chi=True)
      write_fva(label_model.constrained_model,fn=output_prefix+"best_fluxes.csv",fraction=1,remove0=False,change_threshold=0.001,mode="full",lp_tolerance_feasibility=1e-6)
      if quick_analysis:
-        cobra.io.write(label_model.constrained_model,output_prefix+"constrained_model.sbml")
+        cobra.io.write_sbml_model(label_model.constrained_model,output_prefix+"constrained_model.sbml")
      else: 
         parameter_confidence_interval_dict,flux_confidence_interval_dict,parameter_value_parameters_sets_dict,constrained_model=estimate_confidence_intervals(label_model,significance=p_dict["confidence_significance"],perturbation=p_dict["confidence_perturbation"],min_absolute_perturbation=p_dict["confidence_min_absolute_perturbation"],max_absolute_perturbation=p_dict["confidence_max_absolute_perturbation"],parameter_precision=label_model.parameter_precision,best_parameter_dict=best_parameters,parameter_list=[],fraction_of_optimum=fraction_of_optimum,relative_max_random_sample=relative_max_sample, relative_min_random_sample= relative_min_sample,annealing_n=p_dict["annealing_n"],annealing_m=p_dict["annealing_m"],annealing_p0=p_dict["annealing_p0"],annealing_pf=p_dict["annealing_pf"],output=False,annealing_n_processes=p_dict["annealing_n_processes"],annealing_cycle_time_limit=p_dict["annealing_cycle_time_limit"], annealing_cycle_max_attempts=5,annealing_iterations=p_dict["annealing_iterations"],fname=output_prefix+"confidence.csv",sbml_name=output_prefix+"constrained_model.sbml")
      
