@@ -10,14 +10,14 @@ import numpy
 labelled_substrate_col_name="tracer molecule"
 label_pattern_col_name="labelled positions"
 lab_sub_abundance_col_name="abundance [%]"
-lab_sub_abundance_percentage=True
+lab_sub_abundance_percentage=True #Set it to true if the abundance of labelled substrate are in percentatges
 replicate_col_name="replicate"
 injection_col_name="injection"
 metabolite_name_col_name="Metabolite name"
 atomic_positions_to_the_parent_molecule_col_name="atomic positions to the parent molecule/metabolite name"
 isotopologue_col_name="isotopologue"
 isotopologue_fraction_col_name="isotologue abundance [%]"
-isotopologue_fraction_abundance_percentage=True
+isotopologue_fraction_abundance_percentage=True #Set it to true if the isotopologue are in percentatges
 CHEBI_identifier_col_name="CHEBI identifier"
 
 if __name__=="__main__":

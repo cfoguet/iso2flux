@@ -194,7 +194,7 @@ if __name__ == "__main__":
      
      #emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,mid_data_name,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
      try:
-        emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=factor,selected_time=time,minimum_sd=p_dict["minimum_sd"],rsm=False)
+        emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,minimum_sd=p_dict["minimum_sd"],rsm=False)
      except:
         emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,mid_data_name,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
      print emu_dict0
