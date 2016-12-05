@@ -107,10 +107,10 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
            print [n_isotopologue,row[n_isotopologue],isotopologue]
            isotopologue_abundance=float(row[n_isotopologue_abundance])
            if lab_sub_abundance_percentage:
-              abundance/=100.0
+              abundance=float(abundance)/100.0
               print abundance
            if isotopologue_fraction_abundance_percentage:
-              isotopologue_abundance/=100.0
+              isotopologue_abundance=float(isotopologue_abundance)/100.0
            labelled_substrate=str(substrate)+"$/$"+str(pattern)+"$/$"+str(abundance) 
            print labelled_substrate
            #Define Emu
