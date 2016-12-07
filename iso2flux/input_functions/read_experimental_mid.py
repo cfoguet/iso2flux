@@ -137,6 +137,9 @@ def read_experimental_mid(label_model,file_names=None,emu0_dict={},experimental_
                   if "/sm" in str(row[6]).lower() or "true" in str(row[6]).lower() or "yes" in str(row[6]).lower():
                      if emuid not in label_model.rsm_list:
                         label_model.rsm_list.append(emuid)
+                                     
+            if metabolite_id in label_model.rsm_metabolite_id_list and emuid not in label_model.rsm_list:
+                     label_model.rsm_list.append(emuid)
             if condition not in experimental_dict:
                experimental_dict[condition]={}
             if emuid not in experimental_dict[condition]:
