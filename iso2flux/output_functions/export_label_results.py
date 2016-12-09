@@ -2,7 +2,7 @@ import openpyxl
 from ..fitting.get_objective_function import get_objective_function
 from ..misc.write_spreadsheet import write_spreadsheet
 
-def export_label_results(label_model,fn="output.xlsx",show_chi=True):
+def export_label_results(label_model,fn="output.xlsx",show_chi=True,show_emu=True):
   a,chi_dict_not_rsm,simulation_not_rsm=get_objective_function(label_model,output=False,rsm="never")
   a,chi_dict_with_rsm,simulation_with_rsm=get_objective_function(label_model,output=False,rsm="always")
   sheet_row_data_dict={}
@@ -62,8 +62,8 @@ def export_label_results(label_model,fn="output.xlsx",show_chi=True):
                    row.append(round(chi,4))
                 sheet_row_data_dict[condition].append(row)
          sheet_row_data_dict[condition].append([])             
-                      
-      for size in label_model.size_emu_c_eqn_dict:
+      if show_emu:                 
+         for size in label_model.size_emu_c_eqn_dict:
            sheet=condition+" emu size%s"%(size)
            order_vector.append(sheet)
            sheet_row_data_dict[sheet]=[]
