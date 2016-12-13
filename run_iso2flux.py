@@ -104,7 +104,7 @@ if __name__ == "__main__":
         # print help information and exit:
         print str(err)  # will print something like "option -a not recognized":
         #print "wrong parameters"#'test.py -i <inputfile> -o <outputfile>'
-        sys.exit(2)
+        sys.exit(0)
      for opt, arg in opts:
          print [opt,arg]
          if opt in ("--experimental_data_file","-e"):
