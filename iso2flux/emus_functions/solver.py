@@ -72,8 +72,9 @@ def solver(label_model,mode="fsolve",fba_mode="fba",model=None,check_unity=True,
          yy0=label_model.condition_size_yy_dict
       else:
          yy0=label_model.condition_size_yy0_dict
-      get_fluxes(label_model,model,precision=12)
-      for condition in label_model.initial_label:
+      for n_precision in xrange(10,16):
+       get_fluxes(label_model,model,precision=n_precision)
+       for condition in label_model.initial_label:
          label_model.active_condition=condition
          if mode=="fsolve":
             for size in label_model.size_emu_c_eqn_dict:
@@ -101,7 +102,7 @@ def solver(label_model,mode="fsolve",fba_mode="fba",model=None,check_unity=True,
                    if max_value>1.001 or min_value<-0.001:
                       label_model.solver_flag="fail"
                       print mode+" failed unity check"+str([max_value,min_value])
-                      error_dump(label_model,e_type="solver error") 
+                      #error_dump(label_model,e_type="solver error") 
                       break
          dy=check_dy(label_model,condition)
          if dy>1e-4:
@@ -111,8 +112,11 @@ def solver(label_model,mode="fsolve",fba_mode="fba",model=None,check_unity=True,
             if mode!="ode": #If fsolve failes try ode
                label_model.solver_flag, label_model.condition_size_yy_dict=solver(label_model,mode="ode")
             else:
-               error_dump(label_model,e_type="solver error") 
-                       
+               break
+                
+       if label_model.solver_flag!="fail":
+           break #Break the precision loop if it worked
+           error_dump(label_model,e_type="solver error")               
     else:
       #remove 
       label_model.solver_flag="fail"    
