@@ -1871,7 +1871,10 @@ class GUI:
           a,b,simulation_not_rsm=get_objective_function(self.label_model,force_balance=self.label_model.force_balance,output=False,rsm="never")
           a,b,simulation_with_rsm=get_objective_function(self.label_model,force_balance=self.label_model.force_balance,output=False,rsm="always")
           #ventanafigura = Tk()
-          figure_height=sum([30+25*len(self.label_model.experimental_dict[condition][emu]) for emu in self.label_model.experimental_dict[condition]])+sum([+25*len(self.label_model.experimental_dict[condition][emu]) for emu in  self.label_model.rsm_list])
+          figure_height=sum([30+25*len(self.label_model.experimental_dict[condition][emu]) for emu in self.label_model.experimental_dict[condition]])
+          for emu in  self.label_model.rsm_list:
+              if emu in self.label_model.experimental_dict[condition]:
+                 figure_height+=25*len(self.label_model.experimental_dict[condition][emu])
           fig = Canvas(root, width=280, height=figure_height,scrollregion=(0,0,0, figure_height))
           pos=0
           for emu_id in self.label_model.experimental_dict[condition]:
