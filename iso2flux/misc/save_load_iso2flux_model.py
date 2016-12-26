@@ -7,6 +7,7 @@ from ..classes.label_model import Label_model #Import the label_model class
 import sys
 import os
 import cobra
+from ..fitting.apply_parameters import apply_parameters
 
 def save_iso2flux_model(label_model,name="project",write_sbml=True,ask_sbml_name=False,gui=False):
    project_name=name
@@ -138,6 +139,8 @@ def load_iso2flux_model(project_file="project.iso2flux",sbml_name="project_metab
    get_equations(loaded_label_model.size_emu_c_eqn_dict)
    del loaded_label_model.irreversible_metabolic_model #Delete irreversible model as it not used if the model is already built
    loaded_label_model.project_name=project_file.split("/")[-1]
+   if loaded_label_model.parameter_dict!={}:
+     apply_parameters(loaded_label_model,loaded_label_model.parameter_dict)
    return loaded_label_model
    
 
