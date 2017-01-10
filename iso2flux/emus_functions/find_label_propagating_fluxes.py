@@ -86,7 +86,7 @@ def find_label_propagating_fluxes(label_model):
              inverse_label_groups_reactions_dict[reaction]=[]
           inverse_label_groups_reactions_dict[reaction].append(group)
           if reaction in label_model.reactions_propagating_label:
-              inverse_label_groups_reactions_dict[reaction].append(reactions)
+              inverse_label_groups_reactions_dict[reaction].append(reaction)
   reactions_in_only_one_group=[]
   for reaction in inverse_label_groups_reactions_dict:
       if len(inverse_label_groups_reactions_dict[reaction])==1:
