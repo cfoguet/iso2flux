@@ -4,6 +4,7 @@ import tkFileDialog
 import Tkinter 
 from ..emus_functions.set_equations_variables import set_equations_variables
 from ..classes.label_model import Label_model #Import the label_model class
+from ..flux_functions.apply_ratios import apply_ratios
 import sys
 import os
 import cobra
@@ -141,6 +142,7 @@ def load_iso2flux_model(project_file="project.iso2flux",sbml_name="project_metab
    loaded_label_model.project_name=project_file.split("/")[-1]
    if loaded_label_model.parameter_dict!={}:
      apply_parameters(loaded_label_model,loaded_label_model.parameter_dict)
+   apply_ratios(loaded_label_model.constrained_model,loaded_label_model.ratio_dict)
    return loaded_label_model
    
 
