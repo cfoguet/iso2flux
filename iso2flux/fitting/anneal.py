@@ -357,7 +357,7 @@ def annealing(label_model,parameter_dict=None,parameter_to_be_fitted=[],paramete
   if n_processes>1:
      pool = Pool(processes=n_processes)
   for i in range(n):
-    cycle_arg_dict={"label_model":label_model,"m":m,"i":i,"max_perturbation":max_perturbation,"min_perturbation":min_perturbation,"current_parameters":current_parameters,"parameter_to_be_fitted":parameter_to_be_fitted, "min_random_sample":min_random_sample,"max_random_sample":max_random_sample,"parameter_precision":parameter_precision,"DeltaE_avg":DeltaE_avg,"fc":fc, "f_best":f_best,"t":t,"flux_value_parameter_list":flux_value_parameter_list,"mode":mode,"fba_mode":fba_mode,"na":na,"best_parameters":best_parameters,"best_flux_dict":best_flux_dict,"force_flux_value_bounds":force_flux_value_bounds}
+    cycle_arg_dict={"label_model":label_model,"m":m,"i":i,"max_perturbation":max_perturbation,"min_perturbation":min_perturbation,"current_parameters":current_parameters,"parameter_to_be_fitted":parameter_to_be_fitted, "min_random_sample":min_random_sample,"max_random_sample":max_random_sample,"parameter_precision":parameter_precision,"DeltaE_avg":DeltaE_avg,"fc":fc, "f_best":f_best,"t":t,"flux_value_parameter_list":flux_value_parameter_list,"mode":mode,"fba_mode":fba_mode,"na":na,"best_parameters":best_parameters,"best_flux_dict":best_flux_dict,"force_flux_value_bounds":force_flux_value_bounds,"n":n,"i":i}
     print 'Cycle: ' + str(i) + ' with Temperature: ' + str(t)+" best fit:"+str(fc)
     print cycle_arg_dict["label_model"].constrained_model.optimize()
     #print label_model.constrained_model.optimize()
@@ -757,7 +757,8 @@ def cycle(cycle_arg_dict):
             #check if it is the new best result
             
         if (accept==True):
-            print "accept "+str(DeltaE)+" "+str(fi)  #remove me
+            print str(j)+"/"+str(local_cycle_arg_dict["m"])+" of cycle "+str(local_cycle_arg_dict["i"]+1)+"/"+str(local_cycle_arg_dict["n"])+" accept "+" s="+str(sample_size)+" "+str(DeltaE)+" "+str(fi)+" fc:"+str(local_cycle_arg_dict["fc"])+" best:"+str(local_cycle_arg_dict["f_best"])
+            #print "accept "+str(DeltaE)+" "+str(fi)  #remove me
             local_cycle_arg_dict["current_parameters"]=copy.deepcopy(working_parameters)
             ###error_dump(local_cycle_arg_dict["label_model"],"not optimal 1","accept_no_apply") 
             ###apply_parameters(local_cycle_arg_dict["label_model"], local_cycle_arg_dict["current_parameters"],apply_flux_values=True,parameter_precision=local_cycle_arg_dict["parameter_precision"])
@@ -783,7 +784,7 @@ def cycle(cycle_arg_dict):
                local_cycle_arg_dict["f_best"]=fi
                local_cycle_arg_dict["best_parameters"]=best_parameters
                local_cycle_arg_dict["best_flux_dict"]=best_flux_dict
-               print("New best fit is %s"%(fi))
+               print str(j)+"/"+str(local_cycle_arg_dict["m"])+" of cycle "+str(local_cycle_arg_dict["i"]+1)+"/"+str(local_cycle_arg_dict["n"])+" New best fit is "+str(fi)
             #Remove me
             #print label_model.flux_dict
             """for x in label_model.constrained_model.reactions:
@@ -817,6 +818,7 @@ def cycle(cycle_arg_dict):
             local_cycle_arg_dict["DeltaE_avg"] = (local_cycle_arg_dict["DeltaE_avg"] * (na-1.0) +  DeltaE) / na 
             #print [na,i,=local_cycle_arg_dict["t"],DeltaE,DeltaE_avg]
         else:
+            print str(j)+"/"+str(local_cycle_arg_dict["m"])+" of cycle "+str(local_cycle_arg_dict["i"]+1)+"/"+str(local_cycle_arg_dict["n"])+" reject "+" s="+str(sample_size)+" "+str(DeltaE)+" "+str(fi)+" fc:"+str(local_cycle_arg_dict["fc"])+" best:"+str(local_cycle_arg_dict["f_best"])
             if debug:
                print [j,fi,fi-local_cycle_arg_dict["fc"],"reject"]
             #If we rejected the simulation we need to restore the flux bound to the value of current_parameters
