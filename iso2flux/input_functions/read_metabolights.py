@@ -9,17 +9,19 @@ import numpy
 """ Names of the columns in the fluxmic files, modify them if the file format is changed"""
 labelled_substrate_col_name="tracer molecule"
 label_pattern_col_name="labelled positions"
-lab_sub_abundance_col_name="abundance [%]"
+lab_sub_abundance_col_name="abundance"
 lab_sub_abundance_percentage=True #Set it to true if the abundance of labelled substrate are in percentatges
-replicate_col_name="replicate"
-injection_col_name="injection"
+replicate_col_name="Parameter Value[Replicate]"
+injection_col_name="Parameter Value[injection]"
 metabolite_name_col_name="Metabolite name"
-atomic_positions_to_the_parent_molecule_col_name="atomic positions of fragment"
+atomic_positions_to_the_parent_molecule_col_name="atomic positions to the parent molecule/metabolite name"
 isotopologue_col_name="isotopologue"
-isotopologue_fraction_col_name="peak abundance [%]"
+isotopologue_fraction_col_name="isotologue abundance relative concentration"
 isotopologue_fraction_abundance_percentage=True #Set it to true if the isotopologue are in percentatges
 CHEBI_identifier_col_name="CHEBI identifier"
 
+tracer_regular_expression=re.compile("(.*)\[(.+)-C13\]-(.+)")
+isotopologue_regular_expression=re.compile(".+13c(.+)")
 if __name__=="__main__":
    from iso2flux.misc.read_spreadsheets import read_spreadsheets
 
@@ -94,7 +96,11 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
            replicate=str(row[n_replicate])
            injection=str(row[n_injection])
            print [replicate,injection]
-           substrate=row[n_substrate]
+           tracer_expression=row[n_substrate]
+           tracer_match=tracer_regular_expression.match("D-[1,2-C13]-Glucose")
+           substrate=tracer_match.group(1)+tracer_match.group(3)
+           tracer_pattern_temp=tracer_match.group(2) #To be used in future version
+           
            abundance=row[n_lab_sub_abundance]
            pattern=row[n_lab_pattern_substrate]
            print [substrate,n_substrate]
@@ -103,7 +109,12 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
                continue
                #print "aaaaaaaaaaAAaa"
            #print "bbbbbbbb"
-           isotopologue=str(row[n_isotopologue].lower().replace("m","")) 
+           #Obsolete
+           #isotopologue=str(row[n_isotopologue].lower().replace("m","")) 
+           try:           
+              isotopologue=isotopologue_regular_expression.match(str(row[n_isotopologue].lower())).group(1)
+           except:
+             continue
            print [n_isotopologue,row[n_isotopologue],isotopologue]
            isotopologue_abundance=float(row[n_isotopologue_abundance])
            if lab_sub_abundance_percentage:

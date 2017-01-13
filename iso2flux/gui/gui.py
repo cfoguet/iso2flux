@@ -50,6 +50,8 @@ from cobra.flux_analysis.parsimonious import optimize_minimal_flux
 
 from ..label_propagation_functions.find_missing_reactions import find_missing_reactions
 from ..input_functions.read_experimental_mid import read_experimental_mid
+from ..input_functions.read_metabolights import read_metabolights
+from ..input_functions.read_isotoflux_settings import read_isotoflux_settings
 from ..input_functions.read_isotopomer_model import read_isotopomer_model
 from ..input_functions.read_constraints import read_flux_constraints 
 from ..input_functions.read_isotoflux_settings import read_isotoflux_settings
@@ -2381,7 +2383,11 @@ class build_model_gui:
           #loaded_file = tkFileDialog.askopenfile(title='Choose experimental measuments file',filetypes=[("xlsx",".xlsx")]) 
           #fileName=loaded_file.name
           e_data_names=self.e_data_entry.get().replace("[","").replace("]","").split(",")
-          emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,e_data_names,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
+          try:
+                 emu_dict0,label_model.experimental_dict =read_metabolights(label_model,e_data_names,minimum_sd=p_dict["minimum_sd"],rsm=False)
+          except:
+                 emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,e_data_names,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
+          #emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,e_data_names,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
           label_model.build(emu_dict0,force_balance=True,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=True,turnover_exclude_EX=p_dict['turnover_exclude_EX'])
           self.finish_create_new_model() 
         except Exception, e:
@@ -2444,7 +2450,10 @@ class build_model_gui:
               #loaded_file = tkFileDialog.askopenfile(title='Choose experimental measuments file',filetypes=[("xlsx",".xlsx")]) 
               #fileName=loaded_file.name
               e_data_names=self.e_data_entry.get().replace("[","").replace("]","").split(",")
-              emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,e_data_names,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
+              try:
+                 emu_dict0,label_model.experimental_dict =read_metabolights(label_model,e_data_names,minimum_sd=p_dict["minimum_sd"],rsm=False)
+              except:
+                 emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,e_data_names,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
               label_model.build(emu_dict0,force_balance=False,recompile_c_code=True,remove_impossible_emus=True,isotopic_steady_state=True,excluded_outputs_inputs=[],turnover_upper_bound=p_dict["turnover_upper_bound"],clear_intermediate_data=False,turnover_exclude_EX=p_dict['turnover_exclude_EX'])
               steady_state_flag=check_steady_state(label_model,only_initial_m0=True,threshold=1e-9,fn="validation_results.txt",fn_mode="a")#Check initial dy for steady state deviations
                
