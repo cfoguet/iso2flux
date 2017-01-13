@@ -6,6 +6,22 @@ import tkFileDialog
 from ..misc.read_spreadsheets import read_spreadsheets
 import numpy
 
+""" Names of the columns in the fluxmic files, modify them if the file format is changed"""
+labelled_substrate_col_name="tracer molecule"
+label_pattern_col_name="labelled positions"
+lab_sub_abundance_col_name="abundance"
+lab_sub_abundance_percentage=True #Set it to true if the abundance of labelled substrate are in percentatges
+replicate_col_name="Parameter Value[Replicate]"
+injection_col_name="Parameter Value[injection]"
+metabolite_name_col_name="Metabolite name"
+atomic_positions_to_the_parent_molecule_col_name="atomic positions to the parent molecule/metabolite name"
+isotopologue_col_name="isotopologue"
+isotopologue_fraction_col_name="isotologue abundance relative concentration"
+isotopologue_fraction_abundance_percentage=True #Set it to true if the isotopologue are in percentatges
+CHEBI_identifier_col_name="CHEBI identifier"
+
+tracer_regular_expression=re.compile("(.*)\[(.+)-C13\]-(.+)")
+isotopologue_regular_expression=re.compile(".+13c(.+)")
 if __name__=="__main__":
    from iso2flux.misc.read_spreadsheets import read_spreadsheets
 
@@ -16,10 +32,28 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
    label_model.experimental_dict={}
    label_model.data_name_emu_dict={}
    name_id_dict={}
+   #Get name equivalency
    for x in label_model.metabolic_model.metabolites:
+       if x.name==None or x.name=="":
+          x.name=x.id
        if x.name.lower() not in  name_id_dict:
           name_id_dict[x.name.lower()]=[]
        name_id_dict[x.name.lower()].append(x.id)
+   label_rules_dict=read_spreadsheets(file_names=label_model.label_rules_file,csv_delimiter=',',more_than_1=True,tkinter_title="Choose a experimental label file") 
+   for data in label_rules_dict:
+        for row in label_rules_dict[data]:
+            #print row
+            if row[0]==None:
+               continue
+            try: 
+             if row[0].split(",")[0] in label_model.metabolic_model.metabolites:
+               if len(row)>5:
+                  if row[5] not in ["",None]:
+                     metabolite_id=label_model.metabolic_model.metabolites.get_by_id(row[0].split(",")[0]).id
+                     name_id_dict[str(row[5].lower())]=[metabolite_id]
+            except:
+                pass
+   print name_id_dict
    sheet_rows_dict=read_spreadsheets(file_names=file_name,csv_delimiter=',',more_than_1=False,tkinter_title="") 
    for sheet in sheet_rows_dict:
        #Identfy the contents of each col
@@ -28,59 +62,79 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
        for n,header in enumerate(rows[0]):
            if header!=None:
               col_n_dict[header.lower()]=n #Remove caps
-       print col_n_dict
+       #print col_n_dict
        #Update this if the headers are changed
        labelled_substrate_emuid_isotopologue_replicate_injection_dict={}
-       n_condition=col_n_dict["conditions"]
-       n_substrate=col_n_dict["labelled substrate"]
-       n_lab_pattern_substrate=col_n_dict["label pattern"]  
+       #n_condition=col_n_dict["conditions"]
+       n_substrate=col_n_dict[labelled_substrate_col_name.lower()]
+       n_lab_pattern_substrate=col_n_dict[label_pattern_col_name.lower()]  
        #n_lab_sub_abundance=col_n_dict["abundance [value]"]
-       n_lab_sub_abundance=col_n_dict["abundance"]
+       n_lab_sub_abundance=col_n_dict[lab_sub_abundance_col_name.lower()]
        #n_lab_sub_abundance_units=col_n_dict["abundance [units]"]
-       n_time=col_n_dict["incubation time [value]"]
-       n_replicate=col_n_dict["replicate"]
-       n_injection=col_n_dict["injection"]
-       n_metabolite_name=col_n_dict["metabolite name"]
-       n_carbon_range=col_n_dict["atomic positions to the parent molecule/metabolite name"]
-       n_isotopologue=col_n_dict["isotopologue"]
-       n_isotopologue_abundance=col_n_dict["isotopologue [value]"]
+       #n_time=col_n_dict["incubation time [value]"]
+       n_replicate=col_n_dict[replicate_col_name.lower()]
+       n_injection=col_n_dict[injection_col_name.lower()]
+       n_metabolite_name=col_n_dict[metabolite_name_col_name.lower()]
+       n_carbon_range=col_n_dict[atomic_positions_to_the_parent_molecule_col_name.lower()]
+       n_isotopologue=col_n_dict[isotopologue_col_name.lower()]
+       n_isotopologue_abundance=col_n_dict[isotopologue_fraction_col_name.lower()]
+       try:
+         n_CHEBI_identifier=col_n_dict[CHEBI_identifier_col_name.lower]  
+         CHEBI_identifier=str(row[n_CHEBI_identifier])
+       except:
+         pass
        #n_isotopologue_units=col_n_dict["isotopologue [units]"]
-       n_isotopologue_units=col_n_dict["isotopologue [units]"]
+       #n_isotopologue_units=col_n_dict["isotopologue [units]"]
        for n,row in enumerate(rows):
+           print row
            if n==0:
               continue
-           condition=row[n_condition]
+           #condition=row[n_condition]
            metabolite_name=str(row[n_metabolite_name])
-           unrpocessed_carbon_range=row[n_carbon_range].lower()
+           unrpocessed_carbon_range=row[n_carbon_range]
            str_isotopologue=row[n_isotopologue]
            replicate=str(row[n_replicate])
            injection=str(row[n_injection])
            print [replicate,injection]
-           substrate=row[n_substrate]
+           tracer_expression=row[n_substrate]
+           tracer_match=tracer_regular_expression.match("D-[1,2-C13]-Glucose")
+           substrate=tracer_match.group(1)+tracer_match.group(3)
+           tracer_pattern_temp=tracer_match.group(2) #To be used in future version
+           
            abundance=row[n_lab_sub_abundance]
            pattern=row[n_lab_pattern_substrate]
+           print [substrate,n_substrate]
            isotopologue_abundance_str=row[n_isotopologue_abundance]
-           if  any(x==None or x=="" for x in [abundance,pattern,substrate,metabolite_name,unrpocessed_carbon_range,str_isotopologue,replicate,injection,isotopologue_abundance_str]):
+           if  any(x==None or x=="" for x in [abundance,pattern,substrate,metabolite_name,unrpocessed_carbon_range,str_isotopologue,replicate,isotopologue_abundance_str]):
                continue
                #print "aaaaaaaaaaAAaa"
            #print "bbbbbbbb"
-           time=float(row[n_time])
-           print [[condition,selected_condition],[time,float(selected_time)]]
-           if condition!=selected_condition or time!=float(selected_time):
-              #print "ccccccccccccccccccccc"
-              continue 
-           #print "ddddddddddddddddd"
-           """if row[n_lab_sub_abundance_units]=="%":
-              abundance/=100"""
-           labelled_substrate=str(substrate)+"$/$"+str(pattern)+"$/$"+str(abundance)
-           isotopologue=str(row[n_isotopologue].lower().replace("m","")) 
+           #Obsolete
+           #isotopologue=str(row[n_isotopologue].lower().replace("m","")) 
+           try:           
+              isotopologue=isotopologue_regular_expression.match(str(row[n_isotopologue].lower())).group(1)
+           except:
+             continue
            print [n_isotopologue,row[n_isotopologue],isotopologue]
            isotopologue_abundance=float(row[n_isotopologue_abundance])
-           if row[n_isotopologue_units]=="%":
-              isotopologue_abundance/=100 
-           #Define Emus
-           metabolite_id=name_id_dict[metabolite_name.lower()][0] #Assume that so far all metabolites are the same label pool regardles of the compartment
-           carbon_range=unrpocessed_carbon_range.replace("c","").split("-")
+           if lab_sub_abundance_percentage:
+              abundance=float(abundance)/100.0
+              print abundance
+           if isotopologue_fraction_abundance_percentage:
+              isotopologue_abundance=float(isotopologue_abundance)/100.0
+           labelled_substrate=str(substrate)+"$/$"+str(pattern)+"$/$"+str(abundance) 
+           print labelled_substrate
+           #Define Emu
+           if metabolite_name.lower() in name_id_dict:
+              metabolite_id=name_id_dict[metabolite_name.lower()][0] #Assume that so far all metabolites are the same label pool regardles of the compartment
+           else: #If the name was not found try the CHEBY_ID
+              try:
+                if CHEBI_identifier in name_id_dict:
+                   metabolite_id=name_id_dict[CHEBI_identifier.lower()][0]
+              except:
+                   print "Warning: Metabolite "+str(metabolite_name)+ "was not found in the constraint based model and will be ignored"
+                   continue
+           carbon_range=unrpocessed_carbon_range.lower().replace("c","").split("-")
            if len(carbon_range)>1: 
                   carbons=[x for x in range(int(carbon_range[0]),int(carbon_range[1])+1)]
            else:
@@ -134,6 +188,8 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
                   emu0_dict[emuid]= local_emu0_dict
                   if emuid not in label_model.data_name_emu_dict:
                      label_model.data_name_emu_dict[emuid]=metabolite_name+"_"+unrpocessed_carbon_range
+                  if metabolite_id in label_model.rsm_metabolite_id_list:
+                     label_model.rsm_list.append(emuid)
            if labelled_substrate not in labelled_substrate_emuid_isotopologue_replicate_injection_dict:
               labelled_substrate_emuid_isotopologue_replicate_injection_dict[labelled_substrate]={}
            if emuid not in labelled_substrate_emuid_isotopologue_replicate_injection_dict[labelled_substrate]:
@@ -149,12 +205,11 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
        substrate_name=initial_label[0].lower()
        string_pattern=initial_label[1]
        abundance=float(initial_label[2]) 
-       
+       print initial_label
        condition_name=(substrate_name+"_"+str(string_pattern)+"_"+str(round(abundance,4))).replace(" ","")
        substrate_id=name_id_dict[substrate_name][0]
        pattern=[int(x) for x in string_pattern.split(",") ]
        label_model.add_initial_label(substrate_id,[[pattern,abundance]],condition=condition_name,total_concentration=1)
-       
        label_model.experimental_dict[condition_name]={}
        for emuid in labelled_substrate_emuid_isotopologue_replicate_injection_dict[labelled_substrate]:
            label_model.experimental_dict[condition_name][emuid]={}
