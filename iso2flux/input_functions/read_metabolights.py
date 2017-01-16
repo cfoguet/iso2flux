@@ -116,7 +116,7 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
            except:
              continue
            print [n_isotopologue,row[n_isotopologue],isotopologue]
-           isotopologue_abundance=float(row[n_isotopologue_abundance])
+           isotopologue_abundance=max(float(row[n_isotopologue_abundance]),0)
            if lab_sub_abundance_percentage:
               abundance=float(abundance)/100.0
               print abundance
