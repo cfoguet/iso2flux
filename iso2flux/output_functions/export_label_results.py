@@ -41,7 +41,7 @@ def export_label_results(label_model,fn="output.xlsx",show_chi=True,show_emu=Tru
                 if show_chi and not (emu in label_model.rsm_list and rsm_show_chi):
                    row.append(round(chi,4))
                 sheet_row_data_dict[condition].append(row)
-         sheet_row_data_dict[condition].append([])
+         #sheet_row_data_dict[condition].append([])
          if emu in label_model.rsm_list:
             
             for mi in sorted(label_model.experimental_dict[condition][emu]):
@@ -61,7 +61,7 @@ def export_label_results(label_model,fn="output.xlsx",show_chi=True,show_emu=Tru
                    chi=chi_dict_with_rsm[condition][emu][mi]   #round(pow((sim-exp_m)/exp_sd,2),3)
                    row.append(round(chi,4))
                 sheet_row_data_dict[condition].append(row)
-         sheet_row_data_dict[condition].append([])             
+         #sheet_row_data_dict[condition].append([])             
       if show_emu:                 
          for size in label_model.size_emu_c_eqn_dict:
            sheet=condition+" emu size%s"%(size)
