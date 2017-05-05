@@ -2,7 +2,7 @@ import openpyxl
 from ..fitting.get_objective_function import get_objective_function
 from ..misc.write_spreadsheet import write_spreadsheet
 
-def export_label_results(label_model,fn="output.xlsx",show_chi=True,show_emu=True):
+def export_label_results(label_model,fn="output.xlsx",show_chi=True,show_emu=True,show_fluxes=True):
   a,chi_dict_not_rsm,simulation_not_rsm=get_objective_function(label_model,output=False,rsm="never")
   a,chi_dict_with_rsm,simulation_with_rsm=get_objective_function(label_model,output=False,rsm="always")
   sheet_row_data_dict={}
@@ -41,7 +41,7 @@ def export_label_results(label_model,fn="output.xlsx",show_chi=True,show_emu=Tru
                 if show_chi and not (emu in label_model.rsm_list and rsm_show_chi):
                    row.append(round(chi,4))
                 sheet_row_data_dict[condition].append(row)
-         sheet_row_data_dict[condition].append([])
+         #sheet_row_data_dict[condition].append([])
          if emu in label_model.rsm_list:
             
             for mi in sorted(label_model.experimental_dict[condition][emu]):
@@ -61,7 +61,7 @@ def export_label_results(label_model,fn="output.xlsx",show_chi=True,show_emu=Tru
                    chi=chi_dict_with_rsm[condition][emu][mi]   #round(pow((sim-exp_m)/exp_sd,2),3)
                    row.append(round(chi,4))
                 sheet_row_data_dict[condition].append(row)
-         sheet_row_data_dict[condition].append([])             
+         #sheet_row_data_dict[condition].append([])             
       if show_emu:                 
          for size in label_model.size_emu_c_eqn_dict:
            sheet=condition+" emu size%s"%(size)
@@ -69,10 +69,11 @@ def export_label_results(label_model,fn="output.xlsx",show_chi=True,show_emu=Tru
            sheet_row_data_dict[sheet]=[]
            for n,x in enumerate(label_model.condition_size_yy_dict[condition][size]):
                 sheet_row_data_dict[sheet].append([label_model.size_inverse_variable_dict[size][n],x])
-  row=["ID","Name","Stoichiometry","Value"]
-  sheet_row_data_dict["Reaction fluxes"]=[row]
-  order_vector.append("Reaction fluxes")   
-  for x in sorted(label_model.constrained_model.solution.x_dict,key=lambda v: v.upper()):  
+  if show_fluxes:
+     row=["ID","Name","Stoichiometry","Value"]
+     sheet_row_data_dict["Reaction fluxes"]=[row]
+     order_vector.append("Reaction fluxes")   
+     for x in sorted(label_model.constrained_model.solution.x_dict,key=lambda v: v.upper()):  
          if "_RATIO" in x:
             continue
          reaction=label_model.constrained_model.reactions.get_by_id(x)
