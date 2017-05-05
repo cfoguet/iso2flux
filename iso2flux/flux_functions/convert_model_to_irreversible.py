@@ -2,7 +2,7 @@ import copy
 from warnings import warn
 from itertools import izip
 #from gurobipy import Model, LinExpr, GRB, QuadExpr
-from cobra.core.Solution import Solution
+
 from six import string_types, iteritems
 import re
 from time import time

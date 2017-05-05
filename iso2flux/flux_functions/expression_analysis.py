@@ -11,7 +11,6 @@ import math
 
 from cobra.flux_analysis.variability import flux_variability_analysis
 from cobra import Reaction, Metabolite
-from cobra.core.Solution import Solution
 from cobra.solvers import solver_dict
 
 from convert_model_to_irreversible import convert_to_irreversible_with_indicators

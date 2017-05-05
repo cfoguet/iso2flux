@@ -1,5 +1,10 @@
-from cobra.core.Reaction import Reaction
-from cobra.core.Metabolite import Metabolite
+try :
+ from cobra.core.Reaction import Reaction
+ from cobra.core.Metabolite import Metabolite
+except:
+ from cobra.core.reaction import Reaction
+ from cobra.core.metabolite import Metabolite
+
 from numpy import abs
 import copy
 

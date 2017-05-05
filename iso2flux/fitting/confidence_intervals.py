@@ -601,6 +601,6 @@ def save_sbml_with_confidence_results(label_model,flux_confidence_interval_dict,
            reaction.upper_bound=round_up(flux_confidence_interval_dict[reaction.id]["ub"],precision)
       try:
         if fname!=None or fname!="":
-           cobra.io.write_sbml_model(model_to_save, fname)
+           cobra.io.write_sbml_model(model_to_save, fname,use_fbc_package=False)
       except: print "Could not save SBML file"
       return model_to_save

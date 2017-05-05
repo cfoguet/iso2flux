@@ -63,5 +63,7 @@ def create_cobra_model_from_file(fn):
              metabolite.formula=str(row[2])
            except:
              print row[0]+": formula not added"
-     
+    for metabolite in model.metabolites:
+        if metabolite.compartment not in model.compartments:
+           model.compartments[metabolite.compartment]=metabolite.compartment     
     return model
