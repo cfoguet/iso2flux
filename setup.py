@@ -10,6 +10,6 @@ setup(name='iso2flux',
       author_email='cfoguet@outlook.com',
       url='',
       scripts=["run_iso2flux_cl.py","run_iso2flux_gui.py"],
-      install_requires=["cython","python-libsbml","openpyxl","numpy","scipy","pandas","nose","lxml","cobra"],
+      install_requires=["cython","python-libsbml","openpyxl","numpy","scipy","pandas","nose","lxml","cobra==0.5.11"],
       packages=find_packages(),
      )
