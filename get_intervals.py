@@ -1,3 +1,14 @@
+"""
+This script works similar to the p13cmfa.py script but instead of minimizing fluxes it minimizes and maximizes each flux individually to estimate the variation interval for each flux. 
+--iso2flux_model_file=,-I (mandatory):  path to the iso2flux model. 
+--output_prefix=","-o= (optional): Used to define a prefix that will be added to all output files. It can be used both to name the outputs and to select the directory where the outputs will be saved (directory must already exist)
+--number_of_processes=,-n(optional): Number of islands (processes) that will be used in the optimization. Should not be larger than the number of processor threads. Default is 4.  
+--population_size=(optional),-p(optional):  Size of the population in each island. Default is 20. 
+--generations_per_cycle=,-g(optional):  Number of generations that each island will evolve before exchanging individuals with other islands. Default is 200.
+--max_cycles_without_improvement=,-m (optional): Maximum number of cycles without a significant improvement of the objective function. When this number is reached the algorithm will stop. Default is 9 
+--absolute, -a (optional) If this flag is used the tolerance will be used as an absolute tolerance
+--tolerance_of_label_objective=,-t(optional): Tolerance of the primary  13C MFA objective in the interval estimation. If the absolute flag is not used the maximum primary objective allowed value will be the optimal value of the primary objective plus the tolerance_of_label_objective. The optimal value of the primary objective will be taken from the iso2flux_model_file if solve_iso2flux_label.py  has been run with this model. Alternatively, 13C MFA will be run to find the optimal value of the primary objective. If the absolute flag is used, the tolerance_of_label_objective will be the absolute maximum value allowed for the primary objective. Default is 3.84
+"""
 import tkFileDialog
 import Tkinter
 import sys, getopt
@@ -24,11 +35,8 @@ from iso2flux.misc.read_spreadsheets import read_spreadsheets
 
 try:
  argv=sys.argv[1:]
- #argv=("-i ppm3 -n 2 -p 20 -g  30  -t 0.75 -f ppm_flux_penalty.csv -r reaction_list.csv").split()
  
  opts, args = getopt.getopt(argv,"i:f:n:p:g:m:o:t:ar:",["iso2flux_model_file=","flux_penalty_file=","number_of_processes=","population_size=","generations_per_cycle=","max_cycles_without_improvement=","output_prefix=","tolerance_of_objective=","absolute","reaction_list_file="])
- #opts, args = getopt.getopt(argv,"e:l:s:p:c:o:t:f:w:g:m:q",["experimental_data_file=","label_propagation_files=","sbml_model=","parameters_file=","constraints_file=","output_prefix=","time=","factor=","working_directory=","gene_expression_file=","metabolomics_file=","quick_analysis"])
- #opts, args = getopt.getopt(sys.argv[1:],"hi:o:",["ifile=","ofile="])
 except getopt.GetoptError as err:
    # print help information and exit:
    print str(err)  # will print something like "option -a not recognized":
@@ -252,73 +260,6 @@ else:
 reference_flux_group_dict,reaction_reference_flux_group_dict=find_flux_grups(label_model,reaction_list=reaction_list,irreversible_flag=irreversible_flag)
 print reference_flux_group_dict,reaction_reference_flux_group_dict
 
-"""
-def find_flux_grups(label_model,reaction_list=None):
-    reference_flux_group_dict={}
-    reaction_reference_flux_group_dict={}
-    grouped_reactions=[]
-    nullm=label_model.flux_solver_nullmnp
-    corr_matrix=np.corrcoef(nullm)
-    for n_flux,row in enumerate(corr_matrix):
-        reaction1=label_model.flux_solver_n_reaction_dict[n_flux]
-        if "LABEL_RGROUP_" in reaction1:
-            continue
-        if "RATIO_" in reaction1:
-            continue
-        if reaction1 in grouped_reactions:
-            continue
-        grouped_reactions.append(reaction1)
-        reference_flux_group_dict[reaction1]=[reaction1]
-        reaction_reference_flux_group_dict[reaction1]=reaction1
-        for n_flux2,row2 in enumerate(corr_matrix):
-            reaction2=label_model.flux_solver_n_reaction_dict[n_flux2]
-            if reaction1==reaction2:
-               continue
-            if reaction2 in grouped_reactions:
-                continue
-            coef=corr_matrix[n_flux,n_flux2]
-            if abs(coef)>0.99999:
-               print coef,reaction1,reaction2  
-               grouped_reactions.append(reaction2)                          
-               reference_flux_group_dict[reaction1].append(reaction2)
-               reaction_reference_flux_group_dict[reaction2]=reaction1
-    if reaction_list!=None:
-       reduced_reference_flux_group_dict={}
-       reduced_reaction_reference_flux_dict={}
-       select_reaction_groups=[]
-       print reaction_list
-       for reaction_id in reaction_list:
-           select_reaction_groups.append(reaction_reference_flux_group_dict[reaction_id])
-       print select_reaction_groups
-       for reaction_id in set(select_reaction_groups):
-           reduced_reference_flux_group_dict[reaction_id]=reference_flux_group_dict[reaction_id]
-           print reduced_reference_flux_group_dict[reaction_id]
-           for reaction_id2 in reduced_reference_flux_group_dict[reaction_id]:
-               reduced_reaction_reference_flux_dict[reaction_id2]=reaction_id
-       
-       print reduced_reference_flux_group_dict
-       reference_flux_group_dict=reduced_reference_flux_group_dict
-       reaction_reference_flux_group_dict=reduced_reaction_reference_flux_dict
-       
-    return   reference_flux_group_dict,reaction_reference_flux_group_dict
-
-
-
-if reaction_list_file!=None:
-   reaction_list=[]
-   sheets=read_spreadsheets(file_names=reaction_list_file)
-   for sheet in sheets:
-    for row in sheets[sheet]:
-        for element in row:
-            print element
-            if str(element) in label_model.constrained_model.reactions:
-               reaction_list.append(str(element)) 
-else:
-   reaction_list=None
-
-
-reference_flux_group_dict,reaction_reference_flux_group_dict=find_flux_grups(label_model,reaction_list=reaction_list)
-"""
 
 label_problem_parameters={"label_weight":0.00000,"target_flux_dict":None,"max_chi":max_chi,"max_flux":max_flux,"flux_penalty_dict":flux_penalty_dict,"verbose":True,"flux_weight":0.00000,"flux_unfeasible_penalty":10,"label_unfeasible_penalty":2}
 

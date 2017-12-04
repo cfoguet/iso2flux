@@ -1,3 +1,14 @@
+"""
+This script uses gene expression data to set add additional minimization weights to reactions with gene expression bellow a given threshold. 
+--iso2flux_model_file=,-i (mandatory):  path to the iso2flux model that will be solved. Iso2flux model can be created with the create_iso2flux_model.py and has  “.iso2flux” as extension. 
+--gene_expression_file=,-g(optional): path to the file with gene expression data. See here
+--output_flux_penalty_file=,-o(optional): Used to define a prefix that will be added to the output flux penalty file. It can be used both to name the output and to select the directory where the output will be saved (directory must already exist)
+--reference_flux_penalty_file=,-f(optional): path to the reference flux_penalty_file, gene expression penalties will use the values defined in this file as a starting point. Default is the default reference_flux_penalty_file associated to the iso2flux_model loaded.   
+--gene_prefix==,-p (optional): prefix of that the constraint based model uses for genes (e.g gene_) that is not present in the gene_expression_file. Default is empty (no prefix )  
+--gene_sufix==,-s (optional): suffix of that the constraint based model uses for genes (_at) that is not present in the gene_expression_file. Default is empty (no suffix )  
+--remove_penalty_for_spontaneous,-r (Optional): If this flag is set the penalty for reactions not associated to a gene will be 0 
+
+"""
 import tkFileDialog
 import Tkinter
 import sys, getopt
