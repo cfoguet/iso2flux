@@ -2,7 +2,7 @@ import random
 import copy
 from apply_parameters import apply_parameters 
 from clear_parameters import clear_parameters
-from cobra.flux_analysis.variability import flux_variability_analysis
+from ..flux_functions.flux_variability_analysis import flux_variability_analysis
 from ..flux_functions.apply_ratios import apply_ratios
 from identify_free_parameters import identify_free_fluxes
 from get_objective_function import get_objective_function

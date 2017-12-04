@@ -1,5 +1,5 @@
-from cobra.core.Reaction import Reaction
-from cobra.core.Metabolite import Metabolite
+from cobra import Reaction
+from cobra import Metabolite
 from numpy import abs
 import copy
 

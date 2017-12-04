@@ -26,7 +26,8 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
         #function_str+="import emu_equations_size%s\ntry:\n  emu_equations_size%s=reload(emu_equations_size%s)\nexcept:\n  pass\n"%(size,size,size)
         #function_str+="def f%s(yy,t=0,label_model=None):\n  condition=label_model.active_condition\n  dy=emu_equations_size%s.emu_equations_size%s(yy,"%(size,size,size)
         function_str+="from emu_equations_size%s import emu_equations_size%s\n"%(size,size)
-        function_str+="def f%s(yy,t=0,label_model=None):\n  condition=label_model.active_condition\n  dy=emu_equations_size%s(yy,"%(size,size)  
+        function_str+="def f%s(yy,t,condition_size_yy_dict,flux_list,condition_initial_label_yy_dict,condition):\n  dy=emu_equations_size%s(yy,"%(size,size)  
+        #function_str+="def f%s(yy,t=0,label_model=None):\n  condition=label_model.active_condition\n  dy=emu_equations_size%s(yy,"%(size,size)  
         string="import cython\nfrom libc.stdlib cimport malloc, free\nimport numpy as np\ncimport numpy as np\n" 
         #string_d="cdef double dy_size%s[%s];\n"%(size,len(label_model.size_variable_dict[size]))
         #for sizes in  xrange(size,0,-1):#string_d+="cdef double yy_size%s[%s];\n"%(sizes,len(label_model.size_variable_dict[sizes]))
@@ -37,16 +38,16 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
         
         for sizes in  range(size,0,-1):
                if sizes!=size:
-                  function_str+="label_model.condition_size_yy_dict[condition][%s],"%(sizes)
+                  function_str+="condition_size_yy_dict[condition][%s],"%(sizes)
                if steady_state==True or sizes==size:
                   string+="np.ndarray[np.float64_t, ndim=1] np_size%s_yy ,"%(sizes)
                else:
                   string+="np.ndarray[np.float64_t, ndim=2] np_transposed_time_course_size%s ,"%(sizes)
         string+="np.ndarray[np.float64_t, ndim=1] flux_values,"  #"def emu_equations(np_yy,flux_values,yy0)
-        function_str+="label_model.flux_list,"
+        function_str+="flux_list,"
         if steady_state==True:
               string+="np.ndarray[np.float64_t, ndim=1] np_input_yy0):\n"
-              function_str+="label_model.condition_initial_label_yy_dict[condition])\n  return dy\n\n"
+              function_str+="condition_initial_label_yy_dict[condition])\n  return dy\n\n"
         else:
               string+="np.ndarray[np.float64_t, ndim=1] np_input_yy0,np.ndarray[np.float64_t, ndim=1] np_con, np.ndarray[np.float64_t, ndim=1] np_t, double t):\n"
               function_str+="label_model.condition_initial_label_yy_dict[condition],label_model.np_con,np_t,t)\n"
@@ -101,7 +102,9 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
                   list_of_reactions=[label_model.emu_reaction_dict[emu_reaction.id]]
               for reaction in list_of_reactions:
                   if reaction not in label_model.merged_reactions_reactions_dict:
-                     print emu_reaction.id
+                     if "_reverse" in reaction:
+                         if reaction[:-8] in label_model.merged_reactions_reactions_dict:
+                            reaction=sorted(label_model.merged_reactions_reactions_dict[reaction[:-8]])[0]+"_reverse"
                      reaction_n=label_model.reaction_n_dict[reaction]
                   else:
                      reaction_n=label_model.reaction_n_dict[sorted(label_model.merged_reactions_reactions_dict[reaction])[0]] #We take the first reaction as defined in emu_build_reaction_dict 

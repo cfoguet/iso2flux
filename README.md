@@ -1,2 +1,1 @@
-# iso2flux
-Iso2Flux, is a new 13C flux analysis tool. Iso2Flux is an open source software developed in python that can be operated either through command line or through a graphical interface. Iso2Flux makes uses of the COBRApy package(Ebrahim, Lerman et al. 2013) a widely used and powerful constraint-based modelling package in python. The constraint-based modelling capabilities of Iso2Flux have been enhanced by the implementation of the iMAT and GIM3E  algorithms, which allow Iso2Flux to couple the integration of transcriptomic and metabolomic data to 13C metabolic flux analysis.
+# iso2flux_dev

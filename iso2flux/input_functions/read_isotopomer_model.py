@@ -69,7 +69,7 @@ def read_isotopomer_model(label_model,file_name,header=True):
                       label_input=True
                    else:
                       label_input=False
-                else: 
+               else: 
                      label_input=False
                if len(row)>4:
                   if row[4]!=None:

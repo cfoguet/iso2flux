@@ -9,14 +9,22 @@ def remove_identical_reactions(label_model):
   label_model: label_model object 
   """
   count=0
+  #Reactions should not be grouped if one of them is a false reversible 
+  reactions_to_ommit=[]
+  for reaction in label_model.false_reversible_reactions:
+      for emu_reaction in label_model.reaction_emu_dict[reaction]:
+          reactions_to_ommit.append(emu_reaction)
+    
   for size in label_model.size_model_dict:
    emu_model2=copy.deepcopy(label_model.size_model_dict[size])
    analysed_reactions=[]
    matched_reactions=[]
    for original_reaction in emu_model2.reactions:
+       if original_reaction.id in reactions_to_ommit:
+          continue
        matched_reactions_temp=[original_reaction]  
        for original_reaction2 in emu_model2.reactions:
-           if original_reaction in analysed_reactions or original_reaction==original_reaction2:
+           if original_reaction in analysed_reactions or original_reaction==original_reaction2 or original_reaction2.id in reactions_to_ommit:
               continue   
            if original_reaction.metabolites==original_reaction2.metabolites:
               matched_reactions_temp.append(original_reaction2)

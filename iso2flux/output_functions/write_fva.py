@@ -1,18 +1,23 @@
-from cobra.flux_analysis.variability import flux_variability_analysis
+from ..flux_functions.flux_variability_analysis import flux_variability_analysis
 import openpyxl 
 import math
 
 from ..misc.write_spreadsheet import write_spreadsheet
 
-def write_fva(model,fn="reaction_fluxes.xlsx",fraction=1,remove0=True,change_threshold=0.001,mode="full",lp_tolerance_feasibility=1e-6,flux_precision=1e-3):
+def write_fva(model,fn="reaction_fluxes.xlsx",fva=None,fraction=1,remove0=True,change_threshold=0.001,mode="full",lp_tolerance_feasibility=1e-6,flux_precision=1e-3,reaction_list=None):
+    if reaction_list==None:
+       reaction_list=[x.id for x in model.reactions]
     precision=max(int(-1*(math.log10(flux_precision))),6)
-    fva=flux_variability_analysis(model,fraction_of_optimum=fraction,tolerance_feasibility=lp_tolerance_feasibility)
+    if fva==None:
+       fva=flux_variability_analysis(model,fraction_of_optimum=fraction,tolerance_feasibility=lp_tolerance_feasibility)
     if mode=="full":
        row=["ID","Name","Stoichiometry","Minimum","Maximum"]
     else:
        row=["ID","Name","Flux"]
     sheet_row_data_dict={"fva":[row]}   
-    for x in sorted(fva,key=lambda v: v.upper()):  
+    for x in sorted(fva,key=lambda v: v.upper()):
+         if x not in reaction_list:
+            continue  
          if "_RATIO" in x:
             continue
          if abs(fva[x]["maximum"])>0.000001 or abs(fva[x]["minimum"])>0.000001 or remove0==False:

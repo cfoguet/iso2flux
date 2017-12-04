@@ -65,7 +65,7 @@ def get_objective_function(label_model,output=False,condition_size_yy_dict=None,
                 else:
                    exp_m=label_model.experimental_dict[condition][emu][n]["m"]
                    exp_sd=max(label_model.experimental_dict[condition][emu][n]["sd"],label_model.minimum_sd) 
-                chi=round(pow((sim-exp_m)/exp_sd,2),3)
+                chi=round(pow((sim-exp_m)/exp_sd,2),12)
                 if emu not in label_model.objective_function_dict[condition]:
                    label_model.objective_function_dict[condition][emu]={}
                 label_model.objective_function_dict[condition][emu][n]=chi

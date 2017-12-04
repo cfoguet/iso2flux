@@ -2,18 +2,20 @@ import copy
 from warnings import warn
 from itertools import izip
 #from gurobipy import Model, LinExpr, GRB, QuadExpr
-from cobra.core.Solution import Solution
+
 from six import string_types, iteritems
 import re
 from time import time
 #from ilabel.label_propagation_functions.get_reactants_dict import get_reactants_dict 
-from cobra.flux_analysis.variability import flux_variability_analysis
+from iso2flux.flux_functions.flux_variability_analysis import flux_variability_analysis
 import re
 import numpy as np
+from cobra import Reaction
+from cobra import Metabolite
 #from ..label_propagation_functions.get_reactants_dict import get_reactants_dict 
 #From Gimme
 
-def convert_to_irreversible_with_indicators(cobra_model,reaction_id_list,metabolite_list, mutually_exclusive_directionality_constraint = False,label_model=None):
+def convert_to_irreversible_with_indicators(cobra_model,reaction_id_list=[],metabolite_list=[], mutually_exclusive_directionality_constraint = False,label_model=None):
     #Function modified from the work by : """Schmidt BJ1, Ebrahim A, Metz TO, Adkins JN, Palsson B, Hyduke DR. GIM3E: condition-specific models of cellular metabolism developed from metabolomics and expression data Bioinformatics. 2013 Nov 15;29(22):2900-8. doi: 10.1093/bioinformatics/btt493. Epub 2013 Aug 23."""
     """Will break all of the reversible reactions into two separate irreversible
      reactions with different directions.  This function call modified from
@@ -33,9 +35,9 @@ def convert_to_irreversible_with_indicators(cobra_model,reaction_id_list,metabol
     
      """
     reactions_to_add = []
-    from cobra.core.Reaction import Reaction
-    from cobra.core import Metabolite
     reactions_to_make_irreversible=[]
+    if reaction_id_list==[] or reaction_id_list==None:
+       reaction_id_list=[x.id for x in cobra_model.reactions]
     for x in reaction_id_list:
         reactions_to_make_irreversible.append(cobra_model.reactions.get_by_id(x))
     """for x in lexs:

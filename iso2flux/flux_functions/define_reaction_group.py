@@ -22,22 +22,27 @@ def define_reaction_group(model,reaction_dict,group_reaction_id=None,lower_bound
     group_reaction = Reaction(new_reaction_id)
     group_reaction.name = new_reaction_name
     group_reaction.subsystem = 'Reaction group'
-    group_reaction.upper_bound=upper_bound 
+    if upper_bound!=None:
+       group_reaction.upper_bound=upper_bound 
     group_reaction.add_metabolites({metabolite:-1})
     if objective_coefficient==None:
         group_reaction.objective_coefficient=0
-    group_reaction.objective_coefficient=objective_coefficient
     model.add_reaction(group_reaction)
+    group_reaction.objective_coefficient=objective_coefficient
     theoretical_lower_bound=0
     theoretical_upper_bound=0
     for reaction_id in reaction_dict:
         coef=reaction_dict[reaction_id]
         reaction=model.reactions.get_by_id(reaction_id)
         reaction.add_metabolites({metabolite:coef})
-        theoretical_upper_bound+=reaction.upper_bound
-        theoretical_lower_bound+=reaction.lower_bound
+        if coef>=0:
+           theoretical_upper_bound+=reaction.upper_bound
+           theoretical_lower_bound+=reaction.lower_bound
+        else:
+           theoretical_upper_bound-=reaction.lower_bound
+           theoretical_lower_bound-=reaction.upper_bound
     if lower_bound==None:
-        group_reaction.lower_bound=min(round_down(theoretical_lower_bound,2),-1000)
+        group_reaction.lower_bound=min(round_down(theoretical_lower_bound,2),0)
     else:
         group_reaction.lower_bound=lower_bound
     if upper_bound==None:

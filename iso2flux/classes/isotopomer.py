@@ -82,9 +82,13 @@ class isotopomer:
                if x.compartment not in compartment_list:
                   compartment_list.append(x.compartment) 
                self.name+=" "+x.name
-               self.id+="_"+x.id
+               if len(self.id)<50:
+                  self.id+="_"+x.id
+               elif "_etc" not in self.id:
+                  self.id+="_etc"
                label_model.metabolite_isotopomers_dict[x]=self
                label_model.met_id_isotopomer_dict[x.id]=self
+               
            if "e" in compartment_list:
                if "c" in compartment_list:
                    if "m" in compartment_list:

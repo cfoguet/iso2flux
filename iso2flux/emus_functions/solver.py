@@ -73,7 +73,7 @@ def solver(label_model,mode="fsolve",fba_mode="fba",model=None,check_unity=True,
       else:
          yy0=label_model.condition_size_yy0_dict
       for n_precision in xrange(10,16):
-       get_fluxes(label_model,model,precision=n_precision)
+       get_fluxes(label_model,model,precision=n_precision,model=label_model.constrained_model)
        for condition in label_model.initial_label:
          label_model.active_condition=condition
          if mode=="fsolve":
@@ -122,3 +122,18 @@ def solver(label_model,mode="fsolve",fba_mode="fba",model=None,check_unity=True,
       label_model.solver_flag="fail"    
       error_dump(label_model,e_type="unfeasible") 
     return  label_model.solver_flag, label_model.condition_size_yy_dict
+
+
+
+def flux_solver(nullmnp,variable_vector,n_reaction_dict=None):
+   flux_solution=np.dot(nullmnp,variable_vector)
+   solution_dict={}
+   if n_reaction_dict!=None:
+      for x in n_reaction_dict:
+          solution_dict[n_reaction_dict[x]]=flux_solution[x]
+   return flux_solution, solution_dict
+
+
+
+
+

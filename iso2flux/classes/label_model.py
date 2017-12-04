@@ -4,7 +4,8 @@ from cobra import Model, Reaction, Metabolite
 from ..flux_functions.remove_reflection_co2_reactions import remove_reflection_co2_reactions
 import os
 import sys
-
+from ..flux_functions.flux_variability_analysis import flux_variability_analysis
+from ..flux_functions.convert_model_to_irreversible import convert_to_irreversible_with_indicators
 from ..emus_functions.build_emu_model import build_emu_model
 from ..emus_functions.check_mass_balance import check_mass_balance
 from ..emus_functions.remove_identical_reactions import remove_identical_reactions
@@ -24,7 +25,7 @@ from ..emus_functions.set_reflections import set_reflections
 
 class Label_model:
       """Class used to store and process all information rellevant for building the emu model and simulating label propagation"""
-      def __init__(self,model,split_co2_reactions=False,reactions_with_forced_turnover=[],lp_tolerance_feasibility=1e-8,parameter_precision=0.0001):
+      def __init__(self,model,split_co2_reactions=False,reactions_with_forced_turnover=[],lp_tolerance_feasibility=1e-8,parameter_precision=0.0001,make_all_reversible=False,moddify_false_reversible_reactions=True):
           """
           Initializes the label model class
           
@@ -39,6 +40,8 @@ class Label_model:
           parameter_precision: float optional. 
 		Default Parameter precision used on parameter fitting. 
           """
+          self.name=""
+          self.moddify_false_reversible_reactions=moddify_false_reversible_reactions
           self.minimum_sd=0.01
           self.parameter_precision=parameter_precision
           self.lp_tolerance_feasibility=lp_tolerance_feasibility
@@ -112,11 +115,17 @@ class Label_model:
           #Create irreversible model
           self.reactions_with_forced_turnover=reactions_with_forced_turnover
           self.irreversible_metabolic_model=copy.deepcopy(model)
-          for reaction_id in reactions_with_forced_turnover:
+          reactions_to_be_made_reversible=[]
+          if make_all_reversible==True:
+             reactions_to_be_made_reversible=[x.id for x in self.irreversible_metabolic_model.reactions]
+          for reaction_id in reactions_with_forced_turnover+reactions_to_be_made_reversible:
               reaction=self.irreversible_metabolic_model.reactions.get_by_id(reaction_id)
               reaction.lower_bound=-1000
               reaction.upper_bound=1000
-          cobra.manipulation.convert_to_irreversible(self.irreversible_metabolic_model) #Reactions with a negative lower_bound will be split into 2
+          try:
+             cobra.manipulation.convert_to_irreversible(self.irreversible_metabolic_model)
+          except:
+              self.irreversible_metabolic_model=None
           if split_co2_reactions==True:
              self.reversible_co2_reactions=remove_reflection_co2_reactions(self.irreversible_metabolic_model)
           else:
@@ -195,8 +204,62 @@ class Label_model:
           build_emu_model(self,emu0_dict)  
           split_model(self)
           emu_add_label_ouputs_inputs(self,excluded_outputs_inputs)
+          self.false_reversible_reactions=[]
+          if self.moddify_false_reversible_reactions: 
+           label_model=self
+           
+           for reaction_id in label_model.reaction_emu_dict:
+            if "_reverse" in reaction_id:
+             forward_id=reaction_id[:-8]
+             if forward_id in label_model.metabolic_model.reactions:
+               reaction_object=label_model.metabolic_model.reactions.get_by_id(forward_id)
+               if forward_id in label_model.reaction_emu_dict and  reaction_object.lower_bound>=0 and forward_id not in label_model.reactions_with_forced_turnover:  
+                  self.false_reversible_reactions.append(reaction_id)
+          
           remove_identical_reactions(self) 
           expand_emu_models(self)
+          for false_reversible_reaction in self.false_reversible_reactions:
+            for emu_reaction in label_model.reaction_emu_dict[false_reversible_reaction]:
+              #Find the size to which the reaction belongs
+              for emu_size in label_model.size_model_dict:
+                  if emu_reaction in label_model.size_model_dict[emu_size].reactions:
+                     break
+              
+              for expanded_reaction in label_model.emu_reaction_expanded_dict[emu_reaction]:
+                  expanded_reaction_object=label_model.size_expanded_model_dict[emu_size].reactions.get_by_id(expanded_reaction)
+                  changes_in_products={}
+                  for isotopologue in expanded_reaction_object.metabolites:
+                      coef=expanded_reaction_object.metabolites[isotopologue]
+                      if coef>0: #If its a product we want to change it to m0
+                         emu=label_model.expanded_emu_dict[isotopologue.id]
+                         m0_id=label_model.emu_dict[emu]["mid"][0]
+                         m0=label_model.size_expanded_model_dict[emu_size].metabolites.get_by_id(m0_id)
+                         #if m0_id==isotopologue.id: #If it is already m0 no need to do anyting
+                         #   continue
+                         if m0 not in changes_in_products:
+                            changes_in_products[m0]=coef
+                         else:
+                            changes_in_products[m0]+=coef
+                         if isotopologue not in changes_in_products:
+                            changes_in_products[isotopologue]=-1*coef
+                         else:
+                            changes_in_products[isotopologue]+=-1*coef
+                            
+                         if changes_in_products[isotopologue]==0:
+                            del changes_in_products[isotopologue]
+                         if changes_in_products.get(m0)==0:
+                            del changes_in_products[m0]
+                  if changes_in_products!={}:
+                     print (emu_reaction,emu_size)
+                     print expanded_reaction_object.reaction,changes_in_products
+                     expanded_reaction_object.add_metabolites(changes_in_products)
+                     print expanded_reaction_object.reaction 
+                     #If the reaction is moddified we want to remove any reflections it migh have
+                     if "reflection" in expanded_reaction_object.notes:
+                        reflection_reaction=expanded_reaction_object.notes["reflection"]
+                        del expanded_reaction_object.notes["reflection"]
+                        del label_model.size_expanded_model_dict[emu_size].reactions.get_by_id(reflection_reaction).notes["reflection"]
+                     print "----------------------------------------------------------------------------------------------"
           if turnover_exclude_EX!=True and turnover_exclude_EX in ("true",1,"yes","True","Yes"):
              turnover_exclude_EX=True
           else: 
@@ -205,6 +268,7 @@ class Label_model:
               l0=initial_label
               set_initial_label(l0["met_id"],self,l0["label_patterns"],l0["condition"],l0["total_concentration"])
           if remove_impossible_emus:
+             #return
              rm_impossible_emus(self)
           #set_reflections(self.size_expanded_model_dict)     
           find_label_propagating_fluxes(self)
@@ -224,7 +288,9 @@ class Label_model:
             get_equations=reload(get_equations)
           except:
             pass"""
-          get_equations.get_equations(self.size_emu_c_eqn_dict)
+          exec("from " + self.eqn_dir+".get_equations import get_equations")
+             
+          get_equations(self.size_emu_c_eqn_dict)
           #os.chdir(original_directory)  
           self.constrained_model=copy.deepcopy(self.metabolic_model)
           """if default_turnover==None:
@@ -239,6 +305,13 @@ class Label_model:
                if reaction+"_reverse" in self.reaction_emu_dict:#self.simplified_metabolic_model.reactions :
                   if reaction in self.merged_reactions_reactions_dict:
                      reaction=self.merged_reactions_reactions_dict[reaction][0]
+                  reaction_object=self.constrained_model.reactions.get_by_id(reaction)
+                  if reaction_object.lower_bound>=0 and reaction not in self.reactions_with_forced_turnover:
+                     continue
+                  if "LABEL_RGROUP_" in reaction:#TODO add a better whay of identfiying when group reaction is actually irreversible
+                      fva=flux_variability_analysis(self.constrained_model,reaction_list=[reaction])
+                      if fva[reaction]["minimum"]*fva[reaction]["maximum"]>=0:
+                         continue
                   print [self.reactions_with_forced_turnover]
                   if ("EX_" in reaction and turnover_exclude_EX) and (reaction not in self.reactions_with_forced_turnover):
                       self.turnover_flux_dict[reaction]={"v":0,"lb":0,"ub":0}
@@ -253,5 +326,7 @@ class Label_model:
              del self.isotopomer_object_list
              del self.simplified_metabolic_model
              del self.emu_model
+             self.irreversible_metabolic_model=None
+             self.simplified_metabolic_model=None
 
 

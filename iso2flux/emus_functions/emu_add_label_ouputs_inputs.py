@@ -14,12 +14,13 @@ def emu_add_label_ouputs_inputs(label_model,excluded_reactions_id=[]):
    #Add outputs that are reactions for different size models
    for size in label_model.emu_size_dict:
       reactions_to_add=[]
-      print("adding emu output reactions")
+      print("adding emu output reactions "+str(size))
       for emu in label_model.emu_size_dict[size]:
        
        met_id=label_model.emu_dict[emu]["met_id"]
        if label_model.id_isotopomer_object_dict[met_id].input==True:
           continue
+       print met_id
        met=simp_model.metabolites.get_by_id(met_id)
        met_emu=size_model_dict[size].metabolites.get_by_id(emu)
        for met_reaction in met.reactions:
@@ -34,6 +35,7 @@ def emu_add_label_ouputs_inputs(label_model,excluded_reactions_id=[]):
               output_coef=coef+found_flag
               print(emu+" "+met_reaction.id+" "+str(output_coef))
               reactions_to_add.append({"emu":emu,"met_reaction":met_reaction.id,"coef":output_coef})
+      print reactions_to_add
       for reaction_to_add in reactions_to_add:
               emu=reaction_to_add["emu"]
               met_reaction= reaction_to_add["met_reaction"]

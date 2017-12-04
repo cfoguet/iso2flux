@@ -50,6 +50,8 @@ def find_label_propagating_fluxes(label_model):
                    local_label_reactions_dict[reaction]=1
              else:
                 forward_reaction=reverse_re.match(reaction).group(1)
+                if forward_reaction in label_model.merged_reactions_reactions_dict:
+                    forward_reaction=label_model.merged_reactions_reactions_dict[forward_reaction][0]
                 if forward_reaction in label_model.reactions_propagating_label:
                    continue
                 else:
@@ -77,7 +79,8 @@ def find_label_propagating_fluxes(label_model):
            emu_group_dict[emu_reaction].append(reaction_id)
            #print reaction_id+" already present"
   #label_model.temp=group_emu_dict
-  
+  return 
+"""
   inverse_label_groups_reactions_dict={}
   #Find the reactions that only participate in one reaction group
   for group in label_model.label_groups_reactions_dict:
@@ -126,14 +129,17 @@ def find_label_propagating_fluxes(label_model):
           for reaction in label_model.label_groups_reactions_dict[group]:
                if reaction in label_model.reaction_merged_reactions_dict:
                  reaction=label_model.reaction_merged_reactions_dict[reaction]
-               label_model.emu_reaction_dict[emu_reaction].remove(reaction)
+               if reaction+"_reverse" in label_model.emu_reaction_dict[emu_reaction]:
+                  label_model.emu_reaction_dict[emu_reaction].remove(reaction+"_reverse")
+               else:
+                  label_model.emu_reaction_dict[emu_reaction].remove(reaction)
         for reaction in label_model.label_groups_reactions_dict[group]:
           if reaction in label_model.reaction_merged_reactions_dict:
              reaction=label_model.reaction_merged_reactions_dict[reaction]
           del label_model.reaction_emu_dict[reaction+"_reverse"]
         label_model.reaction_emu_dict[group+"_reverse"]=group_emu_dict[group+"_reverse"]
   
-
+"""
          
   
               

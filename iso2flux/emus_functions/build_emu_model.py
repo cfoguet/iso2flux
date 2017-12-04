@@ -85,6 +85,7 @@ def build_emu_model(label_model,emu0_dict):
                      #print propagation
                      sub_n_dict={}
                      for n in carbons: 
+                         reaction.id, isotopomer_object.ref_met
                          if propagation[n]==["carb"] or propagation[n]==["carboxylation"]:
                             continue
                          sub_key=propagation[n][0]

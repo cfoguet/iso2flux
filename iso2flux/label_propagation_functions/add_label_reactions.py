@@ -143,7 +143,9 @@ def process_reaction_list(label_model,reaction_list):
 		if reference_reactants_list!=sorted(reactant_list):
 		   is_reaction_group=False
 		   break
+                print reactant_list,reference_reactants_list
 	if is_reaction_group:
+                
 		reaction_group_dict={}
 		reversible=False
 		group_id="LABEL_RGROUP_"
@@ -164,6 +166,7 @@ def process_reaction_list(label_model,reaction_list):
 				   reversible=True
 				   reverse_reaction.remove_from_model()
 			reference_reaction.remove_from_model()
+                #print reaction_group_dict
                 group_id=group_id[:-1]
 		define_reaction_group(label_model.metabolic_model,reaction_group_dict,group_reaction_id=group_id,lower_bound=None,upper_bound=None,objective_coefficient=0)
                 reference_reaction=Reaction(group_id)
@@ -181,7 +184,6 @@ def process_reaction_list(label_model,reaction_list):
           for reaction_to_add in reaction_list:
             merged_reaction_id+=reaction_to_add+"_"
             merged_reaction_id=merged_reaction_id[:-1] #Remove "_" at the end
-            label_model.merged_reactions_reactions_dict[merged_reaction_id]=reaction_list
             reference_reaction=Reaction(merged_reaction_id)
             reversible_flag=True
             reference_reaction.name="" 
@@ -198,7 +200,7 @@ def process_reaction_list(label_model,reaction_list):
                  return None
             if reversible_flag==True:
              #reflection=Reaction(merged_reaction_id+"_reverse")
-             reference_reaction.notes[reflection]=merged_reaction_id+"_reverse"
+             reference_reaction.notes["reflection"]=merged_reaction_id+"_reverse"
             else:
              print reversible_merged_reaction_list
              print "Merged reaction removed reflections"
@@ -208,5 +210,7 @@ def process_reaction_list(label_model,reaction_list):
                  reflection.remove_from_model()
                  if "reflection" in forward_reaction.notes:
                  	del forward_reaction.notes["reflection"]
+          
+          label_model.merged_reactions_reactions_dict[merged_reaction_id]=reaction_list
 	return reference_reaction			   
 		       

@@ -1,7 +1,7 @@
 from cobra import Model, Reaction, Metabolite
-from cobra.flux_analysis.variability import flux_variability_analysis
+from ..flux_functions.flux_variability_analysis import flux_variability_analysis
 import copy
-def remove_impossible_emus(label_model):
+def remove_impossible_emus(label_model,force_irreversibility=True):
    """
    Removes emus that cannot with labelled substrates used in the experiment
     
@@ -9,6 +9,57 @@ def remove_impossible_emus(label_model):
    #size_expanded_model2_dict={} 
    possible_isotopomers=[]
    impossible_isotopomers=[]
+   
+   #The optimization solver migh need to move through solutions where irreversible reactions are negative. The reverse reaction must exist to achieve steady state, nevertheless the existence of such reaction migh offset the removal of impossible emus. This piece of code identifys such cases and makes the reversible reactions always produce the m0 form of the metabolite 
+   if False: 
+      false_reversible_reactions=[] 
+      for reaction_id in label_model.reaction_emu_dict:
+         if "_reverse" in reaction_id:
+            forward_id=reaction_id[:-8]
+            if forward_id in label_model.metabolic_model.reactions:
+               reaction_object=label_model.metabolic_model.reactions.get_by_id(forward_id)
+               if forward_id in label_model.reaction_emu_dict and  reaction_object.lower_bound>=0 and forward_id not in label_model.reactions_with_forced_turnover:  
+                  false_reversible_reactions.append(reaction_id)
+      for false_reversible_reaction in false_reversible_reactions:
+          for emu_reaction in label_model.reaction_emu_dict[false_reversible_reaction]:
+              #Find the size to which the reaction belongs
+              for emu_size in label_model.size_model_dict:
+                  if emu_reaction in label_model.size_model_dict[emu_size].reactions:
+                     break
+              
+              for expanded_reaction in label_model.emu_reaction_expanded_dict[emu_reaction]:
+                  expanded_reaction_object=label_model.size_expanded_model_dict[emu_size].reactions.get_by_id(expanded_reaction)
+                  changes_in_products={}
+                  for isotopologue in expanded_reaction_object.metabolites:
+                      coef=expanded_reaction_object.metabolites[isotopologue]
+                      if coef>0: #If its a product we want to change it to m0
+                         emu=label_model.expanded_emu_dict[isotopologue.id]
+                         m0_id=label_model.emu_dict[emu]["mid"][0]
+                         m0=label_model.size_expanded_model_dict[emu_size].metabolites.get_by_id(m0_id)
+                         #if m0_id==isotopologue.id: #If it is already m0 no need to do anyting
+                         #   continue
+                         if m0 not in changes_in_products:
+                            changes_in_products[m0]=coef
+                         else:
+                            changes_in_products[m0]+=coef
+                         if isotopologue not in changes_in_products:
+                            changes_in_products[isotopologue]=-1*coef
+                         else:
+                            changes_in_products[isotopologue]+=-1*coef
+                            
+                         if changes_in_products[isotopologue]==0:
+                            del changes_in_products[isotopologue]
+                         if changes_in_products.get(m0)==0:
+                            del changes_in_products[m0]
+                  if changes_in_products!={}:
+                     print (emu_reaction,emu_size)
+                     print expanded_reaction_object.reaction,changes_in_products
+                     expanded_reaction_object.add_metabolites(changes_in_products)
+                     print expanded_reaction_object.reaction 
+                     print "----------------------------------------------------------------------------------------------"
+                  
+                  
+   
    f=open("impossible_isotopologues","w")
    #If some metabolites are marked as input but have no label described assume they all are m0 and add them to initial label
    for isotopomer in label_model.isotopomer_object_list:
@@ -74,6 +125,7 @@ def remove_impossible_emus(label_model):
              #print ex_id 
              expanded_emu_model.reactions.get_by_id(ex_id).lower_bound=-1000
       fva=flux_variability_analysis(expanded_emu_model,reaction_list=label_exchange_reactions,fraction_of_optimum=0)
+      f.write(str(fva))
       for x in label_exchange_reactions: 
           if fva[x.id]["maximum"]>0.00001 or fva[x.id]["minimum"]<-0.00001 : 
              if x.id[3:] not in possible_isotopomers: #prevent repeated entries
@@ -95,7 +147,7 @@ def remove_impossible_emus(label_model):
           for x in isotopomer._reaction:
               if x not in reactions_to_remove and x.metabolites[isotopomer]<1:
                  reactions_to_remove.append(x)
-          isotopomer.remove_from_model(method='subtractive')
+          isotopomer.remove_from_model(destructive=False)
       for reaction in expanded_emu_model.reactions:
            if len(reaction.metabolites)==0 and reaction not in reactions_to_remove:
               reactions_to_remove.append(reaction) 
@@ -104,7 +156,7 @@ def remove_impossible_emus(label_model):
          f.write("removing "+reaction.id+"\n")
          emu_reaction=label_model.expanded_reaction_emu_dict[reaction.id]
          label_model.emu_reaction_expanded_dict[emu_reaction].remove(reaction.id)
-         del label_model.expanded_reaction_emu_dict[reaction.id]               
+         del label_model.expanded_reaction_emu_dict[reaction.id]
          reaction.remove_from_model(remove_orphans=True)
       #size_expanded_model2_dict[model_size]=expanded_emu_model
       #labek_model=size_expanded_model_dict[model_size]=expanded_emu_model 
@@ -140,7 +192,7 @@ def remove_m0_reactions(label_model,impossible_isotopomers,possible_isotopomers)
           expanded_model=label_model.size_expanded_model_dict[size]
           if mi0_id in expanded_model.metabolites:
              mi0=expanded_model.metabolites.get_by_id(mi0_id)
-             mi0.remove_from_model(method='subtractive')
+             mi0.remove_from_model(destructive=False)
         """for reaction in mi0.reactions:
             coef=reaction.metabolites[mi0]
             if len(reaction.metabolites)==1: #If its an output or input reacton we can remove it
