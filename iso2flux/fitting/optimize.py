@@ -21,8 +21,9 @@ import time
 from random import shuffle
 
 
-def migrate_ring(fs,xs,n_bests):
-     print "-------------------\nMigration:"
+def migrate_ring(fs,xs,n_bests,verbose=False):
+     if verbose:
+        print "-------------------\nMigration:"
      champions_f= [min(f) for f in fs]
      champions_x=[]
      for n,n_best in enumerate(n_bests):
@@ -43,7 +44,8 @@ def migrate_ring(fs,xs,n_bests):
             
             #If the best element of the island is better than the worst of the adjacent islands replace them
             if best_individual_f<worst_f_left:
-               print [n_archi,"left",[n_archi,"->",n_left_island],[best_individual_f,"->",worst_f_left]] 
+               if verbose:
+                  print [n_archi,"left",[n_archi,"->",n_left_island],[best_individual_f,"->",worst_f_left]] 
                fs[n_left_island][worst_n_left]=best_individual_f
                variables_sets[n_left_island][worst_n_left]=copy.deepcopy(best_individual_x)
                
@@ -61,7 +63,8 @@ def migrate_ring(fs,xs,n_bests):
             
             #If the best element of the island is better than the worst of the adjacent islands replace them
             if best_individual_f<worst_f_right:
-               print [n_archi,"right",[n_archi,"->",n_right_island],[best_individual_f,"->",worst_f_right]] 
+               if verbose: 
+                  print [n_archi,"right",[n_archi,"->",n_right_island],[best_individual_f,"->",worst_f_right]] 
                fs[n_right_island][worst_n_right]=best_individual_f
                variables_sets[n_right_island][worst_n_right]=copy.deepcopy(best_individual_x)
      #print variables_sets
@@ -211,7 +214,9 @@ def optimize(label_model,iso2flux_problem,pop_size = 25,n_gen = 500,n_islands=6,
             label_obj=obj_dict["chi2_score"]
             fltarget_obj=obj_dict["fltarget_obj"]
             output="Island "+str(n_pop)+ ": obj="+str(round(obj,3))
-            output+=" Chi2="+str(round(label_obj,3))+"/"+str(round(label_problem_parameters["max_chi"],3))
+            output+=" Chi2="+str(round(label_obj,3))
+            if label_problem_parameters["max_chi"]<99999:
+                output+="/"+str(round(label_problem_parameters["max_chi"],3))
             if flux_obj>0:
                 output+=" flux="+str(round(flux_obj,3))+"/"+str(label_problem_parameters["max_flux"])
             target_flux_dict=label_problem_parameters["target_flux_dict"]

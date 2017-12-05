@@ -59,7 +59,7 @@ for opt, arg in opts:
              pop_size=int(arg)
          elif opt in ("--generations_per_cycle=","-g"):
              n_gen=int(arg)
-         elif opt in ("max_cycles_without_improvement=","-m"):
+         elif opt in ("--max_cycles_without_improvement=","-m"):
              max_cycles_without_improvement=int(arg)
 
 
