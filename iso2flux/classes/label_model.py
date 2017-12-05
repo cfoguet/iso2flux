@@ -283,7 +283,7 @@ class Label_model:
           sys.path.insert(0, self.eqn_dir)
           #os.chdir(self.eqn_dir)
           #print os.getcwd()
-          import get_equations
+          from get_equations import get_equations
           """try:
             get_equations=reload(get_equations)
           except:
