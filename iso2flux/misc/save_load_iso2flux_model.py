@@ -190,9 +190,9 @@ def load_iso2flux_model(project_file="project.iso2flux",sbml_name="project_metab
    loaded_label_model.best_chi2=project_dict.get("best_chi2")
    ##############################
    set_equations_variables(loaded_label_model,force_balance=loaded_label_model.force_balance)
-   """sys.path.insert(0, loaded_label_model.eqn_dir)
-   from get_equations import get_equations"""
-   exec("from " + loaded_label_model.eqn_dir+".get_equations import get_equations")
+   sys.path.insert(0, loaded_label_model.eqn_dir)
+   from get_equations import get_equations
+   #exec("from " + loaded_label_model.eqn_dir+".get_equations import get_equations")
    loaded_label_model.size_emu_c_eqn_dict={}
    get_equations(loaded_label_model.size_emu_c_eqn_dict)
    del loaded_label_model.irreversible_metabolic_model #Delete irreversible model as it not used if the model is already built

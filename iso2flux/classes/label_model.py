@@ -283,12 +283,12 @@ class Label_model:
           sys.path.insert(0, self.eqn_dir)
           #os.chdir(self.eqn_dir)
           #print os.getcwd()
-          import get_equations
+          from get_equations import get_equations #import get_equations
           """try:
             get_equations=reload(get_equations)
           except:
             pass"""
-          exec("from " + self.eqn_dir+".get_equations import get_equations")
+          #exec("from " + self.eqn_dir+".get_equations import get_equations")
              
           get_equations(self.size_emu_c_eqn_dict)
           #os.chdir(original_directory)  
