@@ -146,7 +146,6 @@ model=None
 constraints_file=None
 mid_data_name=None
 iso_model_file=None
-output_prefix=""
 null_matrix=None
 eqn_dir=None
 max_t=20
@@ -327,6 +326,13 @@ reference_parameters=[optimal_variables]
 label_model.best_label_variables=optimal_variables
 
 save_iso2flux_model(label_model,name=output_prefix+".iso2flux",write_sbml=True,ask_sbml_name=False,gui=False)
+if not compute_intervals:
+   output_model=label_model.constrained_model.copy()
+   for reaction in output_model.reactions:
+        if reaction.id in label_model.reversible_flux_dict:
+           reaction.lower_bound=label_model.reversible_flux_dict[reaction.id]
+           reaction.upper_bound=label_model.reversible_flux_dict[reaction.id]
+
 
 if compute_intervals:
     irreversible_flag=False
@@ -337,5 +343,12 @@ if compute_intervals:
     flux_interval_dict,irreversible_flux_interval_dict=flux_variation(label_model,iso2flux_problem,reference_flux_group_dict,reference_parameters,label_problem_parameters,max_chi=max_chi,max_flux=1e6,flux_penalty_dict=flux_penalty_dict ,pop_size=pop_size ,n_gen=n_gen ,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement ,stop_criteria_relative=0.005 ,max_iterations=3,log_name="confidence.txt")
     #variation_dict2=flux_variation(label_model,["rib5p_dem","fbp"],best_variables,label_problem_parameters,max_chi=max_chi,max_flux=max_flux,flux_penalty_dict=flux_penalty_dict ,pop_size=20 ,n_gen=20 ,n_islands=2 ,evolves_per_cycle=8 ,max_evolve_cycles=20 ,stop_criteria_relative=0.005 ,max_iterations=10,log_name="confidence.txt")
     write_fva(label_model.constrained_model,fn=output_prefix+"_flux_interval.csv",fva=flux_interval_dict,fraction=1,remove0=False,change_threshold=1e-6,mode="full",lp_tolerance_feasibility=1e-6,flux_precision=1e-3,reaction_list=reaction_reference_flux_group_dict)
+    #Add output to a SBML model
+    output_model=label_model.constrained_model.copy()
+    for reaction in output_model.reactions:
+        if reaction.id in flux_interval_dict:
+           reaction.lower_bound=flux_interval_dict[reaction.id]["minimum"]
+           reaction.upper_bound=flux_interval_dict[reaction.id]["maximum"]
 
 
+cobra.io.write_sbml_model(output_model,output_prefix+"constrained_model.xml")
