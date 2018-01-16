@@ -151,7 +151,7 @@ eqn_dir=None
 max_t=20
 validate=False
 pop_size=20
-n_gen=200
+n_gen=400
 number_of_processes=1
 output_prefix="Iso2Flux"
 max_cycles_without_improvement=4
@@ -330,8 +330,8 @@ if not compute_intervals:
    output_model=label_model.constrained_model.copy()
    for reaction in output_model.reactions:
         if reaction.id in label_model.reversible_flux_dict:
-           reaction.lower_bound=label_model.reversible_flux_dict[reaction.id]
-           reaction.upper_bound=label_model.reversible_flux_dict[reaction.id]
+           reaction.lower_bound=min(round_down(label_model.reversible_flux_dict[reaction.id],6),reaction.lower_bound)
+           reaction.upper_bound=max(round_up(label_model.reversible_flux_dict[reaction.id],6),reaction.upper_bound)
 
 
 if compute_intervals:
