@@ -351,4 +351,4 @@ if compute_intervals:
            reaction.upper_bound=flux_interval_dict[reaction.id]["maximum"]
 
 
-cobra.io.write_sbml_model(output_model,output_prefix+"constrained_model.xml")
+cobra.io.write_sbml_model(output_model,output_prefix+"constrained_model.xml",use_fbc_package=False)
