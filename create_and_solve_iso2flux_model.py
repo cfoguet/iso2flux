@@ -330,8 +330,8 @@ if not compute_intervals:
    output_model=label_model.constrained_model.copy()
    for reaction in output_model.reactions:
         if reaction.id in label_model.reversible_flux_dict:
-           reaction.lower_bound=min(round_down(label_model.reversible_flux_dict[reaction.id],6),reaction.lower_bound)
-           reaction.upper_bound=max(round_up(label_model.reversible_flux_dict[reaction.id],6),reaction.upper_bound)
+           reaction.lower_bound=max(round_down(label_model.reversible_flux_dict[reaction.id],6),reaction.lower_bound)
+           reaction.upper_bound=min(round_up(label_model.reversible_flux_dict[reaction.id],6),reaction.upper_bound)
 
 
 if compute_intervals:
@@ -347,8 +347,8 @@ if compute_intervals:
     output_model=label_model.constrained_model.copy()
     for reaction in output_model.reactions:
         if reaction.id in flux_interval_dict:
-           reaction.lower_bound=flux_interval_dict[reaction.id]["minimum"]
-           reaction.upper_bound=flux_interval_dict[reaction.id]["maximum"]
+           reaction.lower_bound=max(round_down(flux_interval_dict[reaction.id]["minimum"],6),reaction.lower_bound)
+           reaction.upper_bound=min(round_up(flux_interval_dict[reaction.id]["maximum"],6),reaction.upper_bound)
 
 
-cobra.io.write_sbml_model(output_model,output_prefix+"constrained_model.xml",use_fbc_package=False)
+cobra.io.write_sbml_model(output_model,output_prefix+"_constrained_model.xml",use_fbc_package=False)
