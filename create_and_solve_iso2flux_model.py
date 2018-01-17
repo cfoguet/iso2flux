@@ -154,7 +154,7 @@ pop_size=20
 n_gen=400
 number_of_processes=1
 output_prefix="Iso2Flux"
-max_cycles_without_improvement=4
+max_cycles_without_improvement=8
 compute_intervals=False
 
 try:
