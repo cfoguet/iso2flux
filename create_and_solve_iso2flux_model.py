@@ -178,9 +178,9 @@ for opt, arg in opts:
              if "]" in iso_model_file:
                 iso_model_file.replace("[","").replace("]","").split(",")       
          elif opt in ("--constraint_based_model=","-c"):
-              if ".sbml" in arg.lower() or ".xml" in arg.lower():
+              try:
                   model=cobra.io.read_sbml_model(arg)
-              else:
+              except:
                   model=create_cobra_model_from_file(arg) 
          elif opt in ("flux_constraints=","-f"):
               constraints_file=arg
