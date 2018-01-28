@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This script will run standard 13C MFA on a iso2flux model and provide the optimal flux distribution. Iso2flux uses the PyGMO generalized island-model. Under this model there are several “islands” (each running on a processor thread) and on each island, there is a population of solutions vectors evolves. After a n number of generations, the best solutions migrate across islands. Some of the parameters of the script are used to define the characteristics this island-model. The parameters that can be taken by the script are: 
 --iso2flux_model_file=,-I (mandatory):  path to the iso2flux model that will be solved. Iso2flux model can be created with the create_iso2flux_model.py and has  “.iso2flux” as extension. 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This script uses gene expression data to set add additional minimization weights to reactions with gene expression bellow a given threshold. 
 --iso2flux_model_file=,-i (mandatory):  path to the iso2flux model that will be solved. Iso2flux model can be created with the create_iso2flux_model.py and has  “.iso2flux” as extension. 

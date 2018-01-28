@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This script creates a iso2flux 13C propagation model object. This object is used as input for the other scripts. It takes the following command line arguments: 
 --experimental_data_file=, -e (Mandatory): Path to the file describing the labelled substrates used and the quantified isotopologue fractions in metabolic products. See here. 

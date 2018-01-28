@@ -18,6 +18,7 @@ import os
 
 
 
+# -*- coding: utf-8 -*-
 from iso2flux import fitting
 from iso2flux.misc.save_load_iso2flux_model import load_iso2flux_model, save_iso2flux_model
 from iso2flux.flux_functions.minimal_flux import create_minimal_fux_model,flux_minimization_fva
