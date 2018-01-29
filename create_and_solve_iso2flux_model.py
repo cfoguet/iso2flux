@@ -239,7 +239,7 @@ if len(missing_reactions_list)>0:
 
 #emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,mid_data_name,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
 try:
-   emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=0,selected_time=0,minimum_sd=0.01,rsm=False)
+   emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=0,selected_time=None,minimum_sd=0.01,rsm=False)
 except:
    if  "[" in mid_data_name and "]" in mid_data_name:
       try:
