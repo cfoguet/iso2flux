@@ -153,13 +153,15 @@ validate=False
 pop_size=20
 n_gen=400
 number_of_processes=1
-output_prefix="Iso2Flux"
+output_prefix=output_name="Iso2Flux"
 max_cycles_without_improvement=8
 compute_intervals=False
+incubation_time=None
+
 
 try:
  argv=sys.argv[1:]
- opts, args = getopt.getopt(argv,"e:l:c:s:f:o:t:q:t:vn:p:g:m:i",["experimental_data_file=","label_propagation_rules=","constraint_based_model=","settings_file=","flux_constraints=","output_name=","eqn_dir=","max_reversible_turnover=","validate","number_of_processes=","population_size=","generations_per_cycle=","max_cycles_without_improvement=","compute_confidence_intervals"])
+ opts, args = getopt.getopt(argv,"e:l:c:s:f:o:t:q:t:vn:p:g:m:iu:",["experimental_data_file=","label_propagation_rules=","constraint_based_model=","settings_file=","flux_constraints=","output_name=","eqn_dir=","max_reversible_turnover=","validate","number_of_processes=","population_size=","generations_per_cycle=","max_cycles_without_improvement=","compute_confidence_intervals","--incubation_time="])
  #opts, args = getopt.getopt(argv,"n:p:g:m:",["number_of_processes=","population_size=","generations_per_cycle=","max_cycles_without_improvement="])
 
 except getopt.GetoptError as err:
@@ -168,7 +170,7 @@ except getopt.GetoptError as err:
    #print "wrong parameters"#'test.py -i <inputfile> -o <outputfile>'
    sys.exit(2)
 
-output_name=None
+
 for opt, arg in opts:
          print [opt,arg]
          if opt in ("--experimental_data_file","-e"):
@@ -204,6 +206,9 @@ for opt, arg in opts:
              max_cycles_without_improvement=int(arg)
          elif opt in ("--compute_confidence_intervals","-i"):
              compute_intervals=True
+         elif opt in ("--incubation_time=","-u"):
+              incubation_time=str(arg)
+
 
 
 
@@ -230,39 +235,34 @@ fraction_of_optimum=p_dict["fraction_of_optimum"]
 reactions_with_forced_turnover=p_dict["reactions_with_forced_turnover"]
 """
 
+if len(model.reactions)==0:
+   raise Exception ("Constraint-based model appears to be empty")
+
 #label_model=Label_model(model,lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"],parameter_precision=p_dict["parameter_precision"],reactions_with_forced_turnover=reactions_with_forced_turnover,make_all_reversible=False,moddify_false_reversible_reactions=False) #initialize the label model class   
 label_model=Label_model(model,make_all_reversible=False,moddify_false_reversible_reactions=False) #initialize the label model class   
 read_isotopomer_model(label_model,iso_model_file,header=True)
+
+if len(label_model.label_propagation_dict)==0:
+   raise Exception ("No information could be extracted from label propagation rules ("+iso_model_file+"). Check that naming is consistent with constraint-based model")
+
+
 missing_reactions_list= find_missing_reactions(label_model).keys()
 if len(missing_reactions_list)>0:
    raise Exception ("Some reactions lack label propagation rules: "+str(missing_reactions_list)) 
 
-#emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,mid_data_name,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
-try:
-   emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=0,selected_time=None,minimum_sd=0.01,rsm=False)
-except:
-   if  "[" in mid_data_name and "]" in mid_data_name:
-      try:
-        split_name=mid_data_name.replace("[","").replace("]","")
-        
-        emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,split_name.split(","),emu0_dict={},experimental_dict={},minimum_sd=0.01)
-      except:
-        emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,split_name,emu0_dict={},experimental_dict={},minimum_sd=0.01) 
-   else:
-      emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,mid_data_name,emu0_dict={},experimental_dict={},minimum_sd=0.01) 
+
+
+
+emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=0,selected_time=incubation_time,minimum_sd=0.01,rsm=False)
+
+if len(emu_dict0)==0:
+   raise Exception ("Error: No information could be extracted from the experimental_data_file ("+mid_data_name+"). Check that naming is consistent with constraint-based model and the label propagation rules")
+  
+
+
 
 
 print emu_dict0
-
-
-if output_name==None: 
-   try:
-      tk=Tkinter.Tk()
-      tk.withdraw()
-      output_name = tkFileDialog.asksaveasfilename(parent=tk,title="Save project as...",filetypes=[("iso2flux",".iso2flux")])
-      
-   except: 
-     output_name=mid_data_name.replace(".csv","").replace(".xlsx","")
 
 
 if ".iso2flux" in output_name:
