@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This script creates a iso2flux 13C propagation model object and solves is it. It is equivalent to running create_iso2flux_model and solve_iso2flux_label. 
 """
