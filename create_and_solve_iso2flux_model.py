@@ -11,19 +11,12 @@ except:
  pass
 
 
-import sympy
-import numpy
+
 import cobra
-import random
-from cobra import Model, Reaction, Metabolite
-from cobra.manipulation.modify import convert_to_irreversible
-from iso2flux.flux_functions.flux_variability_analysis import flux_variability_analysis
-from iso2flux.flux_functions.minimal_flux import add_flux_limit_constraints
 from  warnings import warn
 import numpy as np
 #from scipy.integrate import odeint
 #import subprocess
-from timeit import timeit
 import copy
 import math
 import json
@@ -31,17 +24,6 @@ import tkFileDialog
 import Tkinter
 import sys, getopt
 import os
-
-from scipy.optimize import broyden1
-from scipy.optimize import broyden2
-from scipy.optimize import fsolve
-from scipy.integrate import odeint
-from scipy.optimize import broyden1
-from scipy.optimize import broyden2
-from scipy.optimize import fsolve
-from scipy.integrate import odeint
-import json 
-import cobra
 import time
 #from cobra.core.arraybasedmodel import ArrayBasedModel
 #iso2flux imports
@@ -55,21 +37,11 @@ from iso2flux.output_functions.export_label_results import export_label_results
 from iso2flux.output_functions.write_fva import write_fva
 #from iso2flux.output_functions.print_emu_results import  print_emu_results
 
-from iso2flux.fitting.anneal import annealing
-from iso2flux.fitting.get_objective_function import get_objective_function
-from iso2flux.fitting.apply_parameters import apply_parameters
-from iso2flux.fitting.clear_parameters import clear_parameters 
-from iso2flux.fitting.save_parameters import save_parameters
-from iso2flux.fitting.load_parameters import load_parameters
-from iso2flux.fitting.identify_free_parameters import identify_free_parameters
-from iso2flux.fitting.confidence_intervals import estimate_confidence_intervals
-from iso2flux.fitting.sampling import sampling
-from iso2flux.fitting.clear_parameters import clear_parameters
+
 
 from iso2flux.misc.check_steady_state import check_steady_state
 from iso2flux.misc.check_simulated_fractions import check_simulated_fractions
 #from iso2flux.flux_functions.expression_analysis import integrate_omics_imat,integrate_omics_gim3e
-from iso2flux.flux_functions.minimal_flux import add_flux_limit_constraints
 from iso2flux.misc.save_load_iso2flux_model import save_iso2flux_model,load_iso2flux_model
 from iso2flux.misc.round_functions import round_up, round_down 
 #from iso2flux.misc.convert_model_to_irreversible import convert_to_irreversible_with_indicators
@@ -110,32 +82,87 @@ from iso2flux.fitting.objfunc import objfunc
 from iso2flux.fitting.extract_results import extract_results
 from iso2flux.output_functions.write_fluxes import export_flux_results
 from iso2flux.output_functions.export_label_results import export_label_results
-from iso2flux.fitting.optimize import optimize,define_isoflux_problem
+from iso2flux.fitting.optimize import optimize,flux_variation,define_isoflux_problem
 
-#To do, move it to emu equations
-#from iso2flux.dynamic.interpolate_timecourse import interpolate_timecourse
-#from iso2flux.dynamic.interpolate_timecourse import interpolate_timecourse
-"""mid_data_name="CA_34_label_reduit.xlsx" 
-iso_model_file="isotopomer_model_reduit2.xlsx"""
-#Default Value of the parameters
+#################Function used to select the fluxes to be computed for confidence intervals
+
+def find_flux_grups(label_model,reaction_list=None,irreversible_flag=False):
+    reference_flux_group_dict={}
+    reaction_reference_flux_group_dict={}
+    grouped_reactions=[]
+    nullm=label_model.flux_solver_nullmnp
+    corr_matrix=np.corrcoef(nullm)
+    for n_flux,row in enumerate(corr_matrix):
+        reaction1=label_model.flux_solver_n_reaction_dict[n_flux]
+        if "LABEL_RGROUP_" in reaction1:
+            continue
+        if "RATIO_" in reaction1:
+            continue
+        if reaction1 in grouped_reactions:
+            continue
+        grouped_reactions.append(reaction1)
+        reference_flux_group_dict[reaction1]=[reaction1]
+        reaction_reference_flux_group_dict[reaction1]=reaction1
+        for n_flux2,row2 in enumerate(corr_matrix):
+            reaction2=label_model.flux_solver_n_reaction_dict[n_flux2]
+            if reaction1==reaction2:
+               continue
+            if reaction2 in grouped_reactions:
+                continue
+            coef=corr_matrix[n_flux,n_flux2]
+            if abs(coef)>0.99999:
+               print coef,reaction1,reaction2  
+               grouped_reactions.append(reaction2)                          
+               reference_flux_group_dict[reaction1].append(reaction2)
+               reaction_reference_flux_group_dict[reaction2]=reaction1
+    if reaction_list!=None: #TODO make it work with custom list
+       if irreversible_flag:
+          reference_flux_group_dict=reaction_list
+          reaction_reference_flux_group_dict=reaction_list
+       else:
+         reduced_reference_flux_group_dict={}
+         reduced_reaction_reference_flux_dict={}
+         select_reaction_groups=[]
+         print reaction_list
+         for reaction_id in reaction_list:
+           select_reaction_groups.append(reaction_reference_flux_group_dict[reaction_id])
+         print select_reaction_groups
+         for reaction_id in set(select_reaction_groups):
+             reduced_reference_flux_group_dict[reaction_id]=reference_flux_group_dict[reaction_id]
+             print reduced_reference_flux_group_dict[reaction_id]
+             for reaction_id2 in reduced_reference_flux_group_dict[reaction_id]:
+               reduced_reaction_reference_flux_dict[reaction_id2]=reaction_id
+         
+         print reduced_reference_flux_group_dict
+         reference_flux_group_dict=reduced_reference_flux_group_dict
+         reaction_reference_flux_group_dict=reduced_reaction_reference_flux_dict
+          
+       
+    return   reference_flux_group_dict,reaction_reference_flux_group_dict
+
+############################
+
+#Default Value for the parameters
 model=None
 constraints_file=None
 mid_data_name=None
 iso_model_file=None
-output_prefix=""
 null_matrix=None
 eqn_dir=None
 max_t=20
 validate=False
 pop_size=20
-n_gen=200
-number_of_processes=6
-output_prefix="Iso2Flux_"
-max_cycles_without_improvement=9
+n_gen=400
+number_of_processes=1
+output_prefix=output_name="Iso2Flux"
+max_cycles_without_improvement=8
+compute_intervals=False
+incubation_time=None
+
 
 try:
  argv=sys.argv[1:]
- opts, args = getopt.getopt(argv,"e:l:c:s:f:o:t:q:t:vn:p:g:m:",["experimental_data_file=","label_propagation_rules=","constraint_based_model=","settings_file=","flux_constraints=","output_name=","eqn_dir=","max_reversible_turnover=","validate","number_of_processes=","population_size=","generations_per_cycle=","max_cycles_without_improvement="])
+ opts, args = getopt.getopt(argv,"e:l:c:s:f:o:t:q:t:vn:p:g:m:iu:",["experimental_data_file=","label_propagation_rules=","constraint_based_model=","settings_file=","flux_constraints=","output_name=","eqn_dir=","max_reversible_turnover=","validate","number_of_processes=","population_size=","generations_per_cycle=","max_cycles_without_improvement=","compute_confidence_intervals","--incubation_time="])
  #opts, args = getopt.getopt(argv,"n:p:g:m:",["number_of_processes=","population_size=","generations_per_cycle=","max_cycles_without_improvement="])
 
 except getopt.GetoptError as err:
@@ -144,7 +171,7 @@ except getopt.GetoptError as err:
    #print "wrong parameters"#'test.py -i <inputfile> -o <outputfile>'
    sys.exit(2)
 
-output_name=None
+
 for opt, arg in opts:
          print [opt,arg]
          if opt in ("--experimental_data_file","-e"):
@@ -154,9 +181,9 @@ for opt, arg in opts:
              if "]" in iso_model_file:
                 iso_model_file.replace("[","").replace("]","").split(",")       
          elif opt in ("--constraint_based_model=","-c"):
-              if ".sbml" in arg.lower() or ".xml" in arg.lower():
+              try:
                   model=cobra.io.read_sbml_model(arg)
-              else:
+              except:
                   model=create_cobra_model_from_file(arg) 
          elif opt in ("flux_constraints=","-f"):
               constraints_file=arg
@@ -178,6 +205,11 @@ for opt, arg in opts:
              n_gen=int(arg)
          elif opt in ("--max_cycles_without_improvement=","-m"):
              max_cycles_without_improvement=int(arg)
+         elif opt in ("--compute_confidence_intervals","-i"):
+             compute_intervals=True
+         elif opt in ("--incubation_time=","-u"):
+              incubation_time=str(arg)
+
 
 
 
@@ -204,39 +236,34 @@ fraction_of_optimum=p_dict["fraction_of_optimum"]
 reactions_with_forced_turnover=p_dict["reactions_with_forced_turnover"]
 """
 
+if len(model.reactions)==0:
+   raise Exception ("Constraint-based model appears to be empty")
+
 #label_model=Label_model(model,lp_tolerance_feasibility=p_dict["lp_tolerance_feasibility"],parameter_precision=p_dict["parameter_precision"],reactions_with_forced_turnover=reactions_with_forced_turnover,make_all_reversible=False,moddify_false_reversible_reactions=False) #initialize the label model class   
 label_model=Label_model(model,make_all_reversible=False,moddify_false_reversible_reactions=False) #initialize the label model class   
 read_isotopomer_model(label_model,iso_model_file,header=True)
+
+if len(label_model.label_propagation_dict)==0:
+   raise Exception ("No information could be extracted from label propagation rules ("+iso_model_file+"). Check that naming is consistent with constraint-based model")
+
+
 missing_reactions_list= find_missing_reactions(label_model).keys()
 if len(missing_reactions_list)>0:
    raise Exception ("Some reactions lack label propagation rules: "+str(missing_reactions_list)) 
 
-#emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,mid_data_name,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
-try:
-   emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=0,selected_time=None,minimum_sd=0.01,rsm=False)
-except:
-   if  "[" in mid_data_name and "]" in mid_data_name:
-      try:
-        split_name=mid_data_name.replace("[","").replace("]","")
-        
-        emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,split_name.split(","),emu0_dict={},experimental_dict={},minimum_sd=0.01)
-      except:
-        emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,split_name,emu0_dict={},experimental_dict={},minimum_sd=0.01) 
-   else:
-      emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,mid_data_name,emu0_dict={},experimental_dict={},minimum_sd=0.01) 
+
+
+
+emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=0,selected_time=incubation_time,minimum_sd=0.01,rsm=False)
+
+if len(emu_dict0)==0:
+   raise Exception ("Error: No information could be extracted from the experimental_data_file ("+mid_data_name+"). Check that naming is consistent with constraint-based model and the label propagation rules")
+  
+
+
 
 
 print emu_dict0
-
-
-if output_name==None: 
-   try:
-      tk=Tkinter.Tk()
-      tk.withdraw()
-      output_name = tkFileDialog.asksaveasfilename(parent=tk,title="Save project as...",filetypes=[("iso2flux",".iso2flux")])
-      
-   except: 
-     output_name=mid_data_name.replace(".csv","").replace(".xlsx","")
 
 
 if ".iso2flux" in output_name:
@@ -296,7 +323,33 @@ export_flux_results(label_model,optimal_variables,fn=output_prefix+"_fluxes.csv"
 objfunc(label_model,optimal_variables)
 export_label_results(label_model,fn=output_prefix+"_label.csv",show_chi=True,show_emu=False,show_fluxes=False)
 np.savetxt(output_prefix+"_variables.txt",optimal_variables)
+reference_parameters=[optimal_variables]
 label_model.best_label_variables=optimal_variables
 
 save_iso2flux_model(label_model,name=output_prefix+".iso2flux",write_sbml=True,ask_sbml_name=False,gui=False)
+if not compute_intervals:
+   output_model=label_model.constrained_model.copy()
+   for reaction in output_model.reactions:
+        if reaction.id in label_model.reversible_flux_dict:
+           reaction.lower_bound=max(round_down(label_model.reversible_flux_dict[reaction.id],6),reaction.lower_bound)
+           reaction.upper_bound=min(round_up(label_model.reversible_flux_dict[reaction.id],6),reaction.upper_bound)
 
+
+if compute_intervals:
+    irreversible_flag=False
+    objective_tolerance=3.84
+    max_chi=label_model.best_chi2+objective_tolerance
+    reference_flux_group_dict,reaction_reference_flux_group_dict=find_flux_grups(label_model,reaction_list=None,irreversible_flag=irreversible_flag)
+    label_problem_parameters={"label_weight":0.00000,"target_flux_dict":None,"max_chi":max_chi,"max_flux":1e6,"flux_penalty_dict":{},"verbose":True,"flux_weight":0.00000,"flux_unfeasible_penalty":10,"label_unfeasible_penalty":2}
+    flux_interval_dict,irreversible_flux_interval_dict=flux_variation(label_model,iso2flux_problem,reference_flux_group_dict,reference_parameters,label_problem_parameters,max_chi=max_chi,max_flux=1e6,flux_penalty_dict=flux_penalty_dict ,pop_size=pop_size ,n_gen=n_gen ,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement ,stop_criteria_relative=0.005 ,max_iterations=3,log_name="confidence.txt")
+    #variation_dict2=flux_variation(label_model,["rib5p_dem","fbp"],best_variables,label_problem_parameters,max_chi=max_chi,max_flux=max_flux,flux_penalty_dict=flux_penalty_dict ,pop_size=20 ,n_gen=20 ,n_islands=2 ,evolves_per_cycle=8 ,max_evolve_cycles=20 ,stop_criteria_relative=0.005 ,max_iterations=10,log_name="confidence.txt")
+    write_fva(label_model.constrained_model,fn=output_prefix+"_flux_interval.csv",fva=flux_interval_dict,fraction=1,remove0=False,change_threshold=1e-6,mode="full",lp_tolerance_feasibility=1e-6,flux_precision=1e-3,reaction_list=reaction_reference_flux_group_dict)
+    #Add output to a SBML model
+    output_model=label_model.constrained_model.copy()
+    for reaction in output_model.reactions:
+        if reaction.id in flux_interval_dict:
+           reaction.lower_bound=max(round_down(flux_interval_dict[reaction.id]["minimum"],6),reaction.lower_bound)
+           reaction.upper_bound=min(round_up(flux_interval_dict[reaction.id]["maximum"],6),reaction.upper_bound)
+
+
+cobra.io.write_sbml_model(output_model,output_prefix+"_constrained_model.xml",use_fbc_package=False)
