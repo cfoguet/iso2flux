@@ -3,9 +3,51 @@ try:
   from cobra.core.arraybasedmodel import ArrayBasedModel
 except:
   from cobra.core.ArrayBasedModel import ArrayBasedModel
+
 import sympy
 import numpy as np
 import copy
+
+from types import FunctionType
+from sympy.simplify import simplify as _simplify, signsimp, nsimplify
+
+
+def nullspace(matrix, simplify=False):
+        """Returns list of vectors (Matrix objects) that span nullspace of self
+        """
+        from sympy.matrices import zeros
+        
+        simpfunc = simplify if isinstance(
+            simplify, FunctionType) else _simplify
+        reduced, pivots = matrix.rref(simplify=simpfunc)
+        
+        basis = []
+        # create a set of vectors for the basis
+        for i in range(matrix.cols - len(pivots)):
+            basis.append(zeros(matrix.cols, 1))
+        # contains the variable index to which the vector corresponds
+        basiskey, cur = [-1]*len(basis), 0
+        for i in range(matrix.cols):
+            if i not in pivots:
+                basiskey[cur] = i
+                cur += 1
+        for i in range(matrix.cols):
+            if i not in pivots:  # free var, just set vector's ith place to 1
+                basis[basiskey.index(i)][i, 0] = 1
+            else:               # add negative of nonpivot entry to corr vector
+                for j in range(i + 1, matrix.cols):
+                    line = pivots.index(i)
+                    v = reduced[line, j]
+                    if simplify:
+                        v = simpfunc(v)
+                    if v:
+                        if j in pivots:
+                            # XXX: Is this the correct error?
+                            raise NotImplementedError(
+                                "Could not compute the nullspace of matrix self.")
+                        basis[basiskey.index(j)][i, 0] = -v
+        return [matrix._new(b) for b in basis]
+
 
 def compute_nullmatrix(label_model,remove_inactive_reactions=True,fname=None):
        reaction_n_dict={}
@@ -24,6 +66,13 @@ def compute_nullmatrix(label_model,remove_inactive_reactions=True,fname=None):
               reaction0_list.append(x)
          for r in reactions_to_remove:
            r.remove_from_model()
+         metabolites2remove=[]
+         for x in model.metabolites: 
+             if len(x.reactions)==0:
+                 metabolites2remove.append(x)
+         for x in metabolites2remove:
+                 print x.id+" removed"
+                 x.remove_from_model()
        rgroup_dict={}
        list_group_metabolites=[]
        n=0
@@ -47,6 +96,7 @@ def compute_nullmatrix(label_model,remove_inactive_reactions=True,fname=None):
        if fname==None:
          array_based=ArrayBasedModel(model)
          sm=array_based.S.toarray()
+         print len(sm),len(sm[0])
          sm_list=[]
          for n_row,metabolite in enumerate(model.metabolites):#in enumerate(sorted([x.id for x in model.metabolites])):
            #metabolite=model.metabolites.get_by_id(metabolite_id)
@@ -62,9 +112,10 @@ def compute_nullmatrix(label_model,remove_inactive_reactions=True,fname=None):
                   sm_list.append(sympy.Rational(coef))
        
          smm=sympy.Matrix(len(model.metabolites)-len(list_group_metabolites),len(reaction_n_dict),sm_list)
-         
+         #print len(smm),len(smm[0])
          print "computing null matrix..."
-         nullms=smm.nullspace(True) #Simplify True
+         nullms=nullspace(smm,True)
+         #nullms=smm.nullspace(True) #Simplify True
          nullmnp=np.transpose(np.array(nullms,dtype=np.float64))
          #original_nullmnp=copy.deepcopy(nullmnp)
          #Adding group reactions:
@@ -127,10 +178,10 @@ def get_compute_fluxes_function(label_model):
     flux_expression=flux_expression[:-1]+"\n" #Remove last plus sign
     string+=flux_expression
     #print flux_expression       
-
+ 
  string+=" return(res)"
  exec(string)
- #f=open("compute_fluxes.txt","w")
- #f.write(string)
- #f.close()
+ f=open("compute_fluxes.txt","w")
+ f.write(string)
+ f.close()
  return  compute_fluxes
