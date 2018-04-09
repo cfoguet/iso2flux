@@ -133,7 +133,7 @@ def evolve_process(pop):
 
 def optimize(label_model,iso2flux_problem,pop_size = 25,n_gen = 500,n_islands=6,max_evolve_cycles=999,max_cycles_without_improvement=10,stop_criteria_relative=0.01,stop_criteria_absolute=-1e6,initial_archi_x=[],lb_list=[],ub_list=[],flux_penalty_dict=None,max_flux=None,label_problem_parameters={},min_model=None,extra_constraint_dict={},log_file_name="optimize_log.txt"):
   log_file=open(log_file_name,"w")
-  f.write(time.strftime("%c")+": starting optimization\n")
+  log_file.write(time.strftime("%c")+": starting optimization\n")
   log_file.close()  
   if flux_penalty_dict==None or flux_penalty_dict=={}:
           flux_penalty_dict={}
@@ -210,7 +210,7 @@ def optimize(label_model,iso2flux_problem,pop_size = 25,n_gen = 500,n_islands=6,
                       
                #variables_sets=migrate_ring(fs,xs,best_ns)
         log_file=open(log_file_name,"a")
-        f.write("\n"+time.strftime("%c")+":\n")       
+        log_file.write("\n"+time.strftime("%c")+":\n")       
         for n_pop,n_best in enumerate(best_ns):
             x=xs[n_pop][n_best]
             obj, obj_dict=objfunc(label_model,x,verbose=False,max_chi=label_problem_parameters["max_chi"],target_flux_dict=label_problem_parameters["target_flux_dict"],max_flux=label_problem_parameters["max_flux"],flux_penalty_dict=label_problem_parameters["flux_penalty_dict"])
