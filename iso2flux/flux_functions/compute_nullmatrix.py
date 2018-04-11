@@ -181,7 +181,7 @@ def get_compute_fluxes_function(label_model):
  
  string+=" return(res)"
  exec(string)
- f=open("compute_fluxes.txt","w")
- f.write(string)
- f.close()
+ #f=open("compute_fluxes.txt","w")
+ #f.write(string)
+ #f.close()
  return  compute_fluxes

@@ -22,7 +22,7 @@ def variable_sampling(label_model,lb_list,ub_list,maximum_flux=1e6,flux_penalty_
      for reaction_id in fva:
          if maximum_flux==None:
             continue
-         print reaction_id
+         #print reaction_id
          reaction=model.reactions.get_by_id(reaction_id)
          if reaction.lower_bound<0:
             if reaction_id not in label_model.turnover_flux_dict:
@@ -82,7 +82,7 @@ def variable_sampling(label_model,lb_list,ub_list,maximum_flux=1e6,flux_penalty_
     f.close()
      
   variable_sets=[]
-  print label_model.turnover_flux_dict  
+  #print label_model.turnover_flux_dict  
   for flux_dict in fluxes_dict:
      variables=[]
      for n,variable in enumerate(label_model.variable_list_dict):
@@ -117,7 +117,7 @@ def variable_sampling(label_model,lb_list,ub_list,maximum_flux=1e6,flux_penalty_
                 if reverse_id not in flux_dict:
                    flux_dict[reverse_id]=0.0
                 value=min(abs(flux_dict[reaction]),abs(flux_dict[reverse_id]))
-        print variable, value,lb,ub
+        #print variable, value,lb,ub
         value=max(min(value,ub),lb)
         variables.append(value)
      variable_sets.append(variables)
@@ -134,8 +134,8 @@ def sampling(model,n=100,processes=6,objective=None):
         for n_flux,flux in enumerate(row):
             flux_dict[reaction_ids[n_flux]]=flux
         flux_dict_list.append(flux_dict)
-        if objective!=None:
-           print flux_dict[objective]
+        """if objective!=None:
+           print flux_dict[objective]"""
     return flux_dict_list
 
 """

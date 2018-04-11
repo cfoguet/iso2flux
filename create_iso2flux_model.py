@@ -261,8 +261,8 @@ else:
        #check_simulated_fractions(label_model)
        passed_flag=check_steady_state(label_model,only_initial_m0=True,threshold=1e-6,precision=10,fn=output_name+"_validation.txt",fn_mode="w")
        if passed_flag==False:
-          "Summary saved in "+output_name+"_validation.txt"
+          print "Summary saved in "+output_name+"_validation.txt"
           break
    if passed_flag==True:
-      "Validation passed"
+      print "Validation passed"
 
