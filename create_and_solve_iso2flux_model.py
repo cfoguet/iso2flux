@@ -11,7 +11,7 @@ except:
  pass
 
 
-
+import multiprocessing
 import cobra
 from  warnings import warn
 import numpy as np
@@ -152,10 +152,10 @@ eqn_dir=None
 max_t=20
 validate=False
 pop_size=20
-n_gen=400
-number_of_processes=1
+n_gen=100
+number_of_processes=multiprocessing.cpu_count()
 output_prefix=output_name="Iso2Flux"
-max_cycles_without_improvement=8
+max_cycles_without_improvement=4
 compute_intervals=False
 incubation_time=None
 
@@ -316,7 +316,7 @@ label_problem_parameters={"label_weight":1,"target_flux_dict":None,"max_chi":1e6
 
 
 iso2flux_problem=define_isoflux_problem(label_model)
-optimal_solution,optimal_variables=optimize(label_model,iso2flux_problem,pop_size = pop_size,n_gen = n_gen,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement,stop_criteria_relative=0.005,initial_archi_x=[],lb_list=[],ub_list=[],max_flux=1e6,label_problem_parameters=label_problem_parameters)
+optimal_solution,optimal_variables=optimize(label_model,iso2flux_problem,pop_size = pop_size,n_gen = n_gen,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement,stop_criteria_relative=0.01,initial_archi_x=[],lb_list=[],ub_list=[],max_flux=1e6,label_problem_parameters=label_problem_parameters)
 
 label_model.best_chi2=optimal_solution
 export_flux_results(label_model,optimal_variables,fn=output_prefix+"_fluxes.csv")
@@ -341,7 +341,7 @@ if compute_intervals:
     max_chi=label_model.best_chi2+objective_tolerance
     reference_flux_group_dict,reaction_reference_flux_group_dict=find_flux_grups(label_model,reaction_list=None,irreversible_flag=irreversible_flag)
     label_problem_parameters={"label_weight":0.00000,"target_flux_dict":None,"max_chi":max_chi,"max_flux":1e6,"flux_penalty_dict":{},"verbose":True,"flux_weight":0.00000,"flux_unfeasible_penalty":10,"label_unfeasible_penalty":2}
-    flux_interval_dict,irreversible_flux_interval_dict=flux_variation(label_model,iso2flux_problem,reference_flux_group_dict,reference_parameters,label_problem_parameters,max_chi=max_chi,max_flux=1e6,flux_penalty_dict=flux_penalty_dict ,pop_size=pop_size ,n_gen=n_gen ,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement ,stop_criteria_relative=0.005 ,max_iterations=3,log_name="confidence.txt")
+    flux_interval_dict,irreversible_flux_interval_dict=flux_variation(label_model,iso2flux_problem,reference_flux_group_dict,reference_parameters,label_problem_parameters,max_chi=max_chi,max_flux=1e6,flux_penalty_dict=flux_penalty_dict ,pop_size=pop_size ,n_gen=n_gen ,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement ,stop_criteria_relative=0.05 ,max_iterations=1,log_name="confidence.txt")
     #variation_dict2=flux_variation(label_model,["rib5p_dem","fbp"],best_variables,label_problem_parameters,max_chi=max_chi,max_flux=max_flux,flux_penalty_dict=flux_penalty_dict ,pop_size=20 ,n_gen=20 ,n_islands=2 ,evolves_per_cycle=8 ,max_evolve_cycles=20 ,stop_criteria_relative=0.005 ,max_iterations=10,log_name="confidence.txt")
     write_fva(label_model.constrained_model,fn=output_prefix+"_flux_interval.csv",fva=flux_interval_dict,fraction=1,remove0=False,change_threshold=1e-6,mode="full",lp_tolerance_feasibility=1e-6,flux_precision=1e-3,reaction_list=reaction_reference_flux_group_dict)
     #Add output to a SBML model
