@@ -49,9 +49,9 @@ def add_turnover_metabolites(cobra_model, metabolite_id_list=[], epsilon=1e-6,la
         if isinstance(metabolite,list) and len(metabolite)>1:
            group_metabolites.append(metabolite)
         elif isinstance(metabolite,list):
-           single_metabolites.apppend(metabolite[0])
+           single_metabolites.append(metabolite[0])
         elif metabolite not in single_metabolites:  
-            single_metabolites.apppend(metabolite)
+            single_metabolites.append(metabolite)
     print group_metabolites
     for metabolites in  group_metabolites:
               met_id=""
