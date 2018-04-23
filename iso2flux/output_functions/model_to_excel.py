@@ -1,7 +1,30 @@
+import openpyxl
+
 def model_to_excel(model,name="model.xlsx"):
-    import openpyxl 
+         
     wb = openpyxl.Workbook()
-    sheet = wb.get_active_sheet()
+    sheet = wb.active
+    sheet.title="Reactions"
+    sheet['A1']="Reaction id"
+    sheet['B1']="Reaction"
+    sheet['C1']="Reaction name"
+    sheet['D1']="Lower bound"
+    sheet['E1']="Upper bound"
+    sheet['F1']="Objective coefficient"
+    sheet['G1']="Gene reaction rule"
+    sheet['H1']="Subsystem"
+    for n, reaction in enumerate(model.reactions):
+        nrow=n+2
+        sheet['A'+str(nrow)]=reaction.id
+        sheet['B'+str(nrow)]=reaction.reaction
+        sheet['C'+str(nrow)]=reaction.name
+        sheet['D'+str(nrow)]=reaction.lower_bound
+        sheet['E'+str(nrow)]=reaction.upper_bound
+        sheet['F'+str(nrow)]=reaction.objective_coefficient
+        sheet['G'+str(nrow)]=reaction.gene_reaction_rule
+        sheet['H'+str(nrow)]=reaction.subsystem
+        
+    sheet=wb.create_sheet(title="Metabolites")
     sheet.title = 'Metabolites'
     sheet['A1']="Metabolite id"
     sheet['B1']="Metabolite name"
@@ -14,16 +37,6 @@ def model_to_excel(model,name="model.xlsx"):
         sheet['C'+str(nrow)]=metabolite.compartment
         #sheet['D'+str(nrow)]=metabolite.formula.id    
     
-    sheet=wb.create_sheet(title="Reactions")
-    sheet['A1']="Reaction id"
-    sheet['B1']="Reaction name"
-    sheet['C1']="Reaction subsystem"
-    sheet['D1']="Reaction"
-    for n, reaction in enumerate(model.reactions):
-        nrow=n+2
-        sheet['A'+str(nrow)]=reaction.id
-        sheet['B'+str(nrow)]=reaction.name
-        sheet['C'+str(nrow)]=reaction.subsystem
-        sheet['D'+str(nrow)]=reaction.reaction
+    
     
     wb.save(name)
