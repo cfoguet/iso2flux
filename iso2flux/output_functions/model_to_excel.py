@@ -34,8 +34,8 @@ def model_to_excel(model,name="model.xlsx"):
         nrow=n+2
         sheet['A'+str(nrow)]=metabolite.id
         sheet['B'+str(nrow)]=metabolite.name
-        sheet['C'+str(nrow)]=metabolite.compartment
-        #sheet['D'+str(nrow)]=metabolite.formula.id    
+        sheet['C'+str(nrow)]=metabolite.formula
+        sheet['D'+str(nrow)]=metabolite.compartment    
     
     
     
