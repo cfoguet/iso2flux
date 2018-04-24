@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='iso2flux',
-      version='0.6.1',
+      version='0.7.0',
       description='iso2flux',
       author='Carles Foguet',
       author_email='cfoguet@ub.edu',

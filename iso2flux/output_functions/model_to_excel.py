@@ -28,8 +28,8 @@ def model_to_excel(model,name="model.xlsx"):
     sheet.title = 'Metabolites'
     sheet['A1']="Metabolite id"
     sheet['B1']="Metabolite name"
-    sheet['C1']="Metabolite compartment"
-    sheet['D1']="Metabolite formula"
+    sheet['C1']="Metabolite formula"
+    sheet['D1']="Metabolite compartment"
     for n, metabolite in enumerate(model.metabolites):
         nrow=n+2
         sheet['A'+str(nrow)]=metabolite.id
