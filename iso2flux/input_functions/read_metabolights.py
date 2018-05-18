@@ -255,7 +255,7 @@ def read_metabolights(label_model,file_name,name_id_dict={},selected_condition="
        print substrate_name
        substrate_list=substrate_id.split("/")
        print substrate_list
-       pattern_list=pattern.split("/")
+       pattern_list=string_pattern.split("/")
        abundance_list=[float(x) for x in str(abundance).split("/")]
        if lab_sub_abundance_percentage:
               abundance_list=[x/100.0 for x in abundance_list]
