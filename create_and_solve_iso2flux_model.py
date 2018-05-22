@@ -188,7 +188,7 @@ for opt, arg in opts:
          elif opt in ("flux_constraints=","-f"):
               constraints_file=arg
          elif opt in ("--output_prefix=","-o"):
-              output_name=arg
+              output_name=output_prefix=arg
          elif opt in ("--eqn_dir=","-q"):
               eqn_dir=arg
          elif opt in ("--max_reversible_turnover=","-t"):
@@ -197,8 +197,6 @@ for opt, arg in opts:
               validate=True
          elif opt in ("--number_of_processes=","-n"):
              number_of_processes=int(arg)            
-         elif opt in ("--output_prefix=","-o"):
-             output_prefix=arg
          elif opt in ("--population_size=","-p"):
              pop_size=int(arg)
          elif opt in ("--generations_per_cycle=","-g"):
