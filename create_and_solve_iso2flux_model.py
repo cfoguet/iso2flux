@@ -84,6 +84,7 @@ from iso2flux.output_functions.write_fluxes import export_flux_results
 from iso2flux.output_functions.export_label_results import export_label_results
 from iso2flux.fitting.optimize import optimize,flux_variation,define_isoflux_problem
 
+from iso2flux.fitting.covariance import get_std_deviation
 #################Function used to select the fluxes to be computed for confidence intervals
 
 def find_flux_grups(label_model,reaction_list=None,irreversible_flag=False):
@@ -317,7 +318,10 @@ iso2flux_problem=define_isoflux_problem(label_model)
 optimal_solution,optimal_variables=optimize(label_model,iso2flux_problem,pop_size = pop_size,n_gen = n_gen,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement,stop_criteria_relative=0.01,initial_archi_x=[],lb_list=[],ub_list=[],max_flux=1e6,label_problem_parameters=label_problem_parameters)
 
 label_model.best_chi2=optimal_solution
-export_flux_results(label_model,optimal_variables,fn=output_prefix+"_fluxes.csv")
+
+flux_sd_dict, hessian,inverse_hessian,covariance=get_std_deviation(label_model,optimal_variables,initial_step=1e-3)
+
+export_flux_results(label_model,optimal_variables,fn=output_prefix+"_fluxes.csv",flux_sd_dict=flux_sd_dict)
 objfunc(label_model,optimal_variables)
 export_label_results(label_model,fn=output_prefix+"_label.csv",show_chi=True,show_emu=False,show_fluxes=False)
 np.savetxt(output_prefix+"_variables.txt",optimal_variables)
