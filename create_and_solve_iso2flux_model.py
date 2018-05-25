@@ -207,7 +207,10 @@ for opt, arg in opts:
          elif opt in ("--compute_confidence_intervals","-i"):
              compute_intervals=True
          elif opt in ("--incubation_time=","-u"):
-              incubation_time=str(arg)
+              try:
+                 incubation_time=float(arg)
+              except: 
+                 raise Exception ("Incubation time "+str(arg)+" could not be converted into float")  
 
 
 
