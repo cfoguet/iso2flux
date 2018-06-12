@@ -276,7 +276,7 @@ def read_metabolights(label_model,file_name,name_id_dict={},selected_condition="
            label_model.experimental_dict[condition_name][emuid]={}
            #print labelled_substrate_emuid_isotopologue_replicate_injection_dict
            for mi in labelled_substrate_emuid_isotopologue_replicate_injection_dict[labelled_substrate][emuid]:
-               if float(mi)>emu0_dict[emuid]["size"]:
+               if float(mi)>emu0_dict[emuid]["size"] or float(mi)<0:
                   #print mi,emu0_dict[emuid]["size"],"ccccccccccccccccccccccccccccccccccccccc"
                   continue
                data_dict=labelled_substrate_emuid_isotopologue_replicate_injection_dict[labelled_substrate][emuid][mi] 
