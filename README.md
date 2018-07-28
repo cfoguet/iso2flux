@@ -138,7 +138,7 @@ This script works similar to the p13cmfa.py script but instead of minimizing flu
  <a name="ConstraintBasedmodelfile"></a>
 ## Constraint Based model file
  A CBM that provides the complete metabolic network stoichiometry, the default flux bounds and the gene-protein-reaction association used to integrate gene expression data. The CBM will be used to compute valid steady state flux distributions. The CBM can be entered either as a SBML file or as a CSV o XLSX file. An example of the information that should be included in CSV or XLSX file is provided bellow. 
-![Constraints](images/cbm.png) 
+![cbm](images/cbm.png) 
  * A: Reactions (Mandatory): Describes the reactions of the CBM
 o	Reaction ID (Mandatory): ID that will be given to the reaction. ID must be unique to a given reaction
 o	Stoichiometry (Mandatory): Stoichiometry of the reaction
@@ -156,7 +156,7 @@ o	Compartment: Cellular compartment where the metabolite is found
 ## Label propagation rules
 
 A XLSX or CSV file that defines how label is propagated in the model. It contains 2 type of information, metabolites where label can propagate and its attributes and reactions that propagate label and its attributes. An example indicating the different options is provided bellow
-![Constraints](images/rules.png)
+![rules](images/rules.png)
 A Metabolites where label is propagated: Contains the following information:
  * Metabolite/s: ID(s) of the metabolites that can propagate label. Should be the same 
  * metabolite IDs used in the CBM. When several IDs are entered separated by a coma it indicates that these metabolites should be grouped into a single label pool
@@ -172,7 +172,7 @@ Iso2Flux is programmed to recognize whether a given row contains information abo
  <a name="Experimentaldatafile"></a>
 ## Experimental data file 
 One or more XLSX or CSV file that defines the labelled substrates used and the quantified isotopologues. Below is an example of the information that the file should contain. 
-![Constraints](images/edata.png)
+![edata](images/edata.png)
 A Labelled substrates used and its abundance. Contains the following information:
  * Metabolite ID, ID of the labelled substrates, must be the same used in the CBM
  * Label pattern, indicates of the positions of the metabolite that contain a heavy isotope. 1 denotes heavy isotope (e.g. 13C) and 0 denotes non-heavy isotope (12C). In the example above 1,1,0,0,0,0 indicates we have glucose labelled with 13C in the first two positions. 
@@ -193,7 +193,7 @@ The fields Name of the measurements, Metabolite id, Positions measured and m/SM 
 <a name="Constraintsfile"></a>
 ## Constraints file:
 A XLSX or CSV file that defines constraints for the CBM
-![Constraints](images/constraints.png)
+![Constraints](images/constraints_file.png)
 
 A: When a reaction ID is found on the first column the second column will define the lower bound of the reaction, the third column the upper bound of the reaction and the fourth column the objective coefficient (if its positive the flux will be maximized and if its negative the flux will be minimized).
 
