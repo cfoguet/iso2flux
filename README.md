@@ -193,6 +193,7 @@ The fields Name of the measurements, Metabolite id, Positions measured and m/SM 
 <a name="Constraintsfile"></a>
 ## Constraints file:
 A XLSX or CSV file that defines constraints for the CBM
+
 ![Constraints](images/constraints.png)
 
 A: When a reaction ID is found on the first column the second column will define the lower bound of the reaction, the third column the upper bound of the reaction and the fourth column the objective coefficient (if its positive the flux will be maximized and if its negative the flux will be minimized).
