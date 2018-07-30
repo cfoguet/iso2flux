@@ -22,7 +22,7 @@ CHEBI_identifier_col_name="CHEBI identifier"
 incubation_time_colname="Factor Value[Incubation time]"
 
 
-tracer_regular_expression=re.compile("(.*)\[(.+)-C13\]-(.+)")
+tracer_regular_expression=re.compile("(.*)\[(.+)-(13C|C13)(.*)\]-(.+)")
 isotopologue_regular_expression=re.compile(".*13c(.+)")
 if __name__=="__main__":
    from iso2flux.misc.read_spreadsheets import read_spreadsheets
@@ -123,7 +123,7 @@ def read_metabolights(label_model,file_name,name_id_dict={},selected_condition="
            for potential_substrate in substrate.split("/"):
              tracer_match=tracer_regular_expression.match(potential_substrate)
              try:
-               potential_substrate=tracer_match.group(1)+tracer_match.group(3)
+               potential_substrate=tracer_match.group(1)+tracer_match.group(5)
                tracer_pattern_temp=tracer_match.group(2) #To be used in future version
              except:
                pass 
