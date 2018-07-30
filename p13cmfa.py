@@ -54,6 +54,7 @@ relative_tolerance=True
 initial_flux_estimation=None
 n_iterations=1
 max_cycles_without_improvement=9 
+file_name=None
 
 
 for opt, arg in opts:
@@ -82,7 +83,7 @@ for opt, arg in opts:
              max_cycles_without_improvement=int(arg)
 
 
-print file_name
+ 
 
 if file_name==None:
     tk=Tkinter.Tk()

@@ -45,7 +45,7 @@ n_gen=200
 number_of_processes=6
 output_prefix=None
 max_cycles_without_improvement=9
-
+file_name=None
 
 
 for opt, arg in opts:
@@ -64,7 +64,7 @@ for opt, arg in opts:
              max_cycles_without_improvement=int(arg)
 
 
-print file_name
+
 
 if file_name==None:
     tk=Tkinter.Tk()
@@ -104,7 +104,7 @@ label_model.best_chi2=optimal_solution
 
 flux_sd_dict, hessian,inverse_hessian,covariance=get_std_deviation(label_model,optimal_variables,initial_step=1e-3)
 
-export_flux_results(label_model,optimal_variables,fn=output_prefix+"_fluxes.csv",flux_sd_dict)
+export_flux_results(label_model,optimal_variables,fn=output_prefix+"_fluxes.csv",flux_sd_dict=flux_sd_dict)
 objfunc(label_model,optimal_variables)
 export_label_results(label_model,fn=output_prefix+"_label.csv",show_chi=True,show_emu=True,show_fluxes=False)
 np.savetxt(output_prefix+"_variables.txt",optimal_variables)

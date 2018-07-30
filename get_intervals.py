@@ -57,6 +57,7 @@ initial_flux_estimation=None
 flux_penalty_dict={}
 reaction_list_file=None
 max_cycles_without_improvement=9
+file_name=None
 
 for opt, arg in opts:
          print [opt,arg]
