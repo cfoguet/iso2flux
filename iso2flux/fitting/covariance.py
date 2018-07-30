@@ -65,7 +65,7 @@ def get_std_deviation(label_model,optimal_variables,initial_step=1e-3):
             """if abs(second_derivative)<1e-10:
                second_derivative=0 """
             hessian[n_row][n_col]=hessian[n_row][n_col]=max(min(round(second_derivative,10),100000000),-100000000)#round(second_derivative,10)#max(min(round(second_derivative,10),100000),-100000)
-    
+    label_model.flux_solver_free_fluxes=original_solution
     inverse_hessian=np.linalg.inv(hessian)
     try:
        inverse_hessian=np.linalg.inv(hessian)
