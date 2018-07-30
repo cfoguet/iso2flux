@@ -7,7 +7,7 @@ setup(name='iso2flux',
       author_email='cfoguet@ub.edu',
       url='',
       scripts=["create_and_solve_iso2flux_model.py"],
-      install_requires=["pygmo==2.3","cython==0.27.3","python-libsbml==5.16.0","openpyxl==2.5.0","numpy==1.14.0","scipy==0.19.0","sympy==1.0","lxml","cobra==0.7"],
+      install_requires=["pygmo==2.3","cython==0.27.3","python-libsbml==5.16.0","openpyxl==2.5.0","numpy==1.14.0","scipy==0.19.0","sympy==1.0","lxml","cobra==0.7.0"],
       packages=find_packages(),
      )
 
