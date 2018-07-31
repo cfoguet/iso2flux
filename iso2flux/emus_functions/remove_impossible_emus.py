@@ -52,11 +52,11 @@ def remove_impossible_emus(label_model,force_irreversibility=True):
                          if changes_in_products.get(m0)==0:
                             del changes_in_products[m0]
                   if changes_in_products!={}:
-                     print (emu_reaction,emu_size)
-                     print expanded_reaction_object.reaction,changes_in_products
+                     #print (emu_reaction,emu_size)
+                     #print expanded_reaction_object.reaction,changes_in_products
                      expanded_reaction_object.add_metabolites(changes_in_products)
-                     print expanded_reaction_object.reaction 
-                     print "----------------------------------------------------------------------------------------------"
+                     #print expanded_reaction_object.reaction 
+                     #print "----------------------------------------------------------------------------------------------"
                   
                   
    
@@ -152,7 +152,7 @@ def remove_impossible_emus(label_model,force_irreversibility=True):
            if len(reaction.metabolites)==0 and reaction not in reactions_to_remove:
               reactions_to_remove.append(reaction) 
       for reaction in reactions_to_remove:
-         print "removing "+reaction.id
+         #print "removing "+reaction.id
          f.write("removing "+reaction.id+"\n")
          emu_reaction=label_model.expanded_reaction_emu_dict[reaction.id]
          label_model.emu_reaction_expanded_dict[emu_reaction].remove(reaction.id)
@@ -184,7 +184,7 @@ def remove_m0_reactions(label_model,impossible_isotopomers,possible_isotopomers)
                break
         if only_m0:
            only_m0_list.append(emu)
-    print only_m0_list
+    #print only_m0_list
     reactions_to_remove=[]
     for emu in sorted(only_m0_list):
         mi0_id=label_model.emu_dict[emu]["mid"][0]
@@ -211,7 +211,7 @@ def remove_m0_reactions(label_model,impossible_isotopomers,possible_isotopomers)
        f.write(reaction.id+" "+reaction.reaction+"\n")
     f.close()
     for reaction in reactions_to_remove:
-         print "removing"+reaction.id
+         #print "removing"+reaction.id
          emu_reaction=label_model.expanded_reaction_emu_dict[reaction.id]
          del label_model.emu_reaction_expanded_dict[emu_reaction]
          del label_model.expanded_reaction_emu_dict[reaction.id]

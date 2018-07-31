@@ -98,7 +98,7 @@ def read_metabolights(label_model,file_name,name_id_dict={},selected_condition="
               time=float(row[n_time])
            except:
               time=0.0
-           print time
+           #print time
            if time not in time_row_dict:
               time_row_dict[time]=[]
            time_row_dict[time].append(row)
@@ -140,7 +140,7 @@ def read_metabolights(label_model,file_name,name_id_dict={},selected_condition="
                      if potential_substrate.rstrip()!="":
                         print "Warning: Substrate "+str(potential_substrate)+ " was not found in the constraint based model and will be ignored"
                      continue
-           print new_substrate
+           #print new_substrate
            substrate=new_substrate[:-1]
            abundance=row[n_lab_sub_abundance]
            pattern=row[n_lab_pattern_substrate]
@@ -187,7 +187,7 @@ def read_metabolights(label_model,file_name,name_id_dict={},selected_condition="
                   iso_object=label_model.met_id_isotopomer_dict[metabolite_id]
            else:
                   print (metabolite_id+" not defined as isotopomer")
-           print row
+           #print row
            emuid="emu_"+iso_object.id+"_"
            #print emuid
            local_emu0_dict["done"]=False
@@ -252,14 +252,14 @@ def read_metabolights(label_model,file_name,name_id_dict={},selected_condition="
        #print initial_label
        condition_name=(substrate_name+"_"+str(string_pattern)+"_"+str(abundance)).replace(" ","")
        substrate_id=substrate_name
-       print substrate_name
+       #print substrate_name
        substrate_list=substrate_id.split("/")
-       print substrate_list
+       #print substrate_list
        pattern_list=string_pattern.split("/")
        abundance_list=[float(x) for x in str(abundance).split("/")]
        if lab_sub_abundance_percentage:
               abundance_list=[x/100.0 for x in abundance_list]
-       print substrate_list
+       #print substrate_list
        for n_tracer,individual_substrate in enumerate(substrate_list):
            pattern=[int(x) for x in pattern_list[n_tracer].split(",") ]
            label_model.add_initial_label(individual_substrate,[[pattern,abundance_list[n_tracer]]],condition=condition_name,total_concentration=1)

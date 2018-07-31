@@ -56,10 +56,10 @@ def create_minimal_fux_model(metabolic_model,fraction_of_optimum_objective=0.8, 
               reporter_coef=flux_penalty_dict[reflection]
            else:
               reporter_coef=1
-              print "Warning: reaction "+reaction.id+" assigned default weight of 1"
+              #print "Warning: reaction "+reaction.id+" assigned default weight of 1"
         else:
               reporter_coef=1
-              print "Warning: reaction "+reaction.id+" assigned default weight of 1"
+              #print "Warning: reaction "+reaction.id+" assigned default weight of 1"
         if reporter_coef!=0:
            reaction.add_metabolites({flux_reporter:reporter_coef})        
     total_flux_reaction = Reaction('total_flux')

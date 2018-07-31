@@ -29,7 +29,7 @@ def remove_identical_reactions(label_model):
            if original_reaction.metabolites==original_reaction2.metabolites:
               matched_reactions_temp.append(original_reaction2)
               analysed_reactions.append(original_reaction2)
-              print (original_reaction.id+" "+original_reaction2.id)
+              #print (original_reaction.id+" "+original_reaction2.id)
               count+=1
        analysed_reactions.append(original_reaction)    
        if len(matched_reactions_temp)>1:
@@ -40,12 +40,12 @@ def remove_identical_reactions(label_model):
        new_reaction_name=""
        base_reactions=[]
        for reaction in reactions_sets:
-           print reaction.id
+           #print reaction.id
            if isinstance(label_model.emu_reaction_dict[reaction.id],list):
                base_reactions+=label_model.emu_reaction_dict[reaction.id]
            else:
                base_reactions.append(label_model.emu_reaction_dict[reaction.id])
-           print base_reactions
+           #print base_reactions
            """if reaction==reactions_sets[len(reactions_sets)-1]: #When the last reaction is reached the id is added to the new_id without the additional "_"
               new_reaction_name+=reaction.id
               break  

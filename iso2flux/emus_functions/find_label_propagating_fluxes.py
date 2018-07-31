@@ -27,9 +27,9 @@ def find_label_propagating_fluxes(label_model):
                label_model.reactions_propagating_label.append(reaction_id)
          else:
               reaction_id +" already present"
-  print group_reaction_candidates
+  #print group_reaction_candidates
   for emu_reaction in group_reaction_candidates:
-         print emu_reaction
+         #print emu_reaction
          #Find the size where the reaction belongs
          for size in label_model.size_model_dict:
           if emu_reaction in label_model.size_model_dict[size].reactions:
@@ -62,7 +62,7 @@ def find_label_propagating_fluxes(label_model):
            label_model.reactions_propagating_label.append(reaction_id)
          elif len(local_label_reactions_dict)>1:
            reaction_id=reaction_id[:-1]
-           print [reaction_id,local_label_reactions_dict]
+           #print [reaction_id,local_label_reactions_dict]
            if reaction_id not in label_model.reactions_propagating_label:
              label_model.label_groups_reactions_dict[reaction_id]=local_label_reactions_dict 
              label_model.reactions_propagating_label.append(reaction_id) 

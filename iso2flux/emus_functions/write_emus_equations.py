@@ -150,9 +150,9 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
             string_flux ="  cdef double J_"+reaction.id.replace(")","_").replace("(","_").replace("[","_").replace("]","_")+"= J_"+label_model.expanded_reaction_emu_dict[reaction.id].replace(")","_").replace("(","_").replace("[","_").replace("]","_")
             all_m0_flag=True #A flag to check if all substrates are m0
             for metabolite in reaction.metabolites:
-                print reaction.metabolites
-                print reaction.id
-                print reaction.reaction
+                #print reaction.metabolites
+                #print reaction.id
+                #print reaction.reaction
                 emu=label_model.expanded_emu_dict[metabolite.id]
                 local_size=label_model.emu_dict[emu]["size"] 
                 coef=float(reaction.metabolites[metabolite])
@@ -163,7 +163,7 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
                 elif coef<0:
                      if (metabolite.id!=label_model.emu_dict[emu]["mid"][0] or force_balance==False) and metabolite.id not in label_model.input_n_dict:
                         all_m0_flag=False
-                        print [emu,local_size,size]
+                        #print [emu,local_size,size]
                         if steady_state==False and local_size<size:
                            variable_name="*"+metabolite.id
                         else: 
@@ -191,7 +191,7 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
                             variable_name="*np_input_yy0[%s]"%(label_model.input_n_dict[product.id])
                         else:
                            variable_name="*"+product.id
-                        print [reaction.id,reaction.notes["reflection"]]
+                        #print [reaction.id,reaction.notes["reflection"]]
                         string_flux+=(" -J_"+label_model.expanded_reaction_emu_dict[reaction.notes["reflection"]].replace(")","_").replace("(","_").replace("[","_").replace("]","_")+variable_name)  
             if all_m0_flag==True and force_balance==True: #If we do not simulate m0 we do not need to write a raection that only consumes and produces m0
                continue                 

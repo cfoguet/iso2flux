@@ -29,8 +29,8 @@ def get_derivative(label_model,reference_vector,n_row,original_objective,optimal
 
 
 def get_second_derivative(label_model,reference_vector,n_row,n_col,optimal_variables,original_derivative,step=1e-2,min_step=1e-6):
- print "-----------------------------"   
- print original_derivative
+ #print "-----------------------------"   
+ #print original_derivative
  previous_derivative=1e99
  for n in range(0,50):
     step=step/2
@@ -39,11 +39,11 @@ def get_second_derivative(label_model,reference_vector,n_row,n_col,optimal_varia
     new_vector_up[n_col]+=+step
     label_model.flux_solver_free_fluxes=new_vector_up
     new_objective,c=objfunc(label_model,optimal_variables,update_variables=False,simulate_infeasible=True)
-    print optimal_variables
+    #print optimal_variables
     derivative_up=get_derivative(label_model,new_vector_up,n_row,new_objective,optimal_variables,step=1e-3)
-    print step,derivative_up,derivative_up-original_derivative,label_model.flux_solver_free_fluxes 
+    #print step,derivative_up,derivative_up-original_derivative,label_model.flux_solver_free_fluxes 
     second_derivative_up=(derivative_up-original_derivative)/step
-    print second_derivative_up
+    #print second_derivative_up
     if abs(second_derivative_up-previous_derivative)<abs(second_derivative_up*0.05):
        #print "break",first_derivative_up-previous_derivative,first_derivative_up*0.05
        break
@@ -84,7 +84,7 @@ def get_std_deviation(label_model,optimal_variables,initial_step=1e-3):
         value=pow(covariance[n_row][n_row],0.5)
         if label_model.flux_solver_n_reaction_dict[n_row] in nan_free_fluxes:
            value="nan"
-        print n_row,label_model.flux_solver_n_reaction_dict[n_row], value
+        #print n_row,label_model.flux_solver_n_reaction_dict[n_row], value
         flux_std_error_dict[label_model.flux_solver_n_reaction_dict[n_row]]=value
     
     return flux_std_error_dict, hessian,inverse_hessian,covariance

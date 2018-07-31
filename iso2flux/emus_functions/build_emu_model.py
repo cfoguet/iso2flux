@@ -37,7 +37,7 @@ def build_emu_model(label_model,emu0_dict):
     emu_dict_copy=copy.deepcopy(emu_dict)   
     for emu_id in emu_dict_copy:
        emu=emu_dict_copy[emu_id]
-       print emu
+       #print emu
        if emu_dict_copy[emu_id]["done"]==True:
           continue
        else:

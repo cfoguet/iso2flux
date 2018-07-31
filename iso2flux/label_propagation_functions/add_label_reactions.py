@@ -12,18 +12,18 @@ def add_label_reactions(label_model,reaction_id,label_propagation={},substrates_
 	    reaction_id=reaction_id[0]
       if not isinstance(reaction_id,list): 
           if reaction_id not in model.reactions:
-             print "Reaction "+reaction_id+" not found"
+             #print "Reaction "+reaction_id+" not found"
              return
           reference_reaction=model.reactions.get_by_id(reaction_id)
           if reference_reaction.lower_bound==0.0 and reference_reaction.upper_bound==0.0 and reference_reaction not in label_model.reactions_with_forced_turnover: #If the reaction is inactive do not add it
              if "reflection" not in reference_reaction.notes:
-                 print "Reaction "+reaction_id+" ignored as it is inactive"
+                 #print "Reaction "+reaction_id+" ignored as it is inactive"
                  return
              else:
                reflection_reaction_id=reference_reaction.notes["reflection"]
                reflection_reaction=model.reactions.get_by_id(reflection_reaction_id)
                if reflection_reaction.lower_bound==0.0 and reflection_reaction.upper_bound==0.0:
-                  print "Reaction "+reaction_id+" ignored as it is inactive"
+                  #print "Reaction "+reaction_id+" ignored as it is inactive"
                   return
       else: #If a list of reactions is added the reactions will be merged
           reference_reaction=process_reaction_list(label_model,reaction_id)
@@ -136,14 +136,14 @@ def process_reaction_list(label_model,reaction_list):
                         if isotopomer.input==False:
 			   reactant_list.append(isotopomer.id)
 			
-		print reactant_list
+		#print reactant_list
 		
 		if reference_reactants_list==[]:
 		   reference_reactants_list=sorted(reactant_list)
 		if reference_reactants_list!=sorted(reactant_list):
 		   is_reaction_group=False
 		   break
-                print reactant_list,reference_reactants_list
+                #print reactant_list,reference_reactants_list
 	if is_reaction_group:
                 
 		reaction_group_dict={}
@@ -202,8 +202,8 @@ def process_reaction_list(label_model,reaction_list):
              #reflection=Reaction(merged_reaction_id+"_reverse")
              reference_reaction.notes["reflection"]=merged_reaction_id+"_reverse"
             else:
-             print reversible_merged_reaction_list
-             print "Merged reaction removed reflections"
+             #print reversible_merged_reaction_list
+             #print "Merged reaction removed reflections"
              #Make al reactions of the merged reactions irreversible if one is irreversible
              for forward_reaction in reversible_merged_reaction_list:
                  reflection=label_model.irreversible_metabolic_model.reactions.get_by_id(forward_reaction.id+"_reverse")

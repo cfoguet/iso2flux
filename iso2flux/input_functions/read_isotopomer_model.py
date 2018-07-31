@@ -33,13 +33,13 @@ def read_isotopomer_model(label_model,file_name,header=True):
            try:
             if row[0].split(",")[0] in label_model.metabolic_model.metabolites: #Check if you are looking at the list of metabolites
                metabolites_rows.append(row)
-               print row
+               #print row
             elif row[0].split(",")[0] in label_model.metabolic_model.reactions:
                reactions_rows.append(row)
            except:
                pass 
     for n,row in enumerate(metabolites_rows):
-               print row
+               #print row
                if row[0]==None:
                   continue
                reference_metabolites=str(row[0].replace(" ","")).split(",")
@@ -113,7 +113,7 @@ def read_isotopomer_model(label_model,file_name,header=True):
                             label_model.reactions_with_forced_turnover.append(reaction.id) 
                
                iso=isotopomer(reference_metabolite_id=reference_metabolites,label_model=label_model,ncarbons=ncarbons,symmetric=symmetric,label_input=label_input,iso_id=None)
-               print iso.id      
+               #print iso.id      
     cobra.manipulation.convert_to_irreversible(label_model.irreversible_metabolic_model)#Convert any Exchange we migh have added to irreversible
     remove_produced_inputs(label_model) #Remove inputs that are products of irreversible reactions
     label_re=re.compile("(.+)[(](.+)[)]")
@@ -127,7 +127,7 @@ def read_isotopomer_model(label_model,file_name,header=True):
                substrates_dict={}
                products_dict={}
                label_propagation={}
-               print reaction_id
+               #print reaction_id
                if len(row)>2:
                  if (row[1] not in (None,""," ")) and (row[2] not in (None,""," ")):
                   #Get substrates
@@ -157,7 +157,7 @@ def read_isotopomer_model(label_model,file_name,header=True):
                              substrate_n=label_id_dict[label_id][1]
                              label_propagation["prod"+str(n_prod)].append([substrate_id,substrate_n])
                #print [label_propagation,products_dict,substrates_dict]
-               print [reaction_id,substrates_dict,substrates_dict]
+               #print [reaction_id,substrates_dict,substrates_dict]
                add_label_reactions(label_model,reaction_id,label_propagation=label_propagation,products_dict=products_dict,substrates_dict=substrates_dict)
     add_missing_uni_uni_reactions(label_model)
 
@@ -172,7 +172,7 @@ def remove_produced_inputs(label_model):
                    continue
                coef=reaction.metabolites[metabolite]
                if coef>0.0:
-                  print reaction
+                  #print reaction
                   reaction.add_metabolites({metabolite:-coef})
 
 def add_missing_uni_uni_reactions(label_model):
