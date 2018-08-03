@@ -27,13 +27,13 @@ isotopologue_regular_expression=re.compile(".*13c(.+)")
 if __name__=="__main__":
    from iso2flux.misc.read_spreadsheets import read_spreadsheets
 
-def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_time=None,minimum_sd=0.01,rsm=True):
+def read_metabolights(label_model,file_name,name_id_dict={},selected_condition="Ctr",selected_time=None,minimum_sd=0.01,rsm=True):
    label_model.minimum_sd=minimum_sd
    #TODO account for multiple time units
    emu0_dict={}
    label_model.experimental_dict={}
    label_model.data_name_emu_dict={}
-   name_id_dict={}
+   
    #Get name equivalency
    for x in label_model.metabolic_model.metabolites:
        if x.name==None or x.name=="":
@@ -94,16 +94,22 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
               continue
            if str(row[n_time]).rstrip().lstrip()=="":
               continue
-           time=float(row[n_time])
+           try:
+              time=float(row[n_time])
+           except:
+              time=0.0
+           print time
            if time not in time_row_dict:
               time_row_dict[time]=[]
            time_row_dict[time].append(row)
            
        if selected_time==None:
           selected_time=max(time_row_dict)
-          print "selected time ", selected_time              
+          print "selected time ", selected_time
+       if selected_time not in time_row_dict:
+          raise Exception ("Incubation time "+str(selected_time)+" "+"is not a valid option. Valid options are:"+str(time_row_dict.keys()))              
        for n,row in enumerate(time_row_dict[selected_time]):
-           print row
+           #print row
            #condition=row[n_condition]
            metabolite_name=str(row[n_metabolite_name])
            unrpocessed_carbon_range=row[n_carbon_range]
@@ -111,23 +117,31 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
            replicate=str(row[n_replicate])
            injection=str(row[n_injection])
            #print [replicate,injection]
-           tracer_expression=row[n_substrate]
-           tracer_match=tracer_regular_expression.match(tracer_expression)
-           try:
-             substrate=tracer_match.group(1)+tracer_match.group(3)
-             tracer_pattern_temp=tracer_match.group(2) #To be used in future version
-           except:
-             substrate=row[n_substrate]
-           #
-           if substrate.lower() in name_id_dict:
-              substrate=name_id_dict[substrate.lower()][0] #Assume that so far all metabolites are the same label pool regardles of the compartment
-           else: #If the name was not found try the CHEBY_ID
-              try:
-                if CHEBI_identifier in name_id_dict:
-                   substrate=name_id_dict[substrate.lower()][0]
-              except:
-                   print "Warning: Substrate "+str(substrate)+ " was not found in the constraint based model and will be ignored"
-                   continue
+           substrate=row[n_substrate]
+           
+           new_substrate=""
+           for potential_substrate in substrate.split("/"):
+             tracer_match=tracer_regular_expression.match(potential_substrate)
+             try:
+               potential_substrate=tracer_match.group(1)+tracer_match.group(3)
+               tracer_pattern_temp=tracer_match.group(2) #To be used in future version
+             except:
+               pass 
+                
+               #potential substrate
+               
+             if potential_substrate.lower() in name_id_dict:
+                new_substrate+=name_id_dict[potential_substrate.lower()][0]+"/" #Assume that so far all metabolites are the same label pool regardles of the compartment
+             else: #If the name was not found try the CHEBY_ID
+                try:
+                  if CHEBI_identifier in name_id_dict:
+                     new_substrate+=name_id_dict[potential_substrate.lower()][0]+"/"
+                except:
+                     if potential_substrate.rstrip()!="":
+                        print "Warning: Substrate "+str(potential_substrate)+ " was not found in the constraint based model and will be ignored"
+                     continue
+           print new_substrate
+           substrate=new_substrate[:-1]
            abundance=row[n_lab_sub_abundance]
            pattern=row[n_lab_pattern_substrate]
            #print [substrate,n_substrate,abundance,pattern]
@@ -148,9 +162,6 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
              continue
            #print [n_isotopologue,row[n_isotopologue],isotopologue]
            isotopologue_abundance=max(float(row[n_isotopologue_abundance]),0)
-           if lab_sub_abundance_percentage:
-              abundance=float(abundance)/100.0
-              #print abundance
            if isotopologue_fraction_abundance_percentage:
               isotopologue_abundance=float(isotopologue_abundance)/100.0
            labelled_substrate=str(substrate)+"$/$"+str(pattern)+"$/$"+str(abundance) 
@@ -163,7 +174,8 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
                 if CHEBI_identifier in name_id_dict:
                    metabolite_id=name_id_dict[CHEBI_identifier.lower()][0]
               except:
-                   print "Warning: Metabolite "+str(metabolite_name)+ "was not found in the constraint based model and will be ignored"
+                   if metabolite_name.rstrip()!="":
+                      print "Warning: Metabolite "+str(metabolite_name)+ "was not found in the constraint based model and will be ignored"
                    continue
            carbon_range=unrpocessed_carbon_range.lower().replace("c","").split("-")
            if len(carbon_range)>1: 
@@ -175,6 +187,7 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
                   iso_object=label_model.met_id_isotopomer_dict[metabolite_id]
            else:
                   print (metabolite_id+" not defined as isotopomer")
+           print row
            emuid="emu_"+iso_object.id+"_"
            #print emuid
            local_emu0_dict["done"]=False
@@ -235,17 +248,25 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
        initial_label=labelled_substrate.split("$/$")
        substrate_name=initial_label[0]
        string_pattern=initial_label[1]
-       abundance=float(initial_label[2]) 
+       #abundance=float(initial_label[2]) 
        #print initial_label
-       condition_name=(substrate_name+"_"+str(string_pattern)+"_"+str(round(abundance,4))).replace(" ","")
+       condition_name=(substrate_name+"_"+str(string_pattern)+"_"+str(abundance)).replace(" ","")
        substrate_id=substrate_name
-       pattern=[int(x) for x in string_pattern.split(",") ]
-       label_model.add_initial_label(substrate_id,[[pattern,abundance]],condition=condition_name,total_concentration=1)
+       print substrate_name
+       substrate_list=substrate_id.split("/")
+       print substrate_list
+       pattern_list=string_pattern.split("/")
+       abundance_list=[float(x) for x in str(abundance).split("/")]
+       if lab_sub_abundance_percentage:
+              abundance_list=[x/100.0 for x in abundance_list]
+       print substrate_list
+       for n_tracer,individual_substrate in enumerate(substrate_list):
+           pattern=[int(x) for x in pattern_list[n_tracer].split(",") ]
+           label_model.add_initial_label(individual_substrate,[[pattern,abundance_list[n_tracer]]],condition=condition_name,total_concentration=1)
        label_model.experimental_dict[condition_name]={}
        #Remove the measruments from the subtrate if thexy exist as they can lead to error 
        for emuid in emu0_dict.keys():
-           print substrate_id, emu0_dict[emuid]["met_id"].lower()
-           if emu0_dict[emuid]["met_id"]==substrate_id:
+           if emu0_dict[emuid]["met_id"]in substrate_id.split("/"):
               emus_to_remove.append(emuid)
               del(emu0_dict[emuid])
           
@@ -255,7 +276,7 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
            label_model.experimental_dict[condition_name][emuid]={}
            #print labelled_substrate_emuid_isotopologue_replicate_injection_dict
            for mi in labelled_substrate_emuid_isotopologue_replicate_injection_dict[labelled_substrate][emuid]:
-               if float(mi)>emu0_dict[emuid]["size"]:
+               if float(mi)>emu0_dict[emuid]["size"] or float(mi)<0:
                   #print mi,emu0_dict[emuid]["size"],"ccccccccccccccccccccccccccccccccccccccc"
                   continue
                data_dict=labelled_substrate_emuid_isotopologue_replicate_injection_dict[labelled_substrate][emuid][mi] 
@@ -268,11 +289,9 @@ def read_metabolights(label_model,file_name,selected_condition="Ctr",selected_ti
                #print [emuid,mi]
                label_model.experimental_dict[condition_name][emuid][int(mi)]={"m":mean,"sd":sd}
    #Remove the measruments from the subtrate if thexy exist as they can lead to error
-   print emus_to_remove
    for  emuid in emus_to_remove:
         for condition in label_model.experimental_dict:
             if emuid in label_model.experimental_dict[condition]:
                del(label_model.experimental_dict[condition][emuid]) 
    label_model.emu0_dict=label_model.emu_dict=emu0_dict
-   print name_id_dict
    return emu0_dict,label_model.experimental_dict 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This script works similar to the p13cmfa.py script but instead of minimizing fluxes it minimizes and maximizes each flux individually to estimate the variation interval for each flux. 
 --iso2flux_model_file=,-I (mandatory):  path to the iso2flux model. 
@@ -56,6 +57,7 @@ initial_flux_estimation=None
 flux_penalty_dict={}
 reaction_list_file=None
 max_cycles_without_improvement=9
+file_name=None
 
 for opt, arg in opts:
          print [opt,arg]

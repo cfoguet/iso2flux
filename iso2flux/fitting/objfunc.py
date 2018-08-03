@@ -1,6 +1,6 @@
 from ..emus_functions.c13solver import c13solver 
 from get_objective_function import get_objective_function as get_xi2
-def objfunc(label_model,variables,label_weight=1,simulate_label=True,mode="fsolve",target_flux_dict=None,max_chi=1e16,max_flux=1e16,flux_penalty_dict={},flux_weight=1,verbose=False,abort_when_above_max_flux=False,label_unfeasible_penalty=1e9,flux_unfeasible_penalty=1e6,simulate_infeasible=False):
+def objfunc(label_model,variables,label_weight=1,simulate_label=True,mode="fsolve",target_flux_dict=None,max_chi=1e16,max_flux=1e16,flux_penalty_dict={},flux_weight=1,verbose=False,abort_when_above_max_flux=False,label_unfeasible_penalty=1e9,flux_unfeasible_penalty=1e6,simulate_infeasible=False,update_variables=True):
     #label_model.variable_vector=variables
     abort=False #When True Label, or fluxes wont be simulated
     reaction=""
@@ -8,7 +8,8 @@ def objfunc(label_model,variables,label_weight=1,simulate_label=True,mode="fsolv
     flux_obj=label_obj=chi2_score=flux_score=0
     fltarget_obj=0
     obj_dict={}
-    for n, x1 in enumerate(variables):
+    if update_variables:
+     for n, x1 in enumerate(variables):
         vtype=variable_list_dict[n]["type"]
         if vtype=="flux":
            label_model.flux_solver_free_fluxes[variable_list_dict[n]["n"]]=round(x1,12)

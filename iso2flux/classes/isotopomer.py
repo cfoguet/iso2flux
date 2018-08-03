@@ -81,7 +81,7 @@ class isotopomer:
            for x in reference_metabolite: 
                if x.compartment not in compartment_list:
                   compartment_list.append(x.compartment) 
-               self.name+=" "+x.name
+               self.name+=" "+str(x.name)
                if len(self.id)<50:
                   self.id+="_"+x.id
                elif "_etc" not in self.id:

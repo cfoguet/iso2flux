@@ -6,8 +6,9 @@ from ..misc.round_functions import round_up, round_down
 from cobra.flux_analysis import sample
 from ..flux_functions.flux_variability_analysis import flux_variability_analysis
 from cobra import Reaction
+import json
 
-def variable_sampling(label_model,lb_list,ub_list,maximum_flux=1e6,flux_penalty_dict={},n_pop=40,n_processes=6,extra_constraints_dict={}):
+def variable_sampling(label_model,lb_list,ub_list,maximum_flux=1e6,flux_penalty_dict={},n_pop=40,n_processes=6,extra_constraints_dict={},debug=False):
   with label_model.constrained_model as model:
      for reaction_id in extra_constraints_dict:
         reaction=model.reactions.get_by_id(reaction_id)
@@ -19,15 +20,17 @@ def variable_sampling(label_model,lb_list,ub_list,maximum_flux=1e6,flux_penalty_
      reactions2add=[]
      turnover_reaction_list=[]
      for reaction_id in fva:
-         print reaction_id
+         if maximum_flux==None:
+            continue
+         #print reaction_id
          reaction=model.reactions.get_by_id(reaction_id)
          if reaction.lower_bound<0:
             if reaction_id not in label_model.turnover_flux_dict:
-               reaction.upper_bound=min(round_up(fva[reaction_id]["maximum"],3),reaction.upper_bound)
-               reaction.lower_bound=max(round_down(fva[reaction_id]["minimum"],3),reaction.lower_bound)
+               reaction.upper_bound=min(round_up(fva[reaction_id]["maximum"],8),reaction.upper_bound)
+               reaction.lower_bound=max(round_down(fva[reaction_id]["minimum"],8),reaction.lower_bound)
             elif reaction_id in label_model.turnover_flux_dict and reaction.upper_bound>0:
-               reaction.upper_bound=min(round_up(fva[reaction_id]["maximum"],3)+label_model.turnover_flux_dict[reaction_id]["ub"],reaction.upper_bound)
-               reaction.lower_bound=max(round_down(fva[reaction_id]["minimum"],3)-label_model.turnover_flux_dict[reaction_id]["ub"],reaction.lower_bound)
+               reaction.upper_bound=min(round_up(fva[reaction_id]["maximum"],8)+label_model.turnover_flux_dict[reaction_id]["ub"],reaction.upper_bound)
+               reaction.lower_bound=max(round_down(fva[reaction_id]["minimum"],8)-label_model.turnover_flux_dict[reaction_id]["ub"],reaction.lower_bound)
                if reaction.lower_bound>=0:
                   #create a dummy reverse reaction
                   reverse_reaction = Reaction(reaction_id + "_reverse")
@@ -65,12 +68,21 @@ def variable_sampling(label_model,lb_list,ub_list,maximum_flux=1e6,flux_penalty_
               reverse_reaction.name="turnover"
               reactions2add.append(reverse_reaction)
               reverse_reaction.upper_bound =label_model.turnover_flux_dict[reaction_id]["ub"]*2
-              turnover_reaction_list.append(reaction_id + "_reverse") 
-     model.add_reactions(reactions2add)
-     min_model,minimal_flux,non_milp_reactions =create_minimal_fux_model(model,fraction_of_optimum_objective=0, boundaries_precision=0.001,label_model=None,metabolite_list_file_name=None,flux_penalty_dict=flux_penalty_dict,maximum_flux=maximum_flux,extra_constraints_dict={})
-  fluxes_dict=sampling(min_model,n=n_pop*n_processes,processes=n_processes,objective="total_flux")
+              turnover_reaction_list.append(reaction_id + "_reverse")
+     if maximum_flux==None:
+            min_model=model.copy()
+            fluxes_dict=sampling(min_model,n=n_pop*n_processes,processes=n_processes,objective=None)
+     else:        
+        model.add_reactions(reactions2add)
+        min_model,minimal_flux,non_milp_reactions =create_minimal_fux_model(model,fraction_of_optimum_objective=0, boundaries_precision=0.001,label_model=None,metabolite_list_file_name=None,flux_penalty_dict=flux_penalty_dict,maximum_flux=maximum_flux,extra_constraints_dict={})
+        fluxes_dict=sampling(min_model,n=n_pop*n_processes,processes=n_processes,objective="total_flux")
+  if debug:
+    f=open("fluxes_dict.json","w")
+    json.dump(fluxes_dict,f)
+    f.close()
+     
   variable_sets=[]
-  print label_model.turnover_flux_dict  
+  #print label_model.turnover_flux_dict  
   for flux_dict in fluxes_dict:
      variables=[]
      for n,variable in enumerate(label_model.variable_list_dict):
@@ -92,17 +104,20 @@ def variable_sampling(label_model,lb_list,ub_list,maximum_flux=1e6,flux_penalty_
              value=(forward_flux-reverse_flux)/coef
              #variables.append((forward_flux-reverse_flux)/coef)
         elif variable["type"]=="turnover":
-             reaction=variable["reaction"]
-             reverse_id=reaction+"_reverse"
-             if reverse_id in turnover_reaction_list:
-                value=(flux_dict[reverse_id]/2.0)
-             elif reaction in  turnover_reaction_list:
-                value=(flux_dict[reaction]/2.0)
+             if maximum_flux==None:
+                value=random.uniform(lb_list[n],ub_list[n])
              else:
+               reaction=variable["reaction"]
+               reverse_id=reaction+"_reverse"
+               if reverse_id in turnover_reaction_list:
+                  value=(flux_dict[reverse_id]/2.0)
+               elif reaction in  turnover_reaction_list:
+                  value=(flux_dict[reaction]/2.0)
+               else:
                 if reverse_id not in flux_dict:
                    flux_dict[reverse_id]=0.0
                 value=min(abs(flux_dict[reaction]),abs(flux_dict[reverse_id]))
-        print variable, value,lb,ub
+        #print variable, value,lb,ub
         value=max(min(value,ub),lb)
         variables.append(value)
      variable_sets.append(variables)
@@ -111,7 +126,7 @@ def variable_sampling(label_model,lb_list,ub_list,maximum_flux=1e6,flux_penalty_
 
 def sampling(model,n=100,processes=6,objective=None):
     reaction_ids=[x.id for x in model.reactions]
-    print model.reactions.get_by_id(objective).lower_bound
+    #print model.reactions.get_by_id(objective).lower_bound
     result_matrix = sample(model, n,processes=processes).as_matrix()
     flux_dict_list=[]
     for row in result_matrix:
@@ -119,8 +134,8 @@ def sampling(model,n=100,processes=6,objective=None):
         for n_flux,flux in enumerate(row):
             flux_dict[reaction_ids[n_flux]]=flux
         flux_dict_list.append(flux_dict)
-        if objective!=None:
-           print flux_dict[objective]
+        """if objective!=None:
+           print flux_dict[objective]"""
     return flux_dict_list
 
 """
