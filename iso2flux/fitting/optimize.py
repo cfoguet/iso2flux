@@ -21,6 +21,58 @@ import time
 from random import shuffle
 
 
+
+def migrate_one_direction(fs,xs,n_bests,verbose=False):
+     #Migrate only in one direction
+     if verbose:
+        print "-------------------\nMigration:"
+     champions_f= [min(f) for f in fs]
+     champions_x=[]
+     for n,n_best in enumerate(n_bests):
+         champions_x.append(xs[n][n_best]) 
+     variables_sets=xs
+     n_archis=range(0,len(variables_sets))
+     #For each island check if it can migrate to the next island
+     for n_archi in n_archis:
+            best_individual_f=champions_f[n_archi]
+            best_individual_x=list(champions_x[n_archi])
+            #Get the worst element of the adjacents islands
+            worst_f_left=None
+            n_left_island=n_archis[n_archi-1]
+            for n_left,f_left in enumerate(fs[n_left_island]):
+                if worst_f_left==None or worst_f_left>f_left:
+                   worst_n_left=n_left
+                   worst_f_left=f_left
+            
+            #If the best element of the island is better than the worst of the adjacent islands replace them
+            if best_individual_f<worst_f_left:
+               if verbose:
+                  print [n_archi,"left",[n_archi,"->",n_left_island],[best_individual_f,"->",worst_f_left]] 
+               fs[n_left_island][worst_n_left]=best_individual_f
+               variables_sets[n_left_island][worst_n_left]=copy.deepcopy(best_individual_x)
+               
+            """#Do the same for the right island
+            if (n_archi+1)==len(variables_sets):
+               n_right_island=0
+            else:
+               n_right_island=n_archis[n_archi+1]
+            worst_f_right=None
+            for n_right,f_right in enumerate(fs[n_right_island]):
+                if worst_f_right==None or worst_f_right>f_right:
+                   worst_n_right=n_right
+                   worst_f_right=f_right
+            
+            #If the best element of the island is better than the worst of the adjacent islands replace them
+            if best_individual_f<worst_f_right:
+               if verbose: 
+                  print [n_archi,"right",[n_archi,"->",n_right_island],[best_individual_f,"->",worst_f_right]] 
+               fs[n_right_island][worst_n_right]=best_individual_f
+               variables_sets[n_right_island][worst_n_right]=copy.deepcopy(best_individual_x)"""
+     #print variables_sets
+     print "-------------------"    
+     return variables_sets
+
+
 def migrate_ring(fs,xs,n_bests,verbose=False):
      if verbose:
         print "-------------------\nMigration:"
@@ -131,7 +183,7 @@ def evolve_process(pop):
       return [pop.get_f(),pop.get_x(),pop.best_idx()] 
 
 
-def optimize(label_model,iso2flux_problem,pop_size = 25,n_gen = 500,n_islands=6,max_evolve_cycles=999,max_cycles_without_improvement=10,stop_criteria_relative=0.01,stop_criteria_absolute=-1e6,initial_archi_x=[],lb_list=[],ub_list=[],flux_penalty_dict=None,max_flux=None,label_problem_parameters={},min_model=None,extra_constraint_dict={},log_file_name="optimize_log.txt"):
+def optimize(label_model,iso2flux_problem,pop_size = 25,n_gen = 500,n_islands=6,max_evolve_cycles=999,max_cycles_without_improvement=10,stop_criteria_relative=0.01,stop_criteria_absolute=-1e6,initial_archi_x=[],lb_list=[],ub_list=[],flux_penalty_dict=None,max_flux=None,label_problem_parameters={},min_model=None,extra_constraint_dict={},log_file_name="optimize_log.txt",max_flux_sampling=None,migrate="ring"):
   log_file=open(log_file_name,"w")
   log_file.write(time.strftime("%c")+": starting optimization\n")
   log_file.close()  
@@ -165,7 +217,9 @@ def optimize(label_model,iso2flux_problem,pop_size = 25,n_gen = 500,n_islands=6,
   algo = pygmo.algorithm(pygmo.sade(gen = n_gen)) 
   
   #variables_sets=variable_sampling(label_model,lb_list,ub_list,maximum_flux=max_flux,flux_penalty_dict=flux_penalty_dict,n_pop=pop_size*n_islands,n_processes=1)
-  sampled_variables=variable_sampling(label_model,lb_list,ub_list,maximum_flux=max_flux,flux_penalty_dict=flux_penalty_dict,n_pop=pop_size*n_islands,n_processes=1,extra_constraints_dict=extra_constraint_dict)
+  if max_flux_sampling==None:
+     max_flux_sampling= max_flux  
+  sampled_variables=variable_sampling(label_model,lb_list,ub_list,maximum_flux=max_flux_sampling,flux_penalty_dict=flux_penalty_dict,n_pop=pop_size*n_islands,n_processes=1,extra_constraints_dict=extra_constraint_dict)
   variables_sets=[]
   counter=0
   for n_island in range(0,n_islands):
@@ -213,7 +267,7 @@ def optimize(label_model,iso2flux_problem,pop_size = 25,n_gen = 500,n_islands=6,
         log_file.write("\n"+time.strftime("%c")+":\n")       
         for n_pop,n_best in enumerate(best_ns):
             x=xs[n_pop][n_best]
-            obj, obj_dict=objfunc(label_model,x,verbose=False,max_chi=label_problem_parameters["max_chi"],target_flux_dict=label_problem_parameters["target_flux_dict"],max_flux=label_problem_parameters["max_flux"],flux_penalty_dict=label_problem_parameters["flux_penalty_dict"])
+            obj, obj_dict=objfunc(label_model,x,verbose=False,label_weight=label_problem_parameters["label_weight"],flux_weight=label_problem_parameters["flux_weight"],max_chi=label_problem_parameters["max_chi"],target_flux_dict=label_problem_parameters["target_flux_dict"],max_flux=label_problem_parameters["max_flux"],flux_penalty_dict=label_problem_parameters["flux_penalty_dict"])
             
             flux_obj=obj_dict["flux_score"]
             label_obj=obj_dict["chi2_score"]
@@ -266,7 +320,10 @@ def optimize(label_model,iso2flux_problem,pop_size = 25,n_gen = 500,n_islands=6,
            previous_best_variables=optimal_variables
         if optimal_solution<1e-6: #Mostly used when computing intervals
            break
-        variables_sets=migrate_ring(fs,xs,best_ns)
+        if migrate=="one_direction":
+            variables_sets=migrate_one_direction(fs,xs,best_ns,True)
+        else:       
+           variables_sets=migrate_ring(fs,xs,best_ns)
   
   obj, obj_dict=objfunc(label_model,optimal_variables,verbose=False,max_chi=label_problem_parameters["max_chi"],target_flux_dict=label_problem_parameters["target_flux_dict"],max_flux=label_problem_parameters["max_flux"],flux_penalty_dict=label_problem_parameters["flux_penalty_dict"])     
   if (obj_dict["chi2_score"]-label_problem_parameters["max_chi"])>0.0001 or (obj_dict["flux_score"]-label_problem_parameters["max_flux"])>0.0001:
@@ -810,7 +867,7 @@ def optimize(label_model,pop_size = 25,n_gen = 500,n_islands=6,evolves_per_cycle
 
 """
 
-def minimize_fluxes(label_model,iso2flux_problem,label_problem_parameters,max_chi=999999,flux_penalty_dict={} ,pop_size=20 ,n_gen=500 ,n_islands=6 ,max_cycles_without_improvement=8 ,max_evolve_cycles=20 ,stop_criteria_relative=0.005 ,max_iterations=10,  initial_flux_estimation=1000,log_name="log.txt"):
+def minimize_fluxes(label_model,iso2flux_problem,label_problem_parameters,max_chi=999999,flux_penalty_dict={} ,pop_size=20 ,n_gen=500 ,n_islands=6 ,max_cycles_without_improvement=8 ,max_evolve_cycles=20 ,stop_criteria_relative=0.005 ,max_iterations=10,  initial_flux_estimation=1000,log_name="log.txt",migrate="ring"):
     min_model,minimal_flux,non_milp_reactions =create_minimal_fux_model(copy.deepcopy(label_model.constrained_model),fraction_of_optimum_objective=0.0,      fraction_of_flux_minimum=None,boundaries_precision=0.001,label_model=None,metabolite_list_file_name=None,flux_penalty_dict=flux_penalty_dict,maximum_flux=initial_flux_estimation, mutually_exclusive_directionality_constraint=False,extra_constraints_dict={}) 
     best_flux=max_flux=initial_flux_estimation
     best_variables=None
@@ -821,7 +878,7 @@ def minimize_fluxes(label_model,iso2flux_problem,label_problem_parameters,max_ch
     for iteration in range(0,max_iterations):
         label_problem_parameters["max_flux"]=max_flux
         #label_problem_parameters={"label_weight":0.001,"target_flux_dict":None,"max_chi":max_chi,"max_flux":max_flux,"flux_penalty_dict":flux_penalty_dict,"verbose":True,"flux_weight":1,"flux_unfeasible_penalty":1e6,"label_unfeasible_penalty":1e3}
-        flux_objective,flux_optimal_variables=optimize(label_model,iso2flux_problem,pop_size = pop_size,n_gen = n_gen,n_islands=n_islands,max_evolve_cycles=max_evolve_cycles,max_cycles_without_improvement=max_cycles_without_improvement, stop_criteria_relative=stop_criteria_relative,initial_archi_x=[],lb_list=[],ub_list=[],flux_penalty_dict=flux_penalty_dict, max_flux=max_flux,label_problem_parameters=label_problem_parameters,min_model=min_model)
+        flux_objective,flux_optimal_variables=optimize(label_model,iso2flux_problem,pop_size = pop_size,n_gen = n_gen,n_islands=n_islands,max_evolve_cycles=max_evolve_cycles,max_cycles_without_improvement=max_cycles_without_improvement, stop_criteria_relative=stop_criteria_relative,initial_archi_x=[],lb_list=[],ub_list=[],flux_penalty_dict=flux_penalty_dict, max_flux=max_flux,label_problem_parameters=label_problem_parameters,min_model=min_model,migrate=migrate)
         #a,objective_dict=objfunc(label_model,flux_optimal_variables,flux_penalty_dict=flux_penalty_dict,flux_weight=1)
         #flux_objective=objective_dict["flux_score"]
         f=open(log_name, "a")
@@ -877,7 +934,7 @@ def update_flux_interval_dict(flux_interval_dict,parameters=[],max_chi=99999,max
 
 
 
-def flux_variation(label_model,iso2flux_problem,fluxes_to_evaluate,reference_variables,label_problem_parameters,max_chi=999999,max_flux=999999,flux_penalty_dict={} ,pop_size=20 ,n_gen=500 ,n_islands=6 ,max_cycles_without_improvement=10 ,stop_criteria_relative=0.005 ,max_iterations=10,log_name="log.txt",flux_interval_dict={},irreversible_flux_interval_dict={}):
+def flux_variation(label_model,iso2flux_problem,fluxes_to_evaluate,reference_variables,label_problem_parameters,max_chi=999999,max_flux=999999,flux_penalty_dict={} ,pop_size=20 ,n_gen=500 ,n_islands=6 ,max_cycles_without_improvement=10 ,stop_criteria_relative=0.005 ,max_iterations=10,log_name="log.txt",flux_interval_dict={},irreversible_flux_interval_dict={},max_flux_sampling=None,migrate="ring"):
     
     min_model,minimal_flux,non_milp_reactions =create_minimal_fux_model(copy.deepcopy(label_model.constrained_model),fraction_of_optimum_objective=0.0,      fraction_of_flux_minimum=None,boundaries_precision=0.001,label_model=None,metabolite_list_file_name=None,flux_penalty_dict=flux_penalty_dict,maximum_flux=max_flux, mutually_exclusive_directionality_constraint=False,extra_constraints_dict={}) 
     """best_flux=max_flux=initial_flux_estimation
@@ -981,7 +1038,7 @@ def flux_variation(label_model,iso2flux_problem,fluxes_to_evaluate,reference_var
                     min_model.reactions.get_by_id(reaction_id+"_reverse").lower_bound=max(max(-1*reaction_2_test_ub,-1*flux_interval_dict[reaction_id]["minimum"]),0)"""                     
                 f=open(log_name, "a")
                 f.write("starting "+str(target_flux_dict)+"\n")
-                objective,optimal_variables=optimize(label_model,iso2flux_problem,pop_size = pop_size,n_gen = n_gen,n_islands=n_islands,max_cycles_without_improvement=max_cycles_without_improvement, stop_criteria_relative=stop_criteria_relative,initial_archi_x=[],lb_list=[],ub_list=[],flux_penalty_dict=flux_penalty_dict, max_flux=max_flux,label_problem_parameters=label_problem_parameters,extra_constraint_dict=extra_constraint_dict)
+                objective,optimal_variables=optimize(label_model,iso2flux_problem,pop_size = pop_size,n_gen = n_gen,n_islands=n_islands,max_cycles_without_improvement=max_cycles_without_improvement, stop_criteria_relative=stop_criteria_relative,initial_archi_x=[],lb_list=[],ub_list=[],flux_penalty_dict=flux_penalty_dict, max_flux=max_flux,label_problem_parameters=label_problem_parameters,extra_constraint_dict=extra_constraint_dict,max_flux_sampling=max_flux_sampling,migrate=migrate)
                 objfunc(label_model,optimal_variables)
                 update_flux_interval_dict(flux_interval_dict,optimal_variables,label_problem_parameters["max_chi"],label_problem_parameters["max_flux"],label_model=label_model)
                 update_flux_interval_dict(irreversible_flux_interval_dict,optimal_variables,label_problem_parameters["max_chi"],label_problem_parameters["max_flux"],label_model=label_model,irreversible_flux_dict=True)

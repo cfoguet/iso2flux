@@ -102,7 +102,10 @@ optimal_solution,optimal_variables=optimize(label_model,iso2flux_problem,pop_siz
 
 label_model.best_chi2=optimal_solution
 
-flux_sd_dict, hessian,inverse_hessian,covariance=get_std_deviation(label_model,optimal_variables,initial_step=1e-3)
+try:
+  flux_sd_dict, hessian,inverse_hessian,covariance=get_std_deviation(label_model,optimal_variables,initial_step=1e-3)
+except:
+   flux_sd_dict={}
 
 export_flux_results(label_model,optimal_variables,fn=output_prefix+"_fluxes.csv",flux_sd_dict=flux_sd_dict)
 objfunc(label_model,optimal_variables)

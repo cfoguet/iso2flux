@@ -145,7 +145,7 @@ if initial_flux_estimation==None:
    if label_model.best_p13cmfa_variables!=None:
       a,objective_dict=objfunc(label_model,label_model.best_p13cmfa_variables,flux_penalty_dict=flux_penalty_dict,flux_weight=1)
       initial_flux_estimation=objective_dict["flux_score"]
-   if label_model.best_label_variables!=None:
+   elif label_model.best_label_variables!=None:
       a,objective_dict=objfunc(label_model,best_label_variables,flux_penalty_dict=flux_penalty_dict,flux_weight=1)
       initial_flux_estimation=objective_dict["flux_score"]
    else:
