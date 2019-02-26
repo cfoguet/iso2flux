@@ -296,12 +296,14 @@ def optimize(label_model,iso2flux_problem,pop_size = 25,n_gen = 500,n_islands=6,
         #print archi.get_champions_f()
         print "previous best objective: "+str(round(previous_best_solution,3))+"; current best objective: "+str(round(optimal_solution,3))
         log_file.write("previous best objective: "+str(round(previous_best_solution,3))+"; current best objective: "+str(round(optimal_solution,3))+"\n")
-        log_file.close()
         #optimal_variables=champions_x[n_optimal]
         #variables_sets=migrate_ring(archi)
         #variables_sets=migrate_ring(fs,xs,best_ns)
         #shuffle(variables_sets)
         #print previous_best_solution,optimal_solution
+        #print optimal_variables
+        log_file.write(str(optimal_variables)+"\n")
+        log_file.close()
         if previous_best_solution-optimal_solution<max(previous_best_solution*stop_criteria_relative,1e-4) or optimal_solution<stop_criteria_absolute:
            if previous_best_solution<optimal_solution:
               optimal_variables=previous_best_variables
@@ -321,7 +323,7 @@ def optimize(label_model,iso2flux_problem,pop_size = 25,n_gen = 500,n_islands=6,
         if optimal_solution<1e-6: #Mostly used when computing intervals
            break
         if migrate=="one_direction":
-            variables_sets=migrate_one_direction(fs,xs,best_ns,True)
+            variables_sets=migrate_one_direction(fs,xs,best_ns,False)
         else:       
            variables_sets=migrate_ring(fs,xs,best_ns)
   
@@ -867,8 +869,10 @@ def optimize(label_model,pop_size = 25,n_gen = 500,n_islands=6,evolves_per_cycle
 
 """
 
-def minimize_fluxes(label_model,iso2flux_problem,label_problem_parameters,max_chi=999999,flux_penalty_dict={} ,pop_size=20 ,n_gen=500 ,n_islands=6 ,max_cycles_without_improvement=8 ,max_evolve_cycles=20 ,stop_criteria_relative=0.005 ,max_iterations=10,  initial_flux_estimation=1000,log_name="log.txt",migrate="ring"):
-    min_model,minimal_flux,non_milp_reactions =create_minimal_fux_model(copy.deepcopy(label_model.constrained_model),fraction_of_optimum_objective=0.0,      fraction_of_flux_minimum=None,boundaries_precision=0.001,label_model=None,metabolite_list_file_name=None,flux_penalty_dict=flux_penalty_dict,maximum_flux=initial_flux_estimation, mutually_exclusive_directionality_constraint=False,extra_constraints_dict={}) 
+def minimize_fluxes(label_model,iso2flux_problem,label_problem_parameters,max_chi=999999,flux_penalty_dict={} ,pop_size=20 ,n_gen=500 ,n_islands=6 ,max_cycles_without_improvement=8 ,max_evolve_cycles=20 ,stop_criteria_relative=0.005 ,max_iterations=10,  initial_flux_estimation=1000,log_name="log.txt",migrate="ring",max_flux_sampling=None):
+    if max_flux_sampling==None:
+       max_flux_sampling= initial_flux_estimation  
+    min_model,minimal_flux,non_milp_reactions =create_minimal_fux_model(copy.deepcopy(label_model.constrained_model),fraction_of_optimum_objective=0.0,      fraction_of_flux_minimum=None,boundaries_precision=0.001,label_model=None,metabolite_list_file_name=None,flux_penalty_dict=flux_penalty_dict,maximum_flux=max_flux_sampling, mutually_exclusive_directionality_constraint=False,extra_constraints_dict={}) 
     best_flux=max_flux=initial_flux_estimation
     best_variables=None
     f=open(log_name, "a")
