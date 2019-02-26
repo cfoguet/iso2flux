@@ -145,7 +145,7 @@ if initial_flux_estimation==None:
    if label_model.best_p13cmfa_variables!=None:
       a,objective_dict=objfunc(label_model,label_model.best_p13cmfa_variables,flux_penalty_dict=flux_penalty_dict,flux_weight=1)
       initial_flux_estimation=objective_dict["flux_score"]
-   if label_model.best_label_variables!=None:
+   elif label_model.best_label_variables!=None:
       a,objective_dict=objfunc(label_model,best_label_variables,flux_penalty_dict=flux_penalty_dict,flux_weight=1)
       initial_flux_estimation=objective_dict["flux_score"]
    else:
@@ -155,18 +155,22 @@ if initial_flux_estimation==None:
 
 
 
-label_problem_parameters={"label_weight":0.000,"target_flux_dict":None,"max_chi":max_chi,"max_flux":initial_flux_estimation,"flux_penalty_dict":flux_penalty_dict,"verbose":True,"flux_weight":1,"flux_unfeasible_penalty":10,"label_unfeasible_penalty":1}
+label_problem_parameters={"label_weight":0.0001,"target_flux_dict":None,"max_chi":max_chi,"max_flux":initial_flux_estimation,"flux_penalty_dict":flux_penalty_dict,"verbose":True,"flux_weight":1,"flux_unfeasible_penalty":25,"label_unfeasible_penalty":5}
 
 best_flux=initial_flux_estimation
 best_variables=None
 
 
 for iteration in range(0,n_iterations):
-    flux_objective,variables=minimize_fluxes(label_model,iso2flux_problem,label_problem_parameters,max_chi=max_chi,flux_penalty_dict=flux_penalty_dict ,pop_size=pop_size ,n_gen=n_gen ,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement ,max_evolve_cycles=999 ,stop_criteria_relative=0.0001 ,max_iterations=1,  initial_flux_estimation=initial_flux_estimation,log_name=file_name.replace(".iso2flux","_p13cmfa_log.txt"))
+    flux_objective,variables=minimize_fluxes(label_model,iso2flux_problem,label_problem_parameters,max_chi=max_chi,flux_penalty_dict=flux_penalty_dict ,pop_size=pop_size ,n_gen=n_gen ,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement ,max_evolve_cycles=999 ,stop_criteria_relative=0.000001 ,max_iterations=1,  initial_flux_estimation=initial_flux_estimation,log_name=file_name.replace(".iso2flux","_p13cmfa_log.txt"),migrate="one_direction")
     print "flux minimized to " + str(round(flux_objective,3))
     if flux_objective<best_flux:
+       initial_flux_estimation=best_best_flux=flux_objective
+       label_problem_parameters={"label_weight":0.0001,"target_flux_dict":None,"max_chi":max_chi,"max_flux":best_flux,"flux_penalty_dict":flux_penalty_dict,"verbose":True,"flux_weight":1,"flux_unfeasible_penalty":25,"label_unfeasible_penalty":5}
        best_best_flux=flux_objective
        best_variables=variables
+
+
 
 export_flux_results(label_model,best_variables,fn=output_prefix+"_p13cmfa_fluxes.csv")
 objfunc(label_model,best_variables)

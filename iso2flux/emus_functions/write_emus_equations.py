@@ -93,7 +93,7 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
                  string+="  cdef double "
               else: 
                  string+="  "
-              string+="J_"+emu_reaction.id.replace(")","_").replace("(","_").replace("[","_").replace("]","_")+"="
+              string+="J_"+emu_reaction.id.replace(")","_").replace("(","_").replace("[","_").replace("]","_").replace(".","_")+"="
               list_of_reactions=[]
               if isinstance(label_model.emu_reaction_dict[emu_reaction.id],list):
                  for reaction in label_model.emu_reaction_dict[emu_reaction.id]:
@@ -109,7 +109,7 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
                   else:
                      reaction_n=label_model.reaction_n_dict[sorted(label_model.merged_reactions_reactions_dict[reaction])[0]] #We take the first reaction as defined in emu_build_reaction_dict 
                   string+="+flux_values[%s] "%(reaction_n)
-                  comment+=" +J_"+reaction.replace(")","_").replace("(","_").replace("[","_").replace("]","_")
+                  comment+=" +J_"+reaction.replace(")","_").replace("(","_").replace("[","_").replace("]","_").replace(".","_")
               string+=";"+comment+"\n"
         if force_balance==True:
            mi0_list=[]
@@ -123,7 +123,7 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
                mi0_list.append(mi0)
                local_size=local_emu_dict["size"]
                if mi0 in label_model.size_expanded_model_dict[size].metabolites: #only add the balance for the emus that participate
-                  string+="  cdef double  "+mi0+"=1" #consider moving the declaration at the begining
+                  string+="  cdef double  "+mi0.replace(")","_").replace("(","_").replace("[","_").replace("]","_").replace(".","_")+"=1" #consider moving the declaration at the begining
                   for n in local_emu_dict["mid"]:
                       if n==0:
                          continue 
@@ -147,7 +147,7 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
             """if steady_state==False and "EX_" in reaction.id:
                      continue #If we are working outside of stedy state EX_reactions are not necessary"""
             #string_d_flux="J_"+reaction.id+", "
-            string_flux ="  cdef double J_"+reaction.id.replace(")","_").replace("(","_").replace("[","_").replace("]","_")+"= J_"+label_model.expanded_reaction_emu_dict[reaction.id].replace(")","_").replace("(","_").replace("[","_").replace("]","_")
+            string_flux ="  cdef double J_"+reaction.id.replace(")","_").replace("(","_").replace("[","_").replace("]","_").replace(".","_")+"= J_"+label_model.expanded_reaction_emu_dict[reaction.id].replace(")","_").replace("(","_").replace("[","_").replace("]","_").replace(".","_")
             all_m0_flag=True #A flag to check if all substrates are m0
             for metabolite in reaction.metabolites:
                 print reaction.metabolites
@@ -172,7 +172,7 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
                           all_m0_flag=False
                           variable_name="*np_input_yy0[%s]"%(label_model.input_n_dict[metabolite.id])
                      else:
-                        variable_name="*"+metabolite.id  
+                        variable_name="*"+metabolite.id.replace(")","_").replace("(","_").replace("[","_").replace("]","_").replace(".","_")  
                      if coef.is_integer(): #coef.is_integer checks if coefficient is a whole number.Coefs will be integer in all cases except output_reactions
                         string_flux+=variable_name
                         if coef==2:
@@ -192,7 +192,7 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
                         else:
                            variable_name="*"+product.id
                         print [reaction.id,reaction.notes["reflection"]]
-                        string_flux+=(" -J_"+label_model.expanded_reaction_emu_dict[reaction.notes["reflection"]].replace(")","_").replace("(","_").replace("[","_").replace("]","_")+variable_name)  
+                        string_flux+=(" -J_"+label_model.expanded_reaction_emu_dict[reaction.notes["reflection"]].replace(")","_").replace("(","_").replace("[","_").replace("]","_").replace(".","_")+variable_name)  
             if all_m0_flag==True and force_balance==True: #If we do not simulate m0 we do not need to write a raection that only consumes and produces m0
                continue                 
             string_flux+=";\n"
@@ -218,13 +218,13 @@ def write_emus_equations(label_model,c_code=True,force_balance=True,steady_state
                    continue
                coef=reaction.metabolites[metabolite]
                if coef==1:
-                  string+=" +J_"+reaction.id.replace(")","_").replace("(","_").replace("[","_").replace("]","_")
+                  string+=" +J_"+reaction.id.replace(")","_").replace("(","_").replace("[","_").replace("]","_").replace(".","_")
                elif coef==-1:
-                  string+=" -J_"+reaction.id.replace(")","_").replace("(","_").replace("[","_").replace("]","_")
+                  string+=" -J_"+reaction.id.replace(")","_").replace("(","_").replace("[","_").replace("]","_").replace(".","_")
                elif coef>0:
-                    string+=" +"+str(coef)+"*J_"+reaction.id.replace(")","_").replace("(","_").replace("[","_").replace("]","_")
+                    string+=" +"+str(coef)+"*J_"+reaction.id.replace(")","_").replace("(","_").replace("[","_").replace("]","_").replace(".","_")
                else: #negative coefficients different than -1
-                    string+=" "+str(coef)+"*J_"+reaction.id.replace(")","_").replace("(","_").replace("[","_").replace("]","_")
+                    string+=" "+str(coef)+"*J_"+reaction.id.replace(")","_").replace("(","_").replace("[","_").replace("]","_").replace(".","_")
             string+=")"
             if steady_state==False:
                string+="/(vol_"+metabolite.compartment+"*"

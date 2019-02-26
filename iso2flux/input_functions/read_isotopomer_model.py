@@ -94,7 +94,7 @@ def read_isotopomer_model(label_model,file_name,header=True):
                             #Add it to the irreversible_model
                             metabolite=label_model.irreversible_metabolic_model.metabolites.get_by_id(reference_metabolites[0])
                             reaction = cobra.core.Reaction('EX_'+metabolite.id)
-                            reaction.name = 'Exchange of '+metabolite.name
+                            reaction.name = 'Exchange of '+metabolite.id
                             reaction.subsystem = 'Exchange reaction'
                             reaction.lower_bound=-1000
                             reaction.upper_bound=1000
@@ -103,7 +103,7 @@ def read_isotopomer_model(label_model,file_name,header=True):
                             #Add it to the metabolic model
                             metabolite=label_model.metabolic_model.metabolites.get_by_id(reference_metabolites[0])
                             reaction = cobra.core.Reaction('EX_'+metabolite.id)
-                            reaction.name = 'Exchange of '+metabolite.name
+                            reaction.name = 'Exchange of '+metabolite.id
                             reaction.subsystem = 'Exchange reaction'
                             reaction.lower_bound=0
                             reaction.upper_bound=0
