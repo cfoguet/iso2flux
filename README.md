@@ -1,5 +1,5 @@
 # Iso2flux 
-Version: 0.7.1
+Version: 0.7.2
 ## Short Description
 
 Iso2flux is an open source software for performing 13C Metabolic Flux Analysis (13CMFA) and  Parsimonious 13C Metabolic Flux Analysis (p13C MFA) 
