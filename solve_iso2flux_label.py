@@ -33,7 +33,7 @@ from iso2flux.fitting.covariance import get_std_deviation
 
 try:
  argv=sys.argv[1:]
- opts, args = getopt.getopt(argv,"i:n:p:g:m:o:",["iso2flux_model_file=","number_of_processes=","population_size=","generations_per_cycle=","max_cycles_without_improvement=","output_prefix="])
+ opts, args = getopt.getopt(argv,"i:n:p:g:m:o:s:",["iso2flux_model_file=","number_of_processes=","population_size=","generations_per_cycle=","max_cycles_without_improvement=","output_prefix=","max_flux_for_sampling="])
 except getopt.GetoptError as err:
    # print help information and exit:
    print str(err)  # will print something like "option -a not recognized":
@@ -46,24 +46,28 @@ number_of_processes=6
 output_prefix=None
 max_cycles_without_improvement=9
 file_name=None
-
+max_flux_for_sampling=1e6
 
 for opt, arg in opts:
          print [opt,arg]
-         if opt in ("--iso2flux_model_file=","-i"):
+         if opt in ("--iso2flux_model_file","-i"):
              file_name=arg
-         elif opt in ("--number_of_processes=","-n"):
+         elif opt in ("--number_of_processes","-n"):
              number_of_processes=int(arg)            
-         elif opt in ("--output_prefix=","-o"):
-             output_prefix=arg
-         elif opt in ("--population_size=","-p"):
+         elif opt in ("--output_prefix","-o"):
+             output_preexport_flux_resultsfix=arg
+         elif opt in ("--population_size","-p"):
              pop_size=int(arg)
-         elif opt in ("--generations_per_cycle=","-g"):
+         elif opt in ("--generations_per_cycle","-g"):
              n_gen=int(arg)
-         elif opt in ("--max_cycles_without_improvement=","-m"):
+         elif opt in ("--max_cycles_without_improvement","-m"):
              max_cycles_without_improvement=int(arg)
+         elif opt in ("--max_flux_for_sampling","-s"):
+             max_flux_for_sampling=float(arg)
 
 
+print max_flux_for_sampling
+#dddddd
 
 
 if file_name==None:
@@ -98,13 +102,20 @@ label_problem_parameters={"label_weight":1,"target_flux_dict":None,"max_chi":1e6
 
 
 iso2flux_problem=define_isoflux_problem(label_model)
-optimal_solution,optimal_variables=optimize(label_model,iso2flux_problem,pop_size = pop_size,n_gen = n_gen,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement,stop_criteria_relative=0.005,initial_archi_x=[],lb_list=[],ub_list=[],max_flux=1e6,label_problem_parameters=label_problem_parameters)
+optimal_solution,optimal_variables=optimize(label_model,iso2flux_problem,pop_size = pop_size,n_gen = n_gen,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement,stop_criteria_relative=0.005,initial_archi_x=[],lb_list=[],ub_list=[],max_flux=1e6,label_problem_parameters=label_problem_parameters,migrate="one_direction",max_flux_sampling=max_flux_for_sampling)
 
 label_model.best_chi2=optimal_solution
 
-flux_sd_dict, hessian,inverse_hessian,covariance=get_std_deviation(label_model,optimal_variables,initial_step=1e-3)
+try:
+  flux_sd_dict, hessian,inverse_hessian,covariance=get_std_deviation(label_model,optimal_variables,initial_step=1e-3)
+except:
+   flux_sd_dict={}
 
-export_flux_results(label_model,optimal_variables,fn=output_prefix+"_fluxes.csv",flux_sd_dict=flux_sd_dict)
+export_flux_results(label_model,optimal_variables,fn=output_prefix+"_fluxes.csv",flux_sd_dict=flux_sd_dict,reversible=True)
+
+export_flux_results(label_model,optimal_variables,fn=output_prefix+"_irreversible_fluxes.csv",flux_sd_dict={},reversible=False)
+
+
 objfunc(label_model,optimal_variables)
 export_label_results(label_model,fn=output_prefix+"_label.csv",show_chi=True,show_emu=True,show_fluxes=False)
 np.savetxt(output_prefix+"_variables.txt",optimal_variables)

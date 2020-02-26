@@ -17,10 +17,10 @@ def set_initial_label(metabolite_id,label_model,label_patterns=[[[1,1,0,0,0,0],0
     isotopomer_object=label_model.met_id_isotopomer_dict[metabolite_id]
     isotopomer_object.input=True
     isotopomer_id=label_model.met_id_isotopomer_dict[metabolite_id].id
-    labelled_positions=[]
     if condition not in label_model.initial_label:
        label_model.initial_label[condition]={}
     for label_pattern in label_patterns:
+       labelled_positions=[] 
        labelled_ratio=label_pattern[1]
        for n, x in enumerate(label_pattern[0]):
            if x==1:
@@ -33,6 +33,7 @@ def set_initial_label(metabolite_id,label_model,label_patterns=[[[1,1,0,0,0,0],0
                if position in emu_carbons:
                   weight+=1
            if weight>0:
+              print label_pattern,labelled_positions, emu, weight 
               emu_mi=label_model.emu_dict[emu]["mid"][weight]
               #emu_mi0=label_model.emu_dict[emu]["mid"][0]
               label_model.initial_label[condition][emu_mi]=total_concentration*labelled_ratio

@@ -94,7 +94,7 @@ def read_isotopomer_model(label_model,file_name,header=True):
                             #Add it to the irreversible_model
                             metabolite=label_model.irreversible_metabolic_model.metabolites.get_by_id(reference_metabolites[0])
                             reaction = cobra.core.Reaction('EX_'+metabolite.id)
-                            reaction.name = 'Exchange of '+metabolite.name
+                            reaction.name = 'Exchange of '+metabolite.id
                             reaction.subsystem = 'Exchange reaction'
                             reaction.lower_bound=-1000
                             reaction.upper_bound=1000
@@ -103,7 +103,7 @@ def read_isotopomer_model(label_model,file_name,header=True):
                             #Add it to the metabolic model
                             metabolite=label_model.metabolic_model.metabolites.get_by_id(reference_metabolites[0])
                             reaction = cobra.core.Reaction('EX_'+metabolite.id)
-                            reaction.name = 'Exchange of '+metabolite.name
+                            reaction.name = 'Exchange of '+metabolite.id
                             reaction.subsystem = 'Exchange reaction'
                             reaction.lower_bound=0
                             reaction.upper_bound=0
@@ -158,7 +158,17 @@ def read_isotopomer_model(label_model,file_name,header=True):
                              label_propagation["prod"+str(n_prod)].append([substrate_id,substrate_n])
                #print [label_propagation,products_dict,substrates_dict]
                print [reaction_id,substrates_dict,substrates_dict]
+               if len(row)>3:
+                  if "turn" in str(row[3]).lower() and not isinstance(reaction_id,list):
+                      label_model.reactions_with_forced_turnover.append(reaction_id)
+                      reaction=label_model.irreversible_metabolic_model.reactions.get_by_id(reaction_id)
+                      if reaction.upper_bound>0:
+                         reaction.lower_bound=-reaction.upper_bound 
+                      else:
+                         reaction.lower_bound=-1000
+               cobra.manipulation.convert_to_irreversible(label_model.irreversible_metabolic_model)       
                add_label_reactions(label_model,reaction_id,label_propagation=label_propagation,products_dict=products_dict,substrates_dict=substrates_dict)
+    
     add_missing_uni_uni_reactions(label_model)
 
 

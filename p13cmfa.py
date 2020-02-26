@@ -38,7 +38,7 @@ from iso2flux.flux_functions.build_flux_penalty_dict import build_flux_penalty_d
 
 try:
  argv=sys.argv[1:]
- opts, args = getopt.getopt(argv,"i:f:n:p:g:m:o:t:as:c:",["iso2flux_model_file=","flux_penalty_file=","number_of_processes=","population_size=","generations_per_cycle=","max_cycles_without_improvement=","output_prefix=","tolerance_of_label_objective=","absolute","starting_flux_value=","cycles="])
+ opts, args = getopt.getopt(argv,"i:f:n:p:g:m:o:t:as:c:x:",["iso2flux_model_file=","flux_penalty_file=","number_of_processes=","population_size=","generations_per_cycle=","max_cycles_without_improvement=","output_prefix=","tolerance_of_label_objective=","absolute","starting_flux_value=","cycles=","max_flux_for_sampling="])
 except getopt.GetoptError as err:
    print str(err)  # will print something like "option -a not recognized":
    sys.exit(2)
@@ -55,32 +55,34 @@ initial_flux_estimation=None
 n_iterations=1
 max_cycles_without_improvement=9 
 file_name=None
-
+max_flux_for_sampling=1e-6
 
 for opt, arg in opts:
          print [opt,arg]
-         if opt in ("--iso2flux_model_file=","-i"):
+         if opt in ("--iso2flux_model_file","-i"):
              file_name=arg
-         elif opt in ("--number_of_processes=","-n"):
+         elif opt in ("--number_of_processes","-n"):
              number_of_processes=int(arg)            
-         elif opt in ("--output_prefix=","-o"):
+         elif opt in ("--output_prefix","-o"):
              output_prefix=arg
-         elif opt in ("--population_size=","-p"):
+         elif opt in ("--population_size","-p"):
              pop_size=int(arg)
-         elif opt in ("--generations_per_cycle=","-g"):
+         elif opt in ("--generations_per_cycle","-g"):
              n_gen=int(arg)
-         elif opt in ("--flux_penalty_file=","-f"):
+         elif opt in ("--flux_penalty_file","-f"):
              flux_penalty_file=arg
-         elif opt in ("--tolerance_of_label_objective=","-t"):
+         elif opt in ("--tolerance_of_label_objective","-t"):
              objective_tolerance=float(arg)
          elif opt in ("--absolute","-a"):
              relative_tolerance=False
          elif opt in ("--starting_flux_value","-s"):
              initial_flux_estimation=float(arg)
-         elif opt in ("--cycles=","-c"):
+         elif opt in ("--cycles","-c"):
              n_iterations=int(arg)
-         elif opt in ("--max_cycles_without_improvement=","-m"):
+         elif opt in ("--max_cycles_without_improvement","-m"):
              max_cycles_without_improvement=int(arg)
+         elif opt in ("--max_flux_for_sampling","-x"):
+             max_flux_for_sampling=float(arg)
 
 
  
@@ -133,7 +135,7 @@ if relative_tolerance:
    else:
       label_problem_parameters={"label_weight":1,"target_flux_dict":None,"max_chi":1e6,"max_flux":1e6,"flux_penalty_dict":{},"verbose":True,"flux_weight":0.0,"label_unfeasible_penalty":1.0,"flux_unfeasible_penalty":10}
       best_objective,best_label_variables=optimize(label_model,iso2flux_problem,pop_size ,n_gen ,n_islands=number_of_processes,max_evolve_cycles=999,max_cycles_without_improvement=9,stop_criteria_relative=0.0005,stop_criteria_absolute=-1e6,initial_archi_x=[],lb_list=[],ub_list=[],flux_penalty_dict=None,max_flux=None,label_problem_parameters=label_problem_parameters,min_model=None,extra_constraint_dict={})
-      label_model.best_label_variables=best_label_variables
+      label_model.best_label_variables=list(best_label_variables)
    
    a,objective_dict=objfunc(label_model,best_label_variables,flux_penalty_dict=flux_penalty_dict,flux_weight=1)
    max_chi=objective_dict["chi2_score"]+objective_tolerance
@@ -145,7 +147,7 @@ if initial_flux_estimation==None:
    if label_model.best_p13cmfa_variables!=None:
       a,objective_dict=objfunc(label_model,label_model.best_p13cmfa_variables,flux_penalty_dict=flux_penalty_dict,flux_weight=1)
       initial_flux_estimation=objective_dict["flux_score"]
-   if label_model.best_label_variables!=None:
+   elif label_model.best_label_variables!=None:
       a,objective_dict=objfunc(label_model,best_label_variables,flux_penalty_dict=flux_penalty_dict,flux_weight=1)
       initial_flux_estimation=objective_dict["flux_score"]
    else:
@@ -155,20 +157,26 @@ if initial_flux_estimation==None:
 
 
 
-label_problem_parameters={"label_weight":0.000,"target_flux_dict":None,"max_chi":max_chi,"max_flux":initial_flux_estimation,"flux_penalty_dict":flux_penalty_dict,"verbose":True,"flux_weight":1,"flux_unfeasible_penalty":10,"label_unfeasible_penalty":1}
+label_problem_parameters={"label_weight":0.0001,"target_flux_dict":None,"max_chi":max_chi,"max_flux":initial_flux_estimation,"flux_penalty_dict":flux_penalty_dict,"verbose":True,"flux_weight":1,"flux_unfeasible_penalty":25,"label_unfeasible_penalty":5}
 
 best_flux=initial_flux_estimation
 best_variables=None
 
 
 for iteration in range(0,n_iterations):
-    flux_objective,variables=minimize_fluxes(label_model,iso2flux_problem,label_problem_parameters,max_chi=max_chi,flux_penalty_dict=flux_penalty_dict ,pop_size=pop_size ,n_gen=n_gen ,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement ,max_evolve_cycles=999 ,stop_criteria_relative=0.0001 ,max_iterations=1,  initial_flux_estimation=initial_flux_estimation,log_name=file_name.replace(".iso2flux","_p13cmfa_log.txt"))
+    flux_objective,variables=minimize_fluxes(label_model,iso2flux_problem,label_problem_parameters,max_chi=max_chi,flux_penalty_dict=flux_penalty_dict ,pop_size=pop_size ,n_gen=n_gen ,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement ,max_evolve_cycles=999 ,stop_criteria_relative=0.000001 ,max_iterations=1,  initial_flux_estimation=initial_flux_estimation,log_name=file_name.replace(".iso2flux","_p13cmfa_log.txt"),migrate="one_direction",max_flux_sampling=max_flux_for_sampling)
     print "flux minimized to " + str(round(flux_objective,3))
     if flux_objective<best_flux:
+       initial_flux_estimation=best_best_flux=flux_objective
+       label_problem_parameters={"label_weight":0.0001,"target_flux_dict":None,"max_chi":max_chi,"max_flux":best_flux,"flux_penalty_dict":flux_penalty_dict,"verbose":True,"flux_weight":1,"flux_unfeasible_penalty":25,"label_unfeasible_penalty":5}
        best_best_flux=flux_objective
        best_variables=variables
 
+
+
 export_flux_results(label_model,best_variables,fn=output_prefix+"_p13cmfa_fluxes.csv")
+export_flux_results(label_model,best_variables,fn=output_prefix+"_p13cmfa_fluxes_irreversible.csv",reversible=False)
+
 objfunc(label_model,best_variables)
 export_label_results(label_model,fn=output_prefix+"_p13cmfa_label.csv",show_chi=True,show_emu=True,show_fluxes=False)
 np.savetxt(output_prefix+"_p13cmfa_variables.txt",best_variables)

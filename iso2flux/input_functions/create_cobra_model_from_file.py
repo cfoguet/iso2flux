@@ -1,7 +1,6 @@
 import cobra
 from ..misc.read_spreadsheets import read_spreadsheets
 from cobra import Model, Reaction, Metabolite
-
 def create_cobra_model_from_file(fn):
     data_rows_dict=read_spreadsheets(file_names=fn,csv_delimiter=',',more_than_1=False)
     model = Model('Constraint based model')

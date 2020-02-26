@@ -51,7 +51,7 @@ n_gen=50
 number_of_processes=6
 output_prefix=None
 flux_penalty_file=None
-objective_tolerance=0.5
+objective_tolerance=3.84
 relative_tolerance=True
 initial_flux_estimation=None
 flux_penalty_dict={}
@@ -61,25 +61,25 @@ file_name=None
 
 for opt, arg in opts:
          print [opt,arg]
-         if opt in ("--iso2flux_model_file=","-i"):
+         if opt in ("--iso2flux_model_file","-i"):
              file_name=arg
-         elif opt in ("--number_of_processes=","-n"):
+         elif opt in ("--number_of_processes","-n"):
              number_of_processes=int(arg)            
-         elif opt in ("--output_prefix=","-o"):
+         elif opt in ("--output_prefix","-o"):
              output_prefix=arg
-         elif opt in ("--population_size=","-p"):
+         elif opt in ("--population_size","-p"):
              pop_size=int(arg)
-         elif opt in ("--generations_per_cycle=","-g"):
+         elif opt in ("--generations_per_cycle","-g"):
              n_gen=int(arg)
-         elif opt in ("--flux_penalty_file=","-f"):
+         elif opt in ("--flux_penalty_file","-f"):
              flux_penalty_file=arg
-         elif opt in ("--tolerance_of_objective=","-t"):
+         elif opt in ("--tolerance_of_objective","-t"):
              objective_tolerance=float(arg)
          elif opt in ("--absolute","-a"):
              relative_tolerance=False
-         elif opt in ("--reaction_list_file=","-r"):
+         elif opt in ("--reaction_list_file","-r"):
              reaction_list_file=arg
-         elif opt in ("max_cycles_without_improvement=","-m"):
+         elif opt in ("max_cycles_without_improvement","-m"):
              max_cycles_without_improvement=int(arg)
 
 
@@ -111,6 +111,7 @@ label_model=load_iso2flux_model(file_name)
 #lb_list,ub_list=get_variable_bounds(label_model,max_flux=1e6)
 
 print flux_penalty_file
+"""
 default_name_flux_dict=file_name.replace(".iso2flux","_flux_penalty.csv")
 if flux_penalty_file==None:
    flux_penalty={} 
@@ -118,6 +119,7 @@ if flux_penalty_file==None:
 else:
    print "loading "+flux_penalty_file
    flux_penalty_dict=read_flux_penalty_dict_from_file(flux_penalty_file)
+"""
 
 """
 
@@ -133,7 +135,7 @@ label_model.iso2flux_problem=iso2flux_problem
 #Get the best fit from iso2flux model, if does not exist run a simulation to get it
 reference_parameters=[]
 
-if flux_penalty_dict!={}: 
+if flux_penalty_dict not in (None,{}): 
    if label_model.best_p13cmfa_variables!=None: 
       reference_parameters.append(label_model.best_p13cmfa_variables)   
       best_variables=label_model.best_p13cmfa_variables

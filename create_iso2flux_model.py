@@ -140,34 +140,32 @@ for opt, arg in opts:
          print [opt,arg]
          if opt in ("--experimental_data_file","-e"):
              mid_data_name=arg
-         elif opt in ("--label_propagation_rules=","-l"):
+         elif opt in ("--label_propagation_rules","-l"):
              iso_model_file=arg
              if "]" in iso_model_file:
                 iso_model_file.replace("[","").replace("]","").split(",")       
-         elif opt in ("--constraint_based_model=","-c"):
+         elif opt in ("--constraint_based_model","-c"):
               if ".sbml" in arg.lower() or ".xml" in arg.lower():
                   model=cobra.io.read_sbml_model(arg)
               else:
                   model=create_cobra_model_from_file(arg) 
-         elif opt in ("flux_constraints=","-f"):
+         elif opt in ("flux_constraints","-f"):
               constraints_file=arg
-         elif opt in ("--output_prefix=","-o"):
+         elif opt in ("--output_prefix","-o"):
               output_name=arg
          elif opt in ("--nullmatix","-n"):
               null_matrix=arg #Must be a numpytext
-         elif opt in ("--eqn_dir=","-q"):
+         elif opt in ("--eqn_dir","-q"):
               eqn_dir=arg
-         elif opt in ("--max_reversible_turnover=","-t"):
-              max_t=arg
+         elif opt in ("--max_reversible_turnover","-t"):
+              max_t=float(arg)
          elif opt in ("-v","--validate"):
               validate=True
-         elif opt in ("--incubation_time=","-u"):
+         elif opt in ("--incubation_time","-u"):
               try:
                  incubation_time=float(arg)
               except: 
                  raise Exception ("Incubation time "+str(arg)+" could not be converted into float")  
-
-
 
 if mid_data_name==None:
         raise Exception ("'--experimental_data_file' required") 
@@ -186,6 +184,11 @@ if constraints_file!=None:
 
 print [iso_model_file]     
      
+#####Add name to model reactions if they are missing
+for x in model.reactions:
+    if x.name==None:
+       x.name=x.id 
+
 
 """
 fraction_of_optimum=p_dict["fraction_of_optimum"]
@@ -257,6 +260,9 @@ if not validate:
    flux_penalty_dict=build_flux_penalty_dict(label_model,base_penalty=1,fn=output_name+"_flux_penalty.csv")
    label_model.best_label_variables=None
    save_iso2flux_model(label_model,name=output_name,write_sbml=True,ask_sbml_name=False,gui=False)
+   print output_name
+   print label_model.reactions_with_forced_turnover
+   print label_model.variable_list_dict
    sys.exit(2)
 else:
    lb_list,ub_list=get_variable_bounds(label_model,flux_penalty_dict={},max_flux=1e6)

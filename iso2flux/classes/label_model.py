@@ -260,7 +260,9 @@ class Label_model:
                         del expanded_reaction_object.notes["reflection"]
                         del label_model.size_expanded_model_dict[emu_size].reactions.get_by_id(reflection_reaction).notes["reflection"]
                      print "----------------------------------------------------------------------------------------------"
-          if turnover_exclude_EX!=True and turnover_exclude_EX in ("true",1,"yes","True","Yes"):
+          if turnover_exclude_EX:
+              pass  
+          elif turnover_exclude_EX!=True and turnover_exclude_EX in ("true",1,"yes","True","Yes"):
              turnover_exclude_EX=True
           else: 
              turnover_exclude_EX=False
