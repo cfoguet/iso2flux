@@ -7,7 +7,7 @@ setup(name='iso2flux',
       author='Carles Foguet',
       author_email='cfoguet@ub.edu',
       url='',
-      scripts=["run_iso2flux_analysis.py"],
+      scripts=["create_iso2flux_model.py","integrate_gene_expression.py","solve_iso2flux_label.py","p13cmfa.py","run_iso2flux_analysis.py","get_intervals.py"],
       install_requires=["pygmo==2.5","cython==0.23.4","python-libsbml==5.16.0","openpyxl==2.3.3","numpy==1.13.3","scipy==0.19.0","sympy==1.0","lxml","cobra==0.9.0"],
       packages=find_packages(),
      )
