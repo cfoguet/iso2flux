@@ -6,7 +6,11 @@ import subprocess
 import shlex
 ###Flux functions
 import cobra
+import iso2flux
 from iso2flux.input_functions.create_cobra_model_from_file import create_cobra_model_from_file
+##Script Dir
+scripts_path = os.path.dirname(os.path.realpath(iso2flux.__file__))+"/scripts/"
+
 
 
 try:
@@ -95,34 +99,34 @@ if max_flux_for_sampling=="":
 
 
 
-#create_model="python create_iso2flux_model.py -e "+mid_data_name+"  -c "+model_name+" -l "+iso_model_file+" -o iso2flux "
-create_model="create_iso2flux_model.py -e "+mid_data_name+"  -c "+model_name+" -l "+iso_model_file+" -o iso2flux "
+create_model="python "+ scripts_path+"create_iso2flux_model.py -e "+mid_data_name+"  -c "+model_name+" -l "+iso_model_file+" -o iso2flux "
+#create_model="create_iso2flux_model.py -e "+mid_data_name+"  -c "+model_name+" -l "+iso_model_file+" -o iso2flux "
 
 if constraints_file!=None:
    create_model+=" -f"+ constraints_file
 
 
-#solve_model="python solve_iso2flux_label.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+max_flux_for_sampling
-solve_model="solve_iso2flux_label.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+max_flux_for_sampling
+solve_model="python "+ scripts_path+"solve_iso2flux_label.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+max_flux_for_sampling
+#solve_model="solve_iso2flux_label.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+max_flux_for_sampling
 
 print solve_model
 
 if run_p13cfma:
-    #p13cmfa="python p13cmfa.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+ xi_tolerance_str+max_flux_for_sampling
-    p13cmfa="p13cmfa.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+ xi_tolerance_str+max_flux_for_sampling
+    p13cmfa="python"+ scripts_path+"p13cmfa.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+ xi_tolerance_str+max_flux_for_sampling
+    #p13cmfa="p13cmfa.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+ xi_tolerance_str+max_flux_for_sampling
     print p13cmfa
 else:
     p13cmfa=""
     
 if integrate_gene_expression_flag:
-   #integrate_gene_expression="python integrate_gene_expression.py -i iso2flux -f iso2flux_flux_penalty.csv --low_expression_threshold 100 --gene_expression_file  "+ gene_expression_file
-   integrate_gene_expression="integrate_gene_expression.py -i iso2flux -f iso2flux_flux_penalty.csv --low_expression_threshold 100 --gene_expression_file  "+ gene_expression_file
+   integrate_gene_expression="python"+ scripts_path+"integrate_gene_expression.py -i iso2flux -f iso2flux_flux_penalty.csv --low_expression_threshold 100 --gene_expression_file  "+ gene_expression_file
+   #integrate_gene_expression="integrate_gene_expression.py -i iso2flux -f iso2flux_flux_penalty.csv --low_expression_threshold 100 --gene_expression_file  "+ gene_expression_file
 else:
    integrate_gene_expression="" 
    
 if compute_intervals_flag:
-   #get_intervals="python get_intervals.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+ xi_tolerance_str
-   get_intervals="get_intervals.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+ xi_tolerance_str
+   get_intervals="python"+ scripts_path+"get_intervals.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+ xi_tolerance_str
+   #get_intervals="get_intervals.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+ xi_tolerance_str
 else:
     get_intervals=""
     
