@@ -274,6 +274,6 @@ flux_interval_dict,irreversible_flux_interval_dict=flux_variation(label_model,is
 
 #variation_dict2=flux_variation(label_model,["rib5p_dem","fbp"],best_variables,label_problem_parameters,max_chi=max_chi,max_flux=max_flux,flux_penalty_dict=flux_penalty_dict ,pop_size=20 ,n_gen=20 ,n_islands=2 ,evolves_per_cycle=8 ,max_evolve_cycles=20 ,stop_criteria_relative=0.005 ,max_iterations=10,log_name="confidence.txt")
 
-write_fva(label_model.constrained_model,fn=output_prefix+"_flux_interval.xlsx",fva=flux_interval_dict,fraction=1,remove0=False,change_threshold=1e-6,mode="full",lp_tolerance_feasibility=1e-6,flux_precision=1e-3,reaction_list=reaction_reference_flux_group_dict)
+write_fva(label_model.constrained_model,fn=output_prefix+"_flux_interval.csv",fva=flux_interval_dict,fraction=1,remove0=False,change_threshold=1e-6,mode="full",lp_tolerance_feasibility=1e-6,flux_precision=1e-3,reaction_list=reaction_reference_flux_group_dict)
 
 
