@@ -164,7 +164,7 @@ best_variables=None
 
 
 for iteration in range(0,n_iterations):
-    flux_objective,variables=minimize_fluxes(label_model,iso2flux_problem,label_problem_parameters,max_chi=max_chi,flux_penalty_dict=flux_penalty_dict ,pop_size=pop_size ,n_gen=n_gen ,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement ,max_evolve_cycles=999 ,stop_criteria_relative=0.000001 ,max_iterations=1,  initial_flux_estimation=initial_flux_estimation,log_name=file_name.replace(".iso2flux","_p13cmfa_log.txt"),migrate="one_direction",max_flux_sampling=max_flux_for_sampling)
+    flux_objective,variables=minimize_fluxes(label_model,iso2flux_problem,label_problem_parameters,max_chi=max_chi,flux_penalty_dict=flux_penalty_dict ,pop_size=pop_size ,n_gen=n_gen ,n_islands=number_of_processes ,max_cycles_without_improvement=max_cycles_without_improvement ,max_evolve_cycles=999 ,stop_criteria_relative=0.0005 ,max_iterations=1,  initial_flux_estimation=initial_flux_estimation,log_name=file_name.replace(".iso2flux","_p13cmfa_log.txt"),migrate="one_direction",max_flux_sampling=max_flux_for_sampling)
     print "flux minimized to " + str(round(flux_objective,3))
     if flux_objective<best_flux:
        initial_flux_estimation=best_best_flux=flux_objective
