@@ -126,6 +126,9 @@ null_matrix=None
 eqn_dir=None
 max_t=20
 validate=False
+incubation_time=None
+
+
 try:
  argv=sys.argv[1:]
  opts, args = getopt.getopt(argv,"e:l:c:s:f:o:t:n:q:t:vu:",["experimental_data_file=","label_propagation_rules=","constraint_based_model=","settings_file=","flux_constraints=","output_name=","nullmatrix_file=","eqn_dir=","max_reversible_turnover=","validate","--incubation_time="])
@@ -204,7 +207,7 @@ if len(missing_reactions_list)>0:
 
 #emu_dict0,label_model.experimental_dict =read_experimental_mid(label_model,mid_data_name,emu0_dict={},experimental_dict={},minimum_sd=p_dict["minimum_sd"])
 try:
-   emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=None,selected_time=None,minimum_sd=0.01,rsm=False)
+   emu_dict0,label_model.experimental_dict =read_metabolights(label_model,mid_data_name,selected_condition=None,selected_time=incubation_time,minimum_sd=0.01,rsm=False)
 except:
    if  "[" in mid_data_name and "]" in mid_data_name:
       try:

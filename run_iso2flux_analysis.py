@@ -10,7 +10,7 @@ import iso2flux
 from iso2flux.input_functions.create_cobra_model_from_file import create_cobra_model_from_file
 ##Script Dir
 scripts_path = os.path.dirname(os.path.realpath(iso2flux.__file__))+"/scripts/"
-
+from iso2flux.input_functions.read_constraints import read_flux_constraints 
 
 
 try:
@@ -35,7 +35,8 @@ xi_tolerance_str=" -t 3.84" #ChiSquare 1 degree of freedom 95%
 integrate_gene_expression_flag=False
 max_flux_for_sampling=""
 compute_intervals_flag=False
-
+incubation_time=""
+max_turnover=""
 
 for opt, arg in opts:
          print [opt,arg]
@@ -59,7 +60,8 @@ for opt, arg in opts:
          elif opt in ("--eqn_dir","-q"):
               eqn_dir=arg
          elif opt in ("--max_reversible_turnover","-t"):
-              max_t=arg
+              #max_t=arg
+              max_turnover=" --max_reversible_turnover="+arg
          elif opt in ("-v","--validate"):
               validate=True
          elif opt in ("--number_of_processes","-n"):
@@ -76,10 +78,7 @@ for opt, arg in opts:
          elif opt in ("--compute_confidence_intervals","-i"):
              compute_intervals_flag=True
          elif opt in ("--incubation_time","-u"):
-              try:
-                 incubation_time=float(arg)
-              except: 
-                 raise Exception ("Incubation time "+str(arg)+" could not be converted into float")
+              incubation_time=" -u "+incubation_time
          elif opt in ("--run_p13cfma","-r"):
               run_p13cfma=True
          elif opt in ("--xi_tolerance","-x"):
@@ -88,22 +87,35 @@ for opt, arg in opts:
              gene_expression_file=arg
              integrate_gene_expression_flag=True
          elif opt in ("--max_flux_for_sampling","-a"):
-             max_flux_for_sampling=" --max_flux_for_sampling="+str(min_sampling_flux)
+             max_flux_for_sampling=" --max_flux_for_sampling="+str(opt)
              
 
 #######
+model,ratio_dict=read_flux_constraints(model,ratio_dict={},file_name=constraints_file)
+sol=cobra.flux_analysis.pfba(model)
+if constraints_file!=None:
+        print constraints_file
+        model,ratio_dict=read_flux_constraints(model,ratio_dict={},file_name=constraints_file)
+
 if max_flux_for_sampling=="":
-   min_possible_flux=cobra.flux_analysis.pfba(model).f
-   min_sampling_flux=max(min_possible_flux*5,1) #As a default set the max flux for sampling to 5 times the maximum value
+   min_possible_flux=sol.f
+   min_sampling_flux=max(min_possible_flux*4,1) #As a default set the max flux for sampling to 5 times the maximum value
    max_flux_for_sampling=" --max_flux_for_sampling="+str(min_sampling_flux)
 
 
+if max_turnover=="":
+   #Max turnover
+   max_turnover=max(abs(min(sol.x)),abs(max(sol.x)))*4
+   max_turnover=" --max_reversible_turnover="+str(max_turnover)
 
-create_model="python "+ scripts_path+"create_iso2flux_model.py -e "+mid_data_name+"  -c "+model_name+" -l "+iso_model_file+" -o iso2flux "
+
+
+
+create_model="python "+ scripts_path+"create_iso2flux_model.py -e "+mid_data_name+"  -c "+model_name+" -l "+iso_model_file+" -o iso2flux "+incubation_time+max_turnover
 #create_model="create_iso2flux_model.py -e "+mid_data_name+"  -c "+model_name+" -l "+iso_model_file+" -o iso2flux "
 
 if constraints_file!=None:
-   create_model+=" -f"+ constraints_file
+   create_model+=" -f "+ constraints_file
 
 
 solve_model="python "+ scripts_path+"solve_iso2flux_label.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+max_flux_for_sampling
