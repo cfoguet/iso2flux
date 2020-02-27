@@ -112,20 +112,20 @@ solve_model="python "+ scripts_path+"solve_iso2flux_label.py -i iso2flux -o iso2
 print solve_model
 
 if run_p13cfma:
-    p13cmfa="python"+ scripts_path+"p13cmfa.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+ xi_tolerance_str+max_flux_for_sampling
+    p13cmfa="python "+ scripts_path+"p13cmfa.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+ xi_tolerance_str+max_flux_for_sampling
     #p13cmfa="p13cmfa.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+ xi_tolerance_str+max_flux_for_sampling
     print p13cmfa
 else:
     p13cmfa=""
     
 if integrate_gene_expression_flag:
-   integrate_gene_expression="python"+ scripts_path+"integrate_gene_expression.py -i iso2flux -f iso2flux_flux_penalty.csv --low_expression_threshold 100 --gene_expression_file  "+ gene_expression_file
+   integrate_gene_expression="python "+ scripts_path+"integrate_gene_expression.py -i iso2flux -f iso2flux_flux_penalty.csv --low_expression_threshold 100 --gene_expression_file  "+ gene_expression_file
    #integrate_gene_expression="integrate_gene_expression.py -i iso2flux -f iso2flux_flux_penalty.csv --low_expression_threshold 100 --gene_expression_file  "+ gene_expression_file
 else:
    integrate_gene_expression="" 
    
 if compute_intervals_flag:
-   get_intervals="python"+ scripts_path+"get_intervals.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+ xi_tolerance_str
+   get_intervals="python "+ scripts_path+"get_intervals.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+ xi_tolerance_str
    #get_intervals="get_intervals.py -i iso2flux -o iso2flux"+n_process_str+n_pop_str+n_gen_str+ xi_tolerance_str
 else:
     get_intervals=""
