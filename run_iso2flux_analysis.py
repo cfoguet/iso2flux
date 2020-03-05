@@ -91,11 +91,12 @@ for opt, arg in opts:
              
 
 #######
-model,ratio_dict=read_flux_constraints(model,ratio_dict={},file_name=constraints_file)
-sol=cobra.flux_analysis.pfba(model)
 if constraints_file!=None:
         print constraints_file
         model,ratio_dict=read_flux_constraints(model,ratio_dict={},file_name=constraints_file)
+
+sol=cobra.flux_analysis.pfba(model)
+
 
 if max_flux_for_sampling=="":
    min_possible_flux=sol.f
