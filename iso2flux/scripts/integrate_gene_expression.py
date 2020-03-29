@@ -37,19 +37,19 @@ gene_sufix=""
 
 for opt, arg in opts:
          print [opt,arg]
-         if opt in ("--iso2flux_model_file=","-i"):
+         if opt in ("--iso2flux_model_file","-i"):
              iso2flux_file_name=arg
-         elif opt in ("--gene_expression_file=","-g"):
+         elif opt in ("--gene_expression_file","-g"):
              gene_expression_file=arg       
-         elif opt in ("--output_flux_penalty_file=","-o"):
+         elif opt in ("--output_flux_penalty_file","-o"):
              output_flux_penalty_file=arg
-         elif opt in ("--low_expression_threshold=","-l"):
+         elif opt in ("low_expression_threshold","-l"):
              low_expression_threshold=float(arg)
-         elif opt in ("--reference_flux_penalty_file=","-f"):
+         elif opt in ("--reference_flux_penalty_file","-f"):
             reference_flux_penalty_file=arg
-         elif opt in ("--gene_prefix==","-p"):
+         elif opt in ("--gene_prefix","-p"):
             gene_prefix=arg
-         elif opt in ("--gene_sufix==","-s"):
+         elif opt in ("--gene_sufix","-s"):
             gene_sufix=arg
 
 

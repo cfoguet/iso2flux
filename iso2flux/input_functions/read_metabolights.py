@@ -103,7 +103,7 @@ def read_metabolights(label_model,file_name,name_id_dict={},selected_condition="
               time_row_dict[time]=[]
            time_row_dict[time].append(row)
            
-       if selected_time==None:
+       if selected_time in (None,""):
           selected_time=max(time_row_dict)
           print "selected time ", selected_time
        if selected_time not in time_row_dict:
